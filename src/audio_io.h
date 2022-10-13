@@ -1,11 +1,11 @@
 #pragma once
-
+#include <functional>
 #include <Arduino.h>
 #include <TsyDMASPI.h>
 #include "pins.h"
 #include "counter.h"
-
-void ProcessAudio();
+#include "io_buffer.h"
+#include "timers.h"
 
 class Inputs
 {
@@ -20,6 +20,7 @@ public:
 
 public:    
     // Processed values; scaled, filtered and offset
+    // These are the values to be used
     float Cv[4];
     float Mod[4];
     bool Gate[4];
@@ -53,6 +54,8 @@ public:
     }
 };
 
+void InvokeProcessAudio();
+
 class AudioIo
 {
 public:
@@ -63,12 +66,18 @@ private:
     uint8_t AdcRxBuf[8][3];
     uint8_t DacTxBuf[4][2];
     uint8_t DacRxBuf[2]; // discard
-
-public:
+    
     uint16_t AdcValues[8] = {0};
 
+public:
     inline void Init()
     {
+        if (Instance != 0)
+        {
+            Serial.println("AudioIo already created!");
+            return;
+        }
+
         pinMode(PIN_CS_DAC0, OUTPUT);
         pinMode(PIN_CS_DAC1, OUTPUT);
         pinMode(PIN_CS_ADC, OUTPUT);
@@ -78,7 +87,6 @@ public:
         digitalWrite(PIN_CS_ADC, HIGH);
         digitalWrite(PIN_LATCH, HIGH);
         TsyDMASPI0.begin(SPISettings(12000000, MSBFIRST, SPI_MODE0));
-
         Instance = this;
     }
 
@@ -126,12 +134,14 @@ public:
 
     inline void StartProcessing()
     {
-        audioLoop.priority(2);
-        audioLoop.begin(ProcessAudio, 22.675737);
+        BufTransmitting = &BufferA;
+        BufProcessing = &BufferB;
+        CallbackComplete = true;
+        BufferUnderrun = false;
+        bufferIdx = 0;
+        ioLoop.priority(2);
+        ioLoop.begin(InvokeProcessAudio, 22.675737); // 1 / 44100 = 22.675737
     }
-
-    float yieldTime = 0;
-    float processingTime = 0;
 
     inline void ProcessAudioX()
     {
@@ -142,19 +152,77 @@ public:
         // Process the newly received ADC values
         ProcessAdcValues();
 
+        BufTransmitting->Cv[0][bufferIdx] = AdcValues[0];
+        BufTransmitting->Cv[1][bufferIdx] = AdcValues[1];
+        BufTransmitting->Cv[2][bufferIdx] = AdcValues[2];
+        BufTransmitting->Cv[3][bufferIdx] = AdcValues[3];
+        BufTransmitting->Mod[0][bufferIdx] = AdcValues[4];
+        BufTransmitting->Mod[1][bufferIdx] = AdcValues[5];
+        BufTransmitting->Mod[2][bufferIdx] = AdcValues[6];
+        BufTransmitting->Mod[3][bufferIdx] = AdcValues[7];
+        BufTransmitting->Gate[0][bufferIdx] = digitalReadFast(PIN_GATE0);
+        BufTransmitting->Gate[1][bufferIdx] = digitalReadFast(PIN_GATE1);
+        BufTransmitting->Gate[2][bufferIdx] = digitalReadFast(PIN_GATE2);
+        BufTransmitting->Gate[3][bufferIdx] = digitalReadFast(PIN_GATE3);
+        
         SampleAdc(3);
         SampleAdc(7);
-        SetDac(0, AdcValues[0]);
-        SetDac(1, AdcValues[1]);
-        //SetDac(2, AdcValues[2]);
-        SetDac(3, AdcValues[3]);
+        SetDac(0, BufTransmitting->Out[0][bufferIdx]);
+        SetDac(1, BufTransmitting->Out[1][bufferIdx]);
+        //SetDac(2, BufTransmitting->Out[2][bufferIdx]);
+        SetDac(3, BufTransmitting->Out[3][bufferIdx]);
+
+        bufferIdx++;
+        if (bufferIdx == 16)
+        {
+            if (!CallbackComplete)
+            {
+                BufferUnderrun = true;
+            }
+
+            bufferIdx = 0;
+            auto tmp = BufTransmitting;
+            BufTransmitting = BufProcessing;
+            BufProcessing = tmp;
+            CallbackComplete = false;
+        }
     }
 
-private:
-    IntervalTimer audioLoop;
+    bool Available()
+    {
+        return !CallbackComplete;
+    }
+
+    IOBuffer<16>* BeginAudioCallback()
+    {
+        if (CallbackComplete)
+            return 0;
+
+        Timers::ResetFrame();
+        return const_cast<IOBuffer<16>*>(BufProcessing);
+    }
+
+    void EndAudioCallback()
+    {
+        CallbackComplete = true;
+        Timers::Lap(Timers::TIMER_TOTAL);
+    }
+
+public:
+    IntervalTimer ioLoop;
+    IOBuffer<16> BufferA;
+    IOBuffer<16> BufferB;
+    int bufferIdx;
+    volatile IOBuffer<16>* BufTransmitting;
+    volatile IOBuffer<16>* BufProcessing;
+    volatile bool CallbackComplete;
+
+public:
+    volatile bool BufferUnderrun;
+    
 };
 
-inline void ProcessAudio()
+inline void InvokeProcessAudio()
 {
     AudioIo::Instance->ProcessAudioX();
 }

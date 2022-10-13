@@ -1,17 +1,15 @@
 #include "Arduino.h"
 #include "display.h"
 #include "menu.h"
-#include "buttons.h"
+#include "controls.h"
 #include "audio_io.h"
 #include "counter.h"
-
+#include "logging.h"
 Inputs ins;
 AudioIo audio;
 Menu m;
 DisplayManager display;
-ButtonManager buttons;
-
-void processAudio();
+ControlManager buttons;
 
 void BuildMenu()
 {
@@ -40,8 +38,20 @@ void BuildMenu()
     m.QuadMode = true;
 }
 
+void HandleAudio(IOBuffer<16>* data)
+{
+    for (int i = 0; i < 16; i++)
+        data->Out[3][i] = data->Cv[3][i];
+
+    delayMicroseconds(340);
+}
+
+
 void setup()
 {
+    while(!Serial) {}
+    Serial.println("Starting...");
+
     BuildMenu();
     //pinMode(LED_BUILTIN,OUTPUT);
     display.Init();
@@ -50,11 +60,32 @@ void setup()
     audio.StartProcessing();
 }
 
+int tsLast = 0;
+
 void loop()
 {
-    Serial.println("Hello...");
-    delay(1000);
+    auto tsx = micros();
 
+    if (tsx-tsLast > 1000000)
+    {
+        if (audio.BufferUnderrun)
+        {
+            LogInfo("Buffer Underrun!!");
+            audio.BufferUnderrun = false;
+        }
+
+        LogInfof("CPU load: %.2f%%", Timers::GetCpuLoad()*100);
+        tsLast = tsx;
+    }
+    
+    if (audio.Available())
+    {
+        auto buf = audio.BeginAudioCallback();
+        HandleAudio(buf);
+        audio.EndAudioCallback();
+    }
+
+    
     // m.Render(display.GetDisplay());
     // display.Transfer();
     // delay(1000);

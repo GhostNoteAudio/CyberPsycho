@@ -1,7 +1,7 @@
 #include "Arduino.h"
 #include "pins.h"
 
-class ButtonManager
+class ControlManager
 {
     int ButtonCounter[4] = {0};
     bool ButtonState[4] = {false};
