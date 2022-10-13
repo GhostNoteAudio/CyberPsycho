@@ -1,0 +1,22 @@
+# build
+.vsteensy/**
+.vscode/**
+makefile
+
+# dependency files
+*.d
+
+# output and binaries
+*.slo
+*.lo
+*.o
+*.obj
+*.hex
+*.lst
+*.elf
+*.a
+
+lib/ADC*
+lib/SD*
+lib/SPI*
+lib/Wire*
