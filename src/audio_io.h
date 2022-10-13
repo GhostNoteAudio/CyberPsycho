@@ -6,53 +6,8 @@
 #include "counter.h"
 #include "io_buffer.h"
 #include "timers.h"
+#include "constants.h"
 
-class Inputs
-{
-    const float Inv12Bit = 1.0 / 4095.0;
-    const int GateThresLow = 10;
-    const int GateThresHigh = 245;
-
-public:
-    uint16_t InputCv[4];
-    uint16_t InputMod[4];
-    int InputGate[4];
-
-public:    
-    // Processed values; scaled, filtered and offset
-    // These are the values to be used
-    float Cv[4];
-    float Mod[4];
-    bool Gate[4];
-
-    // Adjustments
-    uint16_t OffsetCv[4] = {2048};
-    uint16_t OffsetMod[4] = {0};
-    float ScaleCv[4];
-    float ScaleMod[4];
-    int16_t GateSpeed[4] = {64}; // 1 = slowest, 255 = instant change, no filtering
-
-    inline void UpdateCvValue(int idx, uint16_t value)
-    {
-        InputCv[idx] = value;
-        Cv[idx] = (InputCv[idx] - OffsetCv[idx]) * ScaleCv[idx] * Inv12Bit;
-    }
-
-    inline void UpdateModValue(int idx, uint16_t value)
-    {
-        InputMod[idx] = value;
-        Mod[idx] = (InputMod[idx] - OffsetMod[idx]) * ScaleMod[idx] * Inv12Bit;
-    }
-
-    inline void UpdateGateValue(int idx, uint8_t value)
-    {
-        InputGate[idx] += (-1+2*value) * GateSpeed[idx];
-        if (InputGate[idx] > 255) InputGate[idx] = 255;
-        if (InputGate[idx] < 0) InputGate[idx] = 0;
-        if (InputGate[idx] < GateThresLow) Gate[idx] = false;
-        if (InputGate[idx] > GateThresHigh) Gate[idx] = true;
-    }
-};
 
 void InvokeProcessAudio();
 
@@ -139,8 +94,7 @@ public:
         CallbackComplete = true;
         BufferUnderrun = false;
         bufferIdx = 0;
-        ioLoop.priority(2);
-        ioLoop.begin(InvokeProcessAudio, 22.675737); // 1 / 44100 = 22.675737
+        ioLoop.begin(InvokeProcessAudio, 1000000.0/SAMPLERATE);
     }
 
     inline void ProcessAudioX()
@@ -193,13 +147,13 @@ public:
         return !CallbackComplete;
     }
 
-    IOBuffer<16>* BeginAudioCallback()
+    DataBuffer* BeginAudioCallback()
     {
         if (CallbackComplete)
             return 0;
 
         Timers::ResetFrame();
-        return const_cast<IOBuffer<16>*>(BufProcessing);
+        return const_cast<DataBuffer*>(BufProcessing);
     }
 
     void EndAudioCallback()
@@ -210,11 +164,11 @@ public:
 
 public:
     IntervalTimer ioLoop;
-    IOBuffer<16> BufferA;
-    IOBuffer<16> BufferB;
+    DataBuffer BufferA;
+    DataBuffer BufferB;
     int bufferIdx;
-    volatile IOBuffer<16>* BufTransmitting;
-    volatile IOBuffer<16>* BufProcessing;
+    volatile DataBuffer* BufTransmitting;
+    volatile DataBuffer* BufProcessing;
     volatile bool CallbackComplete;
 
 public:

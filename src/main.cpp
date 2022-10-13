@@ -5,7 +5,9 @@
 #include "audio_io.h"
 #include "counter.h"
 #include "logging.h"
-Inputs ins;
+#include "input_processor.h"
+#include "utils.h"
+InputProcessor inProcessor;
 AudioIo audio;
 Menu m;
 DisplayManager display;
@@ -38,12 +40,18 @@ void BuildMenu()
     m.QuadMode = true;
 }
 
-void HandleAudio(IOBuffer<16>* data)
+void HandleAudio(DataBuffer* data)
 {
+    auto fpData = inProcessor.ConvertToFp(data);
+    auto min = Utils::Min(fpData.Cv[3], fpData.Size);
+    auto max = Utils::Max(fpData.Cv[3], fpData.Size);
+
+    LogInfof("Min: %f - Max: %f", min, max)
+
     for (int i = 0; i < 16; i++)
         data->Out[3][i] = data->Cv[3][i];
 
-    delayMicroseconds(340);
+    //delayMicroseconds(340);
 }
 
 
