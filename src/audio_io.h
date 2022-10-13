@@ -1,7 +1,11 @@
+#pragma once
+
 #include <Arduino.h>
 #include <TsyDMASPI.h>
 #include "pins.h"
 #include "counter.h"
+
+void ProcessAudio();
 
 class Inputs
 {
@@ -24,22 +28,22 @@ public:
     uint16_t OffsetCv[4] = {2048};
     uint16_t OffsetMod[4] = {0};
     float ScaleCv[4];
-    float ScaleMod[4];    
+    float ScaleMod[4];
     int16_t GateSpeed[4] = {64}; // 1 = slowest, 255 = instant change, no filtering
 
-    void UpdateCvValue(int idx, uint16_t value)
+    inline void UpdateCvValue(int idx, uint16_t value)
     {
         InputCv[idx] = value;
         Cv[idx] = (InputCv[idx] - OffsetCv[idx]) * ScaleCv[idx] * Inv12Bit;
     }
 
-    void UpdateModValue(int idx, uint16_t value)
+    inline void UpdateModValue(int idx, uint16_t value)
     {
         InputMod[idx] = value;
         Mod[idx] = (InputMod[idx] - OffsetMod[idx]) * ScaleMod[idx] * Inv12Bit;
     }
 
-    void UpdateGateValue(int idx, uint8_t value)
+    inline void UpdateGateValue(int idx, uint8_t value)
     {
         InputGate[idx] += (-1+2*value) * GateSpeed[idx];
         if (InputGate[idx] > 255) InputGate[idx] = 255;
@@ -51,6 +55,10 @@ public:
 
 class AudioIo
 {
+public:
+    static AudioIo* Instance;
+
+private:
     uint8_t AdcTxBuf[8][3];
     uint8_t AdcRxBuf[8][3];
     uint8_t DacTxBuf[4][2];
@@ -59,7 +67,7 @@ class AudioIo
 public:
     uint16_t AdcValues[8] = {0};
 
-    void Init()
+    inline void Init()
     {
         pinMode(PIN_CS_DAC0, OUTPUT);
         pinMode(PIN_CS_DAC1, OUTPUT);
@@ -70,19 +78,21 @@ public:
         digitalWrite(PIN_CS_ADC, HIGH);
         digitalWrite(PIN_LATCH, HIGH);
         TsyDMASPI0.begin(SPISettings(12000000, MSBFIRST, SPI_MODE0));
+
+        Instance = this;
     }
 
-    void SampleAdc(int channel)
+    inline void SampleAdc(int channel)
     {
-    uint8_t* data = AdcTxBuf[channel];
-    data[0] = 0b00000110 | (channel & 0b100) >> 2;
-    data[1] = (channel & 0b011) << 6;
-    data[2] = 0;
-    
-    TsyDMASPI0.queue(AdcTxBuf[channel], AdcRxBuf[channel], 3, PIN_CS_ADC);
+        uint8_t* data = AdcTxBuf[channel];
+        data[0] = 0b00000110 | (channel & 0b100) >> 2;
+        data[1] = (channel & 0b011) << 6;
+        data[2] = 0;
+        
+        TsyDMASPI0.queue(AdcTxBuf[channel], AdcRxBuf[channel], 3, PIN_CS_ADC);
     }
 
-    void ProcessAdcValues()
+    inline void ProcessAdcValues()
     {
         for (int i = 0; i < 8; i++)
         {
@@ -90,7 +100,7 @@ public:
         }
     }
 
-    void SetDac(int channel, uint16_t value)
+    inline void SetDac(int channel, uint16_t value)
     {
         if (value > (1u << 12) - 1) 
             value = (1u << 12) - 1;
@@ -106,11 +116,45 @@ public:
         TsyDMASPI0.queue(tx, rx, 2, csPin);
     }
 
-    void LatchDac()
+    inline void LatchDac()
     {
         digitalWrite(PIN_LATCH, LOW);
         SpinWait(20);
         digitalWrite(PIN_LATCH, HIGH);
         SpinWait(20);
     }
+
+    inline void StartProcessing()
+    {
+        audioLoop.priority(2);
+        audioLoop.begin(ProcessAudio, 22.675737);
+    }
+
+    float yieldTime = 0;
+    float processingTime = 0;
+
+    inline void ProcessAudioX()
+    {
+        // wait for value from previous iteration to be complete. Hopefully should never block
+        TsyDMASPI0.yield();
+        // Emit the DAC values that were previously sent to the output
+        LatchDac();
+        // Process the newly received ADC values
+        ProcessAdcValues();
+
+        SampleAdc(3);
+        SampleAdc(7);
+        SetDac(0, AdcValues[0]);
+        SetDac(1, AdcValues[1]);
+        //SetDac(2, AdcValues[2]);
+        SetDac(3, AdcValues[3]);
+    }
+
+private:
+    IntervalTimer audioLoop;
 };
+
+inline void ProcessAudio()
+{
+    AudioIo::Instance->ProcessAudioX();
+}

@@ -10,7 +10,6 @@ AudioIo audio;
 Menu m;
 DisplayManager display;
 ButtonManager buttons;
-IntervalTimer audioLoop;
 
 void processAudio();
 
@@ -48,48 +47,12 @@ void setup()
     display.Init();
 
     audio.Init();
-    //SPI.begin();
-    //SPI.beginTransaction(SPISettings(8000000, MSBFIRST, SPI_MODE0));
-    
-    audioLoop.priority(2);
-    audioLoop.begin(processAudio, 22.675737);
-}
-
-float yieldTime = 0;
-float processingTime = 0;
-
-void processAudio()
-{
-    int a = micros();
-    // wait for value from previous iteration to be complete. Hopefully should never block
-    TsyDMASPI0.yield();
-    int b = micros();
-
-    // Emit the DAC values that were previously sent to the output
-    audio.LatchDac();
-    // Process the newly received ADC values
-    audio.ProcessAdcValues();
-
-    audio.SampleAdc(3);
-    audio.SampleAdc(7);
-    audio.SetDac(0, audio.AdcValues[0]);
-    audio.SetDac(1, audio.AdcValues[1]);
-    //audio.SetDac(2, audio.AdcValues[2]);
-    audio.SetDac(3, audio.AdcValues[3]);
-
-    int c = micros();
-
-    yieldTime = yieldTime * 0.99 + (b-a) * 0.01;
-    processingTime = processingTime * 0.99 + (c-b) * 0.01;
+    audio.StartProcessing();
 }
 
 void loop()
 {
-    Serial.print("Yield time: ");
-    Serial.print(yieldTime);
-    Serial.print(" Processing time: ");
-    Serial.println(processingTime);
-
+    Serial.println("Hello...");
     delay(1000);
 
     // m.Render(display.GetDisplay());
