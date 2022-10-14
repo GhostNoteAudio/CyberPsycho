@@ -51,7 +51,6 @@ void HandleAudio(DataBuffer* data)
     auto fpData = inProcessor.ConvertToFp(data);
     //auto min = Utils::Min(fpData.Cv[3], fpData.Size);
     //auto max = Utils::Max(fpData.Cv[3], fpData.Size);
-
     //LogInfof("Min: %f - Max: %f", min, max)
 
     for (int i = 0; i < 16; i++)
@@ -63,6 +62,7 @@ void HandleAudio(DataBuffer* data)
 
 void setup()
 {
+    Serial.begin(9600);
     //while(!Serial) {}
     Serial.println("Starting...");
 
@@ -78,7 +78,7 @@ void setup()
 }
 
 int tsLast = 0;
-int t, totalTime = 0;
+int t = 0;
 const int chunkSize = 16;
 int totalChunks = 1024 / chunkSize;
 
@@ -93,31 +93,17 @@ void transmitDisplay()
     if (t == -1)
     {
         txbufStart[0] = 0x00;
-        txbufStart[1] = 0x22;
-        txbufStart[2] = 0x00;
-        txbufStart[3] = 0xFF;
-        txbufStart[4] = 0x21;
-        txbufStart[5] = 0x00;
-        txbufStart[6] = 127;
-
+        txbufStart[1] = 0x22; // set page address
+        txbufStart[2] = 0x00; // first page
+        txbufStart[3] = 0xFF; // last page
+        txbufStart[4] = 0x21; // set column start address
+        txbufStart[5] = 0x00; // first column
+        txbufStart[6] = 127; // last column
         master.write_async(0x3C, txbufStart, 7, true);
-        //while (!master.finished()) {}
-
-        // Wire.beginTransmission(0x3C);
-        // Wire.write((uint8_t)0x00);
-        // Wire.write((uint8_t)0x22); // set page address
-        // Wire.write((uint8_t)0); // first page
-        // Wire.write((uint8_t)0xFF); // last page
-        // Wire.write((uint8_t)0x21); // set column start address
-        // Wire.write((uint8_t)0); // first column
-        // Wire.write((uint8_t)127); // last column
-        // Wire.endTransmission();
         t = 0;
         return;
     }
 
-    //menuManager.GetDisplay()->display();
-    
     txbuf[0] = (uint8_t)0x40;
     for (int i = 0; i < chunkSize; i++)
     {
@@ -125,24 +111,17 @@ void transmitDisplay()
     }
     
     master.write_async(0x3C, txbuf, 1+chunkSize, true);
-    //while (!master.finished()) {}
-    //Serial.println("Waiting for finish");
-    //while(!master.finished()) {}
-    //Serial.println("DONE!!");
-    
-    //Wire.beginTransmission(0x3C);
-    //Wire.write((uint8_t)0x40);
-    //Wire.write(ptr, chunkSize);
-    //Wire.endTransmission();
 
     t++;
     if (t == totalChunks)
         t = -1;
 }
 
+PerfTimer pt;
+
 void loop()
 {
-    
+    pt.Start();
     auto tsx = micros();
 
     if (tsx-tsLast > 1000000)
@@ -156,7 +135,9 @@ void loop()
         LogInfof("CPU load: %.2f%%", Timers::GetCpuLoad()*100);
         tsLast = tsx;
 
-        LogInfof("totalTime load: %d", totalTime);
+        LogInfof("time : %f", pt.Period());
+        LogInfof("time avg: %f", pt.PeriodAvg());
+        LogInfof("time max: %f", pt.PeriodMax());
     }
 
     
@@ -167,24 +148,15 @@ void loop()
         HandleAudio(buf);
         audio.EndAudioCallback();
 
-        int a = micros();
         controls.UpdatePotState(0);
         menuManager.HandlePotUpdate(0, controls.GetPot(0));
         menuManager.Render();
-        int b = micros();
-        totalTime = b-a;
     }
 
-    
     if (master.finished())
     {
         transmitDisplay();
     }
     
-    
-    
-    
-    //menuManager.Transfer();
-
-    //delay(100);
+    pt.Stop();
 }

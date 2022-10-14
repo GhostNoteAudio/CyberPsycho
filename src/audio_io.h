@@ -122,7 +122,7 @@ public:
         SampleAdc(3);
         SampleAdc(7);
         SetDac(0, BufTransmitting->Out[0][bufferIdx]);
-        SetDac(1, BufTransmitting->Out[1][bufferIdx]);
+        //SetDac(1, BufTransmitting->Out[1][bufferIdx]);
         //SetDac(2, BufTransmitting->Out[2][bufferIdx]);
         SetDac(3, BufTransmitting->Out[3][bufferIdx]);
 
