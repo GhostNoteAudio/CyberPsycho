@@ -1,3 +1,5 @@
+#pragma once
+
 #include <functional>
 #include <Adafruit_GFX.h>
 #include <Adafruit_SSD1306.h>
@@ -25,6 +27,14 @@ public:
         }
     }
 
+    int GetStringWidth(Adafruit_SSD1306* display, const char* str)
+    {
+        int16_t x, y;
+        uint16_t w, h;
+        display->getTextBounds(str, 0, 0, &x, &y, &w, &h);
+        return w;
+    }
+    
     void Render(Adafruit_SSD1306* display)
     {
         if (QuadMode)
@@ -33,13 +43,6 @@ public:
             RenderSerial(display);
     }
 
-    int GetStringWidth(Adafruit_SSD1306* display, const char* str)
-    {
-        int16_t x, y;
-        uint16_t w, h;
-        display->getTextBounds(str, 0, 0, &x, &y, &w, &h);
-        return w;
-    }
 
     void RenderSerial(Adafruit_SSD1306* display)
     {

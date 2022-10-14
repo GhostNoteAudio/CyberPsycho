@@ -12,6 +12,8 @@ class ControlManager
     const float PotScaler = 1.0 / (1023.0 - 2*PotDeadSpace);
 
 public:
+    bool EnableFilter = false;
+
     inline void UpdatePotState(int pot)   
     {
         int pin = 0;
@@ -19,7 +21,10 @@ public:
         if (pot == 1) pin = PIN_POT1;
         if (pot == 2) pin = PIN_POT2;
         if (pot == 3) pin = PIN_POT3;
-        PotState[pot] = PotState[pot] * 0.9 + analogRead(pin) * 0.1;
+        if (EnableFilter)
+            PotState[pot] = PotState[pot] * 0.9 + analogRead(pin) * 0.1;
+        else
+            PotState[pot] = analogRead(pin);
     }
 
     inline float GetPot(int pot)
@@ -41,10 +46,12 @@ public:
         int b2 = digitalRead(PIN_BTN2);
         int b3 = digitalRead(PIN_BTN3);
 
-        ButtonCounter[0] += (-1 + 2*b0);
-        ButtonCounter[1] += (-1 + 2*b1);
-        ButtonCounter[2] += (-1 + 2*b2);
-        ButtonCounter[3] += (-1 + 2*b3);
+        int scaler = EnableFilter ? 2 : 300;
+        int halfScaler = scaler >> 1;
+        ButtonCounter[0] += (-halfScaler + scaler*b0);
+        ButtonCounter[1] += (-halfScaler + scaler*b1);
+        ButtonCounter[2] += (-halfScaler + scaler*b2);
+        ButtonCounter[3] += (-halfScaler + scaler*b3);
 
         if (ButtonCounter[0] < 0)
             ButtonCounter[0] = 0;

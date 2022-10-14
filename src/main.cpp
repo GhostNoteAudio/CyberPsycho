@@ -1,5 +1,5 @@
 #include "Arduino.h"
-#include "display.h"
+#include "menu_manager.h"
 #include "menu.h"
 #include "controls.h"
 #include "audio_io.h"
@@ -7,11 +7,15 @@
 #include "logging.h"
 #include "input_processor.h"
 #include "utils.h"
+#include <i2c_driver_wire.h>
+
 InputProcessor inProcessor;
 AudioIo audio;
 Menu m;
-DisplayManager display;
-ControlManager buttons;
+MenuManager menuManager;
+ControlManager controls;
+
+I2CMaster& master = Master;
 
 void BuildMenu()
 {
@@ -38,15 +42,17 @@ void BuildMenu()
     m.TopItem = 0;
     m.EnableSelection = true;
     m.QuadMode = true;
+
+    Wire.setClock(1000000);
 }
 
 void HandleAudio(DataBuffer* data)
 {
     auto fpData = inProcessor.ConvertToFp(data);
-    auto min = Utils::Min(fpData.Cv[3], fpData.Size);
-    auto max = Utils::Max(fpData.Cv[3], fpData.Size);
+    //auto min = Utils::Min(fpData.Cv[3], fpData.Size);
+    //auto max = Utils::Max(fpData.Cv[3], fpData.Size);
 
-    LogInfof("Min: %f - Max: %f", min, max)
+    //LogInfof("Min: %f - Max: %f", min, max)
 
     for (int i = 0; i < 16; i++)
         data->Out[3][i] = data->Cv[3][i];
@@ -57,21 +63,86 @@ void HandleAudio(DataBuffer* data)
 
 void setup()
 {
-    while(!Serial) {}
+    //while(!Serial) {}
     Serial.println("Starting...");
 
     BuildMenu();
-    //pinMode(LED_BUILTIN,OUTPUT);
-    display.Init();
+    menuManager.Init();
+    menuManager.ActiveMenu = &m;
 
     audio.Init();
     audio.StartProcessing();
+    Serial.println("Done");
+
+    master.begin(1000000);
 }
 
 int tsLast = 0;
+int t, totalTime = 0;
+const int chunkSize = 16;
+int totalChunks = 1024 / chunkSize;
+
+uint8_t txbufStart[7];
+uint8_t txbuf[1 + chunkSize];
+
+void transmitDisplay()
+{
+    auto buffer = menuManager.GetDisplay()->getBuffer();
+    uint8_t *ptr = &buffer[t*chunkSize];
+    
+    if (t == -1)
+    {
+        txbufStart[0] = 0x00;
+        txbufStart[1] = 0x22;
+        txbufStart[2] = 0x00;
+        txbufStart[3] = 0xFF;
+        txbufStart[4] = 0x21;
+        txbufStart[5] = 0x00;
+        txbufStart[6] = 127;
+
+        master.write_async(0x3C, txbufStart, 7, true);
+        //while (!master.finished()) {}
+
+        // Wire.beginTransmission(0x3C);
+        // Wire.write((uint8_t)0x00);
+        // Wire.write((uint8_t)0x22); // set page address
+        // Wire.write((uint8_t)0); // first page
+        // Wire.write((uint8_t)0xFF); // last page
+        // Wire.write((uint8_t)0x21); // set column start address
+        // Wire.write((uint8_t)0); // first column
+        // Wire.write((uint8_t)127); // last column
+        // Wire.endTransmission();
+        t = 0;
+        return;
+    }
+
+    //menuManager.GetDisplay()->display();
+    
+    txbuf[0] = (uint8_t)0x40;
+    for (int i = 0; i < chunkSize; i++)
+    {
+        txbuf[i+1] = ptr[i];
+    }
+    
+    master.write_async(0x3C, txbuf, 1+chunkSize, true);
+    //while (!master.finished()) {}
+    //Serial.println("Waiting for finish");
+    //while(!master.finished()) {}
+    //Serial.println("DONE!!");
+    
+    //Wire.beginTransmission(0x3C);
+    //Wire.write((uint8_t)0x40);
+    //Wire.write(ptr, chunkSize);
+    //Wire.endTransmission();
+
+    t++;
+    if (t == totalChunks)
+        t = -1;
+}
 
 void loop()
 {
+    
     auto tsx = micros();
 
     if (tsx-tsLast > 1000000)
@@ -84,20 +155,36 @@ void loop()
 
         LogInfof("CPU load: %.2f%%", Timers::GetCpuLoad()*100);
         tsLast = tsx;
+
+        LogInfof("totalTime load: %d", totalTime);
     }
+
+    
     
     if (audio.Available())
     {
         auto buf = audio.BeginAudioCallback();
         HandleAudio(buf);
         audio.EndAudioCallback();
+
+        int a = micros();
+        controls.UpdatePotState(0);
+        menuManager.HandlePotUpdate(0, controls.GetPot(0));
+        menuManager.Render();
+        int b = micros();
+        totalTime = b-a;
     }
 
     
-    // m.Render(display.GetDisplay());
-    // display.Transfer();
-    // delay(1000);
-    // m.MoveDownPage();
-    //Serial.print("Adc Val: ");
-    //Serial.println(audio.AdcValues[7]);
+    if (master.finished())
+    {
+        transmitDisplay();
+    }
+    
+    
+    
+    
+    //menuManager.Transfer();
+
+    //delay(100);
 }
