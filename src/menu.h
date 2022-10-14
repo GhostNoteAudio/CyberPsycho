@@ -7,27 +7,53 @@
 class Menu
 {
     const int HEIGHT = 4;
+    int Length; // effective length, can be shorter than maxLength (N)
 
 public:
-    const char* Captions[32];
-    float Values[32];
+    const int MaxLength = 32;
+    const char* Captions[32] = {0};
+    float Values[32] = {0};
     std::function<void(float, char*)> Formatters[32];
+    std::function<void(int, float)> ValueChangedCallback = 0;
 
-    int Length;
     int TopItem;
     int SelectedItem;
     bool EnableSelection;
     bool QuadMode;
 
-    Menu()
+    inline Menu()
     {
-        for (int i = 0; i < 32; i++)
+        for (int i = 0; i < MaxLength; i++)
         {
             Formatters[i] = [](float v, char* dest) { sprintf(dest, "%.2f", v); };
         }
     }
 
-    int GetStringWidth(Adafruit_SSD1306* display, const char* str)
+    inline void SetValue(int idx, float value)
+    {
+        if (idx >= Length)
+            return;
+
+        Values[idx] = value;
+
+        if (ValueChangedCallback != 0)
+            ValueChangedCallback(idx, value);
+    }
+
+    inline int GetLength()
+    {
+        return Length;
+    }
+
+    inline void SetLength(int len)
+    {
+        if (len > MaxLength)
+            len = MaxLength;
+
+        Length = len;
+    }
+
+    inline int GetStringWidth(Adafruit_SSD1306* display, const char* str)
     {
         int16_t x, y;
         uint16_t w, h;
@@ -35,7 +61,7 @@ public:
         return w;
     }
     
-    void Render(Adafruit_SSD1306* display)
+    inline void Render(Adafruit_SSD1306* display)
     {
         if (QuadMode)
             RenderQuad(display);
@@ -44,7 +70,7 @@ public:
     }
 
 
-    void RenderSerial(Adafruit_SSD1306* display)
+    inline void RenderSerial(Adafruit_SSD1306* display)
     {
         display->clearDisplay();
         display->setTextSize(1);
@@ -77,7 +103,7 @@ public:
         }
     }
 
-    void RenderQuad(Adafruit_SSD1306* display)
+    inline void RenderQuad(Adafruit_SSD1306* display)
     {
         display->clearDisplay();
         display->setTextSize(1);
@@ -119,7 +145,7 @@ public:
         }
     }
 
-    void MoveDownPage()
+    inline void MoveDownPage()
     {
         MoveDown();
         MoveDown();
@@ -127,7 +153,7 @@ public:
         MoveDown();
     }
 
-    void MoveDown()
+    inline void MoveDown()
     {
         SelectedItem++;
         if (SelectedItem >= Length)
@@ -156,7 +182,7 @@ public:
         }
     }
 
-    void MoveUpPage()
+    inline void MoveUpPage()
     {
         MoveUp();
         MoveUp();
@@ -164,7 +190,7 @@ public:
         MoveUp();
     }
 
-    void MoveUp()
+    inline void MoveUp()
     {
         SelectedItem--;
         if (SelectedItem < 0)

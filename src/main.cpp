@@ -8,6 +8,7 @@
 #include "input_processor.h"
 #include "utils.h"
 #include <i2c_driver_wire.h>
+#include "periodic_execution.h"
 
 InputProcessor inProcessor;
 AudioIo audio;
@@ -15,7 +16,7 @@ Menu m;
 MenuManager menuManager;
 ControlManager controls;
 
-I2CMaster& master = Master;
+extern I2CMaster& master;
 
 void BuildMenu()
 {
@@ -37,7 +38,7 @@ void BuildMenu()
 
     m.Formatters[3] = [](float v, char* s) { v < 0.5 ? sprintf(s, "Off") : sprintf(s, "On"); };
 
-    m.Length = 7;
+    m.SetLength(7);
     m.SelectedItem = 3;
     m.TopItem = 0;
     m.EnableSelection = true;
@@ -59,7 +60,6 @@ void HandleAudio(DataBuffer* data)
     //delayMicroseconds(340);
 }
 
-
 void setup()
 {
     Serial.begin(9600);
@@ -77,54 +77,28 @@ void setup()
     master.begin(1000000);
 }
 
-int tsLast = 0;
-int t = 0;
-const int chunkSize = 16;
-int totalChunks = 1024 / chunkSize;
-
-uint8_t txbufStart[7];
-uint8_t txbuf[1 + chunkSize];
-
-void transmitDisplay()
-{
-    auto buffer = menuManager.GetDisplay()->getBuffer();
-    uint8_t *ptr = &buffer[t*chunkSize];
-    
-    if (t == -1)
-    {
-        txbufStart[0] = 0x00;
-        txbufStart[1] = 0x22; // set page address
-        txbufStart[2] = 0x00; // first page
-        txbufStart[3] = 0xFF; // last page
-        txbufStart[4] = 0x21; // set column start address
-        txbufStart[5] = 0x00; // first column
-        txbufStart[6] = 127; // last column
-        master.write_async(0x3C, txbufStart, 7, true);
-        t = 0;
-        return;
-    }
-
-    txbuf[0] = (uint8_t)0x40;
-    for (int i = 0; i < chunkSize; i++)
-    {
-        txbuf[i+1] = ptr[i];
-    }
-    
-    master.write_async(0x3C, txbuf, 1+chunkSize, true);
-
-    t++;
-    if (t == totalChunks)
-        t = -1;
-}
-
 PerfTimer pt;
+PeriodicExecution execPrint(1000);
+PeriodicExecution execPrintFast(100);
 
 void loop()
 {
-    pt.Start();
-    auto tsx = micros();
+    controls.UpdatePotState(0);
+    auto p = controls.GetPot(0);
 
-    if (tsx-tsLast > 1000000)
+    if (p.IsNew)
+    {
+        LogInfof("Pot value: %.2f :: momentum: %.1f", p.Value, controls.GetPotMomentum(0));
+    }
+
+    delay(1);
+
+    return;
+
+
+
+    pt.Start();
+    if (execPrint.Go())
     {
         if (audio.BufferUnderrun)
         {
@@ -133,15 +107,12 @@ void loop()
         }
 
         LogInfof("CPU load: %.2f%%", Timers::GetCpuLoad()*100);
-        tsLast = tsx;
 
         LogInfof("time : %f", pt.Period());
         LogInfof("time avg: %f", pt.PeriodAvg());
         LogInfof("time max: %f", pt.PeriodMax());
     }
 
-    
-    
     if (audio.Available())
     {
         auto buf = audio.BeginAudioCallback();
@@ -149,13 +120,15 @@ void loop()
         audio.EndAudioCallback();
 
         controls.UpdatePotState(0);
-        menuManager.HandlePotUpdate(0, controls.GetPot(0));
+        controls.UpdatePotState(1);
+        menuManager.HandlePotUpdate(0, controls.GetPot(0).Value);
+        menuManager.HandlePotUpdate(1, controls.GetPot(1).Value);
         menuManager.Render();
     }
 
     if (master.finished())
     {
-        transmitDisplay();
+        menuManager.Transfer();
     }
     
     pt.Stop();

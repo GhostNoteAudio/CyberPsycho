@@ -1,21 +1,41 @@
 #include "Arduino.h"
 #include "pins.h"
 
+struct PotUpdate
+{
+    float Value;
+    bool IsNew;
+
+    PotUpdate(float val, bool isNew)
+    {
+        Value = val;
+        IsNew = isNew;
+    }
+};
+
+// Note: Ideal update frequency for this is about 1Khz
 class ControlManager
 {
     int ButtonCounter[4] = {0};
     bool ButtonState[4] = {false};
     float PotState[4] = {0.0};
+    
+    // used to smooth pot behaviour
+    float PotMomentum[4] = {0.0};
+    float PotOutputValue[4] = {0.0};
 
     // clip the top and bottom range to ensure the pot can reach min and max reliably
     const int PotDeadSpace = 4;
-    const float PotScaler = 1.0 / (1023.0 - 2*PotDeadSpace);
+    const float PotScaler = 1024.0 / (1024.0 - 2*PotDeadSpace);
+    const int PotHysteresis = 4;
 
 public:
-    bool EnableFilter = false;
+    bool EnableFilter = true;
 
     inline void UpdatePotState(int pot)   
     {
+        float prevVal = PotState[pot];
+
         int pin = 0;
         if (pot == 0) pin = PIN_POT0;
         if (pot == 1) pin = PIN_POT1;
@@ -25,18 +45,54 @@ public:
             PotState[pot] = PotState[pot] * 0.9 + analogRead(pin) * 0.1;
         else
             PotState[pot] = analogRead(pin);
+
+        float delta = PotState[pot] - prevVal;
+        PotMomentum[pot] = PotMomentum[pot] * 0.99 + delta;
     }
 
-    inline float GetPot(int pot)
+    inline float GetPotMomentum(int pot)
     {
         if (pot < 0 || pot > 3)
             return 0;
 
-        float p = PotState[pot];
+        return PotMomentum[pot];
+    }
+
+private:
+    inline float ScalePot(float p)
+    {
         p = (p - PotDeadSpace) * PotScaler;
         p = p < 0 ? 0 : p;
-        p = p > 1 ? 1 : p;
+        p = p > 1023 ? 1023 : p;
         return p;
+    }
+
+public:
+    inline PotUpdate GetPot(int pot)
+    {
+        if (pot < 0 || pot > 3)
+            return PotUpdate(0, false);
+
+        float currentOutput = PotOutputValue[pot];
+        float p = ScalePot(PotState[pot]);
+        float delta = fabsf(p - currentOutput);
+
+        bool newValue = delta >= 1;
+        //LogInfof("potState: %.3f p: %.3f old: %.3f newValue: %d", PotState[pot], p, PotOutputValue[pot], newValue ? 1 : 0)
+        bool snapToMax = p >= 1022 && currentOutput != 1023;
+        bool snapToMin = p <= 1 && currentOutput != 0;
+
+        // new value is sufficiently different from old one, or momentum is high - emit new value
+        if (newValue && ((delta > PotHysteresis) || (fabsf(PotMomentum[pot]) > 1.5)) || snapToMax || snapToMin)
+        {
+            //LogInfof("Potstate: %.3f p: %.3f", PotState[pot], p);
+            PotOutputValue[pot] = p;
+            return PotUpdate(p, true);
+        }
+        else
+        {
+            return PotUpdate(PotOutputValue[pot], false);
+        }
     }
 
     inline void UpdateButtonState()
