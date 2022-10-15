@@ -1,25 +1,8 @@
 #include "Arduino.h"
-#include "menu_manager.h"
-#include "menu.h"
-#include "controls.h"
-#include "audio_io.h"
-#include "counter.h"
-#include "logging.h"
-#include "input_processor.h"
-#include "utils.h"
-#include <i2c_driver_wire.h>
-#include "periodic_execution.h"
-#include "timers.h"
-#include "audio_yield.h"
+#include "cyberpsycho.h"
 
-extern AudioIo audio;
-InputProcessor inProcessor;
 Menu m;
-MenuManager menuManager;
-ControlManager controls;
-
 extern I2CMaster& master;
-
 void BuildMenu()
 {
     m.Captions[0] = "Param 0";
@@ -45,8 +28,6 @@ void BuildMenu()
     m.TopItem = 0;
     m.EnableSelection = true;
     m.QuadMode = true;
-
-    Wire.setClock(1000000);
 }
 
 void HandleAudioFunction(DataBuffer* data)

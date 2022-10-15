@@ -10,7 +10,7 @@
 #include "constants.h"
 #include "logging.h"
 
-AudioIo audio;
+//extern AudioIo audio;
 
 void AudioIo::Init()
 {

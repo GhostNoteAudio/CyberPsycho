@@ -7,7 +7,7 @@
 #include "logging.h"
 #include "menu.h"
 
-I2CMaster& master = Master;
+extern I2CMaster& master;
 
 const int ChunkSize = 16;
 const int TotalChunks = 1024 / ChunkSize;
