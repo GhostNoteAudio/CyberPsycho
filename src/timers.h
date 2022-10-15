@@ -12,6 +12,8 @@ namespace Cyber
     PerfTimer* GetPerfYield();
     // Measures the length of time taken in the interrupt loop that sets up SPI comms with ADC/DAC
     PerfTimer* GetPerfIo();
+    // Returns estimated CPU Load by taking the max yield time, the average audio time and the IO time and summing together
+    float GetCpuLoad();
 
     const float MaxTimeInterruptMicros = 1000000.0 / SAMPLERATE;
     const float MaxTimeAudioProcessingMicros = 1000000.0 * BUFFER_SIZE / SAMPLERATE;
@@ -26,6 +28,7 @@ namespace Cyber
         float period = 0;
         float periodMax = 0;
         float periodAvg = 0;
+        float periodDecay = 0;
         
         bool maxExpired(int bMillis)
         {
@@ -63,6 +66,11 @@ namespace Cyber
                 periodMaxTimestamp = bMillis;
             }
 
+            if (periodLocal > periodDecay)
+            {
+                periodDecay = periodLocal;
+            }
+
             if (maxExpired(bMillis))
             {
                 periodMax = periodLocal;
@@ -71,6 +79,7 @@ namespace Cyber
 
             period = periodLocal;
             periodAvg = periodAvg * 0.99 + periodLocal * 0.01;
+            periodDecay *= 0.99999;
         }
 
         inline double Period()
@@ -86,6 +95,11 @@ namespace Cyber
         inline double PeriodAvg()
         {
             return periodAvg;
+        }
+
+        inline double PeriodDecay()
+        {
+            return periodDecay;
         }
     };
 

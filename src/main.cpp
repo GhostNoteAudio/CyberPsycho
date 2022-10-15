@@ -84,18 +84,24 @@ void loop()
         auto pi = GetPerfIo();
         //LogInfof("CPU load: %.2f%%", Timers::GetCpuLoad()*100);
 
-        LogInfof("Audio Time : %f %f %f", pa->Period(), pa->PeriodAvg(), pa->PeriodMax());
-        LogInfof("Yield Time : %f %f %f", py->Period(), py->PeriodAvg(), py->PeriodMax());
-        LogInfof("IO Time : %f %f %f", pi->Period(), pi->PeriodAvg(), pi->PeriodMax());
+        LogInfof("Audio Time : %f %f %f", pa->Period(), pa->PeriodAvg(), pa->PeriodDecay());
+        LogInfof("Yield Time : %f %f %f", py->Period(), py->PeriodAvg(), py->PeriodDecay());
+        LogInfof("IO Time : %f %f %f", pi->Period(), pi->PeriodAvg(), pi->PeriodDecay());
+        float cpuLoad = GetCpuLoad();
+        LogInfof("CPU Load: %.3f", cpuLoad);
         
     }
 
     YieldAudio();
 
-    if (updateMenu.Go())
+    if (updateState.Go())
     {
         controls.UpdatePotState(0);
         controls.UpdatePotState(1);
+    }
+
+    if (updateMenu.Go())
+    {
         menuManager.HandlePotUpdate(0, controls.GetPot(0).Value);
         menuManager.HandlePotUpdate(1, controls.GetPot(1).Value);
         menuManager.Render();
