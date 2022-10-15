@@ -1,8 +1,9 @@
 #include "Arduino.h"
 #include "cyberpsycho.h"
 
+using namespace Cyber;
 Menu m;
-extern I2CMaster& master;
+
 void BuildMenu()
 {
     m.Captions[0] = "Param 0";
@@ -57,7 +58,7 @@ void setup()
     audio.StartProcessing();
     Serial.println("Done");
 
-    master.begin(1000000);
+    i2cMaster.begin(1000000);
     HandleAudioCb = HandleAudioFunction;
 }
 
@@ -100,7 +101,7 @@ void loop()
 
     yieldAudio();
 
-    if (master.finished())
+    if (i2cMaster.finished())
     {
         menuManager.Transfer();
     }

@@ -1,11 +1,14 @@
 #pragma once
-#include <functional>
-#include "io_buffer.h"
 #include "counter.h"
+#include "io_buffer.h"
+#include <functional>
 
-extern std::function<void(DataBuffer* data)> HandleAudioCb;
+namespace Cyber
+{
+    extern std::function<void(DataBuffer* data)> HandleAudioCb;
 
-void yieldAudio();
+    void yieldAudio();
 
-PerfTimer* GetPerfAudio();
-PerfTimer* GetPerfYield();
+    PerfTimer* GetPerfAudio();
+    PerfTimer* GetPerfYield();
+}

@@ -13,8 +13,11 @@
 #include "utils.h"
 #include "timers.h"
 
-extern AudioIo audio;
-extern InputProcessor inProcessor;
-extern MenuManager menuManager;
-extern ControlManager controls;
-extern I2CMaster& master;
+namespace Cyber
+{
+    extern AudioIo audio;
+    extern InputProcessor inProcessor;
+    extern MenuManager menuManager;
+    extern ControlManager controls;
+    extern I2CMaster& i2cMaster;
+}

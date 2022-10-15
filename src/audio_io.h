@@ -2,39 +2,42 @@
 #include <Arduino.h>
 #include "io_buffer.h"
 
-class AudioIo
+namespace Cyber
 {
-private:
-    uint8_t AdcTxBuf[8][3];
-    uint8_t AdcRxBuf[8][3];
-    uint8_t DacTxBuf[4][2];
-    uint8_t DacRxBuf[2]; // discard
-    uint16_t AdcValues[8] = {0};
+    class AudioIo
+    {
+    private:
+        uint8_t AdcTxBuf[8][3];
+        uint8_t AdcRxBuf[8][3];
+        uint8_t DacTxBuf[4][2];
+        uint8_t DacRxBuf[2]; // discard
+        uint16_t AdcValues[8] = {0};
 
-public:
-    void Init();
-    void SampleAdc(int channel);
-    void ProcessAdcValues();
-    void SetDac(int channel, uint16_t value);
-    void LatchDac();
-    void StartProcessing();
-    void ProcessAudioX();
-    bool Available();
-    DataBuffer* BeginAudioProcessing();
-    void EndAudioProcessing();
+    public:
+        void Init();
+        void SampleAdc(int channel);
+        void ProcessAdcValues();
+        void SetDac(int channel, uint16_t value);
+        void LatchDac();
+        void StartProcessing();
+        void ProcessAudioX();
+        bool Available();
+        DataBuffer* BeginAudioProcessing();
+        void EndAudioProcessing();
 
-public:
-    IntervalTimer ioLoop;
-    DataBuffer BufferA;
-    DataBuffer BufferB;
-    int bufferIdx;
-    volatile DataBuffer* BufTransmitting;
-    volatile DataBuffer* BufProcessing;
-    volatile bool CallbackComplete;
+    public:
+        IntervalTimer ioLoop;
+        DataBuffer BufferA;
+        DataBuffer BufferB;
+        int bufferIdx;
+        volatile DataBuffer* BufTransmitting;
+        volatile DataBuffer* BufProcessing;
+        volatile bool CallbackComplete;
 
-public:
-    volatile bool BufferUnderrun;
-};
+    public:
+        volatile bool BufferUnderrun;
+    };
 
-extern AudioIo audio;
-void InvokeProcessAudio();
+    extern AudioIo audio;
+    void InvokeProcessAudio();
+}

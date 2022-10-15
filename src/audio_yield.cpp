@@ -2,38 +2,41 @@
 #include "audio_io.h"
 #include "logging.h"
 
-std::function<void(DataBuffer* data)> HandleAudioCb = 0;
-PerfTimer perfAudio; // measures the length of time actually spent processing audio
-PerfTimer perfYield; // measures the maximum length of time between calls to yield, blocked by other operations
-
-void yieldAudio()
+namespace Cyber
 {
-    perfYield.Stop();
+    std::function<void(DataBuffer* data)> HandleAudioCb = 0;
+    PerfTimer perfAudio; // measures the length of time actually spent processing audio
+    PerfTimer perfYield; // measures the maximum length of time between calls to yield, blocked by other operations
 
-    if (audio.Available())
+    void yieldAudio()
     {
-        perfAudio.Start();
-        auto buf = audio.BeginAudioProcessing();
-        if (HandleAudioCb == 0)
+        perfYield.Stop();
+
+        if (audio.Available())
         {
-            LogInfo("HandleAudioCb has not been set!");
-            return;
+            perfAudio.Start();
+            auto buf = audio.BeginAudioProcessing();
+            if (HandleAudioCb == 0)
+            {
+                LogInfo("HandleAudioCb has not been set!");
+                return;
+            }
+
+            HandleAudioCb(buf);
+            audio.EndAudioProcessing();
+            perfAudio.Stop();
         }
-        
-        HandleAudioCb(buf);
-        audio.EndAudioProcessing();
-        perfAudio.Stop();
+
+        perfYield.Start();
     }
 
-    perfYield.Start();
-}
+    PerfTimer* GetPerfAudio()
+    {
+        return &perfAudio;
+    }
 
-PerfTimer* GetPerfAudio()
-{
-    return &perfAudio;
-}
-
-PerfTimer* GetPerfYield()
-{
-    return &perfYield;
+    PerfTimer* GetPerfYield()
+    {
+        return &perfYield;
+    }
 }

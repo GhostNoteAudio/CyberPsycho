@@ -1,68 +1,71 @@
 #pragma once
 #include <Arduino.h>
 
-template<class T, int S>
-class CircularQueue
+namespace Cyber
 {
-    T data[S];
-    int idxWrite;
-    int idxRead;
-    int size;
-
-public:
-    CircularQueue()
+    template<class T, int S>
+    class CircularQueue
     {
-        idxWrite = 0;
-        idxRead = 0;
-        size = 0;
-    }
+        T data[S];
+        int idxWrite;
+        int idxRead;
+        int size;
 
-    void Push(T item)
-    {
-        data[idxWrite] = item;
-        idxWrite = (idxWrite + 1) % S;
-        size++;
-        if (size > S)
+    public:
+        CircularQueue()
         {
-            Serial.println("QUEUE OVERFLOW!");
-            size--;
+            idxWrite = 0;
+            idxRead = 0;
+            size = 0;
+        }
+
+        void Push(T item)
+        {
+            data[idxWrite] = item;
+            idxWrite = (idxWrite + 1) % S;
+            size++;
+            if (size > S)
+            {
+                Serial.println("QUEUE OVERFLOW!");
+                size--;
+                idxRead = (idxRead + 1) % S;
+            }
+        }
+
+        T Pop()
+        {
+            if (size <= 0)
+            {
+                Serial.println("QUEUE UNDERFLOW!");
+                return T();
+            }
+            
+            T item = data[idxRead];
             idxRead = (idxRead + 1) % S;
+            size--;
+            return item;
         }
-    }
 
-    T Pop()
-    {
-        if (size <= 0)
+        T Front()
         {
-            Serial.println("QUEUE UNDERFLOW!");
-            return T();
+            if (size <= 0)
+            {
+                Serial.println("QUEUE UNDERFLOW!");
+                return T();
+            }
+            
+            T item = data[idxRead];
+            return item;
         }
-        
-        T item = data[idxRead];
-        idxRead = (idxRead + 1) % S;
-        size--;
-        return item;
-    }
 
-    T Front()
-    {
-        if (size <= 0)
+        int Size()
         {
-            Serial.println("QUEUE UNDERFLOW!");
-            return T();
+            return size;
         }
-        
-        T item = data[idxRead];
-        return item;
-    }
 
-    int Size()
-    {
-        return size;
-    }
-
-    bool Empty()
-    {
-        return size == 0;
-    }
-};
+        bool Empty()
+        {
+            return size == 0;
+        }
+    };
+}

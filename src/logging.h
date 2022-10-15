@@ -1,19 +1,22 @@
 #pragma once
 #include "Arduino.h"
 
-extern int LogLevel;
-
-const int LogLevelDebug = 4;
-const int LogLevelInfo = 3;
-const int LogLevelWarn = 2;
-const int LogLevelError = 1;
-
-inline void SetLogLevel(int newLevel)
+namespace Cyber
 {
-    LogLevel = newLevel;
-}
+    extern int LogLevel;
 
-void ts();
+    const int LogLevelDebug = 4;
+    const int LogLevelInfo = 3;
+    const int LogLevelWarn = 2;
+    const int LogLevelError = 1;
+
+    inline void SetLogLevel(int newLevel)
+    {
+        LogLevel = newLevel;
+    }
+
+    void ts();
+}
 
 #define LogDebug(msg) { if (LogLevel >= LogLevelDebug) { ts(); Serial.println(msg); }}
 #define LogDebugf(fmt, ...) {if (LogLevel >= LogLevelDebug) { ts(); Serial.printf(fmt, __VA_ARGS__); Serial.println(""); }}

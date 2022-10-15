@@ -2,8 +2,11 @@
 
 // Definitions for singleton objects.
 
-AudioIo audio;
-InputProcessor inProcessor;
-MenuManager menuManager;
-ControlManager controls;
-I2CMaster& master = Master;
+namespace Cyber
+{
+    AudioIo audio;
+    InputProcessor inProcessor;
+    MenuManager menuManager;
+    ControlManager controls;
+    I2CMaster& i2cMaster = Master;
+}

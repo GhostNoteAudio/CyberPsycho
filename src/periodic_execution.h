@@ -1,34 +1,37 @@
 #pragma once
 #include <Arduino.h>
 
-class PeriodicExecution
+namespace Cyber
 {
-    int period = 1000;
-    int lastTs = 0;
-public:
-    PeriodicExecution(int millis)
+    class PeriodicExecution
     {
-        period = millis;
-    }
-
-    void Set(int millis)
-    {
-        period = millis;
-    }
-
-    void Clear()
-    {
-        lastTs = millis();
-    }
-
-    bool Go()
-    {
-        int m = millis();
-        if (m - lastTs >= period)
+        int period = 1000;
+        int lastTs = 0;
+    public:
+        PeriodicExecution(int millis)
         {
-            lastTs = m;
-            return true;
+            period = millis;
         }
-        return false;
-    }
-};
+
+        void Set(int millis)
+        {
+            period = millis;
+        }
+
+        void Clear()
+        {
+            lastTs = millis();
+        }
+
+        bool Go()
+        {
+            int m = millis();
+            if (m - lastTs >= period)
+            {
+                lastTs = m;
+                return true;
+            }
+            return false;
+        }
+    };
+}
