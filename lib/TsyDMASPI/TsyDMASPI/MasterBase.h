@@ -23,12 +23,54 @@ protected:
         uint8_t cs_pin;
     };
 
+    class SimpleQueue
+    {
+        spi_transaction_t data[16];
+        int frontIdx = 0;
+        int backIdx = 0;
+        int length = 0;
+    public:
+        inline void emplace_back(spi_transaction_t& item)
+        {
+            if (length >= 16)
+            {
+                Serial.println("BUFFER QUEUE OVERFLOW");
+                return;
+            }
+
+            data[backIdx] = item;
+            backIdx = (backIdx+1) & 0x0F; // mod 16
+            length++;
+        }
+
+        inline spi_transaction_t& front()
+        {
+            return data[frontIdx];
+        }
+
+        inline spi_transaction_t pop_front()
+        {
+            if (length == 0)
+                return spi_transaction_t();
+
+            spi_transaction_t output = data[frontIdx];
+            frontIdx = (frontIdx + 1) & 0x0F; // mod 16
+            length--;
+            return output;
+        }
+
+        inline int size() { return length; }
+        inline bool empty() { return length == 0; }
+
+    };
+
     SPIClass* spi;
     SPISettings spi_setting;
     bool b_active_low {true};
     uint8_t current_cs_pin;
 
-    std::deque<spi_transaction_t> transactions;
+    //std::deque<spi_transaction_t> transactions;
+    SimpleQueue transactions;
     bool b_in_transaction {false};
     volatile uint8_t dummy {0};
 
