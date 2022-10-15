@@ -7,9 +7,12 @@
 #include "io_buffer.h"
 #include "timers.h"
 #include "constants.h"
+#include "logging.h"
 
 
 void InvokeProcessAudio();
+TsyDMASPI::Master0* GetDma();
+
 
 class AudioIo
 {
