@@ -3,6 +3,7 @@
 #include <functional>
 #include <Adafruit_GFX.h>
 #include <Adafruit_SSD1306.h>
+#include "audio_yield.h"
 
 class Menu
 {
@@ -79,6 +80,7 @@ public:
 
         for (int i = 0; i < Height; i++)
         {
+            yieldAudio();
             auto item = TopItem + i;
             bool isSelected = (item == SelectedItem) && EnableSelection;
 
@@ -112,6 +114,7 @@ public:
 
         for (int i = 0; i < Height; i++)
         {
+            yieldAudio();
             auto item = TopItem + i;
             if (item >= Length)
                 break;

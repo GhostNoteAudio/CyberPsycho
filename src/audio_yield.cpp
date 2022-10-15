@@ -1,67 +1,39 @@
-// #include "audio_yield.h"
-//#include "audio_io.h"
+#include "audio_yield.h"
+#include "audio_io.h"
+#include "logging.h"
 
-// extern AudioIo audio;
+std::function<void(DataBuffer* data)> HandleAudioCb = 0;
+PerfTimer perfAudio; // measures the length of time actually spent processing audio
+PerfTimer perfYield; // measures the maximum length of time between calls to yield, blocked by other operations
 
-// std::function<void(DataBuffer* data)> HandleAudio = 0;
+void yieldAudio()
+{
+    perfYield.Stop();
 
-// void yieldAudio()
-// {
-//     return;
-//     if (audio.Available())
-//     {
-//         auto buf = audio.BeginAudioProcessing();
-//         HandleAudio(buf);
-//         audio.EndAudioProcessing();
-//     }
-// }
+    if (audio.Available())
+    {
+        perfAudio.Start();
+        auto buf = audio.BeginAudioProcessing();
+        if (HandleAudioCb == 0)
+        {
+            LogInfo("HandleAudioCb has not been set!");
+            return;
+        }
+        
+        HandleAudioCb(buf);
+        audio.EndAudioProcessing();
+        perfAudio.Stop();
+    }
 
+    perfYield.Start();
+}
 
+PerfTimer* GetPerfAudio()
+{
+    return &perfAudio;
+}
 
-
-// this is new loop state
-
-// void loop()
-// {
-//     pt.Start();
-//     if (execPrint.Go())
-//     {
-//         if (audio.BufferUnderrun)
-//         {
-//             LogInfo("Buffer Underrun!!");
-//             audio.BufferUnderrun = false;
-//         }
-
-//         LogInfof("CPU load: %.2f%%", Timers::GetCpuLoad()*100);
-
-//         LogInfof("time : %f", pt.Period());
-//         LogInfof("time avg: %f", pt.PeriodAvg());
-//         LogInfof("time max: %f", pt.PeriodMax());
-//     }
-
-//     if (updateState.Go())
-//     {
-//         controls.UpdatePotState(0);
-//         controls.UpdatePotState(1);
-//     }
-
-//     yieldAudio();
-
-//     if (updateMenu.Go())
-//     {
-//         auto p0 = controls.GetPot(0);
-//         auto p1 = controls.GetPot(1);
-//         menuManager.HandlePotUpdate(0, p0.Value);
-//         if (p1.IsNew)
-//             menuManager.HandlePotUpdate(1, p1.Value);
-
-//         menuManager.Render();
-//     }
-
-//     if (master.finished())
-//     {
-//         menuManager.Transfer();
-//     }
-    
-//     pt.Stop();
-// }
+PerfTimer* GetPerfYield()
+{
+    return &perfYield;
+}

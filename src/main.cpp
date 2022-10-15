@@ -9,10 +9,11 @@
 #include "utils.h"
 #include <i2c_driver_wire.h>
 #include "periodic_execution.h"
-//#include "audio_yield.h"
+#include "timers.h"
+#include "audio_yield.h"
 
+extern AudioIo audio;
 InputProcessor inProcessor;
-AudioIo audio;
 Menu m;
 MenuManager menuManager;
 ControlManager controls;
@@ -48,7 +49,7 @@ void BuildMenu()
     Wire.setClock(1000000);
 }
 
-void HandleAudio(DataBuffer* data)
+void HandleAudioFunction(DataBuffer* data)
 {
     auto fpData = inProcessor.ConvertToFp(data);
     //auto min = Utils::Min(fpData.Cv[3], fpData.Size);
@@ -58,7 +59,7 @@ void HandleAudio(DataBuffer* data)
     for (int i = 0; i < data->Size; i++)
         data->Out[3][i] = data->Cv[3][i];
 
-    //delayMicroseconds(240);
+    delayMicroseconds(240);
 }
 
 void setup()
@@ -76,10 +77,9 @@ void setup()
     Serial.println("Done");
 
     master.begin(1000000);
-    //HandleAudio = HandleAudioFunction;
+    HandleAudioCb = HandleAudioFunction;
 }
 
-PerfTimer pt;
 PeriodicExecution execPrint(1000);
 PeriodicExecution execPrintFast(100);
 PeriodicExecution updateState(1);
@@ -87,7 +87,8 @@ PeriodicExecution updateMenu(10);
 
 void loop()
 {
-    pt.Start();
+    yieldAudio();
+
     if (execPrint.Go())
     {
         if (audio.BufferUnderrun)
@@ -96,31 +97,30 @@ void loop()
             audio.BufferUnderrun = false;
         }
 
-        LogInfof("CPU load: %.2f%%", Timers::GetCpuLoad()*100);
+        auto py = GetPerfYield();
+        auto pa = GetPerfAudio();
+        //LogInfof("CPU load: %.2f%%", Timers::GetCpuLoad()*100);
 
-        LogInfof("time : %f", pt.Period());
-        LogInfof("time avg: %f", pt.PeriodAvg());
-        LogInfof("time max: %f", pt.PeriodMax());
+        LogInfof("Audio Time : %f %f %f", pa->Period(), pa->PeriodAvg(), pa->PeriodMax());
+        LogInfof("Yield Time : %f %f %f", py->Period(), py->PeriodAvg(), py->PeriodMax());
+        
     }
 
-    if (audio.Available())
-    {
-        auto buf = audio.BeginAudioProcessing();
-        HandleAudio(buf);
-        audio.EndAudioProcessing();
+    yieldAudio();
 
+    if (updateMenu.Go())
+    {
         controls.UpdatePotState(0);
         controls.UpdatePotState(1);
         menuManager.HandlePotUpdate(0, controls.GetPot(0).Value);
         menuManager.HandlePotUpdate(1, controls.GetPot(1).Value);
-
         menuManager.Render();
     }
+
+    yieldAudio();
 
     if (master.finished())
     {
         menuManager.Transfer();
     }
-    
-    pt.Stop();
 }
