@@ -39,9 +39,9 @@ void HandleAudioFunction(DataBuffer* data)
     //LogInfof("Min: %f - Max: %f", min, max)
 
     for (int i = 0; i < data->Size; i++)
-        data->Out[3][i] = data->Cv[3][i];
+        data->Out[3][i] = data->Mod[3][i];
 
-    delayMicroseconds(240);
+    //delayMicroseconds(240);
 }
 
 void setup()
@@ -69,7 +69,7 @@ PeriodicExecution updateMenu(10);
 
 void loop()
 {
-    yieldAudio();
+    YieldAudio();
 
     if (execPrint.Go())
     {
@@ -81,14 +81,16 @@ void loop()
 
         auto py = GetPerfYield();
         auto pa = GetPerfAudio();
+        auto pi = GetPerfIo();
         //LogInfof("CPU load: %.2f%%", Timers::GetCpuLoad()*100);
 
         LogInfof("Audio Time : %f %f %f", pa->Period(), pa->PeriodAvg(), pa->PeriodMax());
         LogInfof("Yield Time : %f %f %f", py->Period(), py->PeriodAvg(), py->PeriodMax());
+        LogInfof("IO Time : %f %f %f", pi->Period(), pi->PeriodAvg(), pi->PeriodMax());
         
     }
 
-    yieldAudio();
+    YieldAudio();
 
     if (updateMenu.Go())
     {
@@ -99,7 +101,7 @@ void loop()
         menuManager.Render();
     }
 
-    yieldAudio();
+    YieldAudio();
 
     if (i2cMaster.finished())
     {

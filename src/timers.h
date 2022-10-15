@@ -1,27 +1,93 @@
 #pragma once
-#include <Arduino.h>
+#include "counter.h"
+#include "constants.h"
 
 namespace Cyber
 {
-    class Timers
-    {
-    public:
-        static const int TIMER_COUNT = 20;
-        static const uint8_t TIMER_TOTAL = 19;
-        static float TimeAvg[TIMER_COUNT];
-        static float TimePeak[TIMER_COUNT];
-        static float TimeMax[TIMER_COUNT];
+    class PerfTimer;
+    
+    // measures the length of time actually spent processing audio
+    PerfTimer* GetPerfAudio();
+    // measures the maximum length of time between calls to yield, blocked by other operations
+    PerfTimer* GetPerfYield();
+    // Measures the length of time taken in the interrupt loop that sets up SPI comms with ADC/DAC
+    PerfTimer* GetPerfIo();
 
-        static void Lap(uint8_t timerIndex);
-        static float GetAvg(uint8_t timerIndex=0);
-        static float GetPeak(uint8_t timerIndex=0);
-        static float GetMax(uint8_t timerIndex=0);
-        static void Clear(uint8_t timerIndex=0);
-        static float GetAvgPeriod();
-        static float GetCpuLoad();
-        static void ResetFrame();
-    private:
-        static int TimeFrameStart;
-        static float TimeFramePeriod;
+    const float MaxTimeInterruptMicros = 1000000.0 / SAMPLERATE;
+    const float MaxTimeAudioProcessingMicros = 1000000.0 * BUFFER_SIZE / SAMPLERATE;
+
+    // Very accurate sub-microsecond timer for short periods
+    class PerfTimer
+    {
+        int64_t a, b;
+        int aMillis, bMillis;
+        int periodMaxTimestamp = 0;
+
+        float period = 0;
+        float periodMax = 0;
+        float periodAvg = 0;
+        
+        bool maxExpired(int bMillis)
+        {
+            // hold for 3 seconds
+            return (bMillis - periodMaxTimestamp) > 3000;
+        }
+    public:
+        inline void Start()
+        {
+            a = GetCounter();
+            aMillis = millis();
+        }
+
+        inline void Stop()
+        {
+            b = GetCounter();
+            bMillis = millis();
+            double periodLocal = 0;
+
+            // fall back to less precise timer for long periods > 10 sec
+            if (bMillis - aMillis > 10000)
+            {
+                periodLocal = (bMillis - aMillis) * 1000;
+            }
+            else
+            {
+                if (b < a)
+                    b += UINT32_MAX;
+                periodLocal = ((double)(b-a)) / F_CPU * 1000000.0;
+            }
+            
+            if (periodLocal > periodMax)
+            {
+                periodMax = periodLocal;
+                periodMaxTimestamp = bMillis;
+            }
+
+            if (maxExpired(bMillis))
+            {
+                periodMax = periodLocal;
+                periodMaxTimestamp = bMillis;
+            }
+
+            period = periodLocal;
+            periodAvg = periodAvg * 0.99 + periodLocal * 0.01;
+        }
+
+        inline double Period()
+        {
+            return period;
+        }
+
+        inline double PeriodMax()
+        {
+            return periodMax;
+        }
+
+        inline double PeriodAvg()
+        {
+            return periodAvg;
+        }
     };
+
+    
 }

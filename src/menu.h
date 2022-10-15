@@ -82,7 +82,7 @@ namespace Cyber
 
             for (int i = 0; i < Height; i++)
             {
-                yieldAudio();
+                YieldAudio();
                 auto item = TopItem + i;
                 bool isSelected = (item == SelectedItem) && EnableSelection;
 
@@ -116,7 +116,7 @@ namespace Cyber
 
             for (int i = 0; i < Height; i++)
             {
-                yieldAudio();
+                YieldAudio();
                 auto item = TopItem + i;
                 if (item >= Length)
                     break;

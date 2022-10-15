@@ -1,20 +1,19 @@
 #include "audio_yield.h"
 #include "audio_io.h"
 #include "logging.h"
+#include "timers.h"
 
 namespace Cyber
 {
     std::function<void(DataBuffer* data)> HandleAudioCb = 0;
-    PerfTimer perfAudio; // measures the length of time actually spent processing audio
-    PerfTimer perfYield; // measures the maximum length of time between calls to yield, blocked by other operations
-
-    void yieldAudio()
+    
+    void YieldAudio()
     {
-        perfYield.Stop();
+        GetPerfYield()->Stop();
 
         if (audio.Available())
         {
-            perfAudio.Start();
+            GetPerfAudio()->Start();
             auto buf = audio.BeginAudioProcessing();
             if (HandleAudioCb == 0)
             {
@@ -24,19 +23,9 @@ namespace Cyber
 
             HandleAudioCb(buf);
             audio.EndAudioProcessing();
-            perfAudio.Stop();
+            GetPerfAudio()->Stop();
         }
 
-        perfYield.Start();
-    }
-
-    PerfTimer* GetPerfAudio()
-    {
-        return &perfAudio;
-    }
-
-    PerfTimer* GetPerfYield()
-    {
-        return &perfYield;
+        GetPerfYield()->Start();
     }
 }

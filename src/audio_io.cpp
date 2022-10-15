@@ -78,6 +78,14 @@ namespace Cyber
 
     void AudioIo::ProcessAudioX()
     {
+        GetPerfIo()->Start();
+        
+        if (TsyDMASPI0.remained() > 0)
+        {
+            BufferUnderrun = true;
+            return;
+        }
+
         // wait for value from previous iteration to be complete. Hopefully should never block
         TsyDMASPI0.yield();
         // Emit the DAC values that were previously sent to the output
@@ -99,10 +107,13 @@ namespace Cyber
         BufTransmitting->Gate[3][bufferIdx] = digitalReadFast(PIN_GATE3);
         
         SampleAdc(3);
+        SampleAdc(4);
+        //SampleAdc(5);
+        SampleAdc(6);
         SampleAdc(7);
-        SetDac(0, BufTransmitting->Out[0][bufferIdx]);
+        //SetDac(0, BufTransmitting->Out[0][bufferIdx]);
         //SetDac(1, BufTransmitting->Out[1][bufferIdx]);
-        //SetDac(2, BufTransmitting->Out[2][bufferIdx]);
+        SetDac(2, BufTransmitting->Out[2][bufferIdx]);
         SetDac(3, BufTransmitting->Out[3][bufferIdx]);
 
         bufferIdx++;
@@ -119,6 +130,8 @@ namespace Cyber
             BufProcessing = tmp;
             CallbackComplete = false;
         }
+
+        GetPerfIo()->Stop();
     }
 
     bool AudioIo::Available()
@@ -131,14 +144,12 @@ namespace Cyber
         if (CallbackComplete)
             return 0;
 
-        Timers::ResetFrame();
         return const_cast<DataBuffer*>(BufProcessing);
     }
 
     void AudioIo::EndAudioProcessing()
     {
         CallbackComplete = true;
-        Timers::Lap(Timers::TIMER_TOTAL);
     }
 
 

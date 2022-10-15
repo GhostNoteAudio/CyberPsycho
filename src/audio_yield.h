@@ -7,8 +7,5 @@ namespace Cyber
 {
     extern std::function<void(DataBuffer* data)> HandleAudioCb;
 
-    void yieldAudio();
-
-    PerfTimer* GetPerfAudio();
-    PerfTimer* GetPerfYield();
+    void YieldAudio();
 }
