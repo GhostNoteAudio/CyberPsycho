@@ -127,7 +127,7 @@ public:
         SetDac(3, BufTransmitting->Out[3][bufferIdx]);
 
         bufferIdx++;
-        if (bufferIdx == 16)
+        if (bufferIdx == BUFFER_SIZE)
         {
             if (!CallbackComplete)
             {

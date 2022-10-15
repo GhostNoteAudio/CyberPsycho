@@ -87,18 +87,6 @@ PeriodicExecution updateMenu(10);
 
 void loop()
 {
-    controls.UpdatePotState(0);
-    auto p = controls.GetPot(0);
-
-    if (p.IsNew)
-    {
-        LogInfof("Pot value: %.2f :: momentum: %.1f", p.Value, controls.GetPotMomentum(0));
-    }
-
-    delay(1);
-
-    return;
-
     pt.Start();
     if (execPrint.Go())
     {
