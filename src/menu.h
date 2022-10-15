@@ -6,7 +6,7 @@
 
 class Menu
 {
-    const int HEIGHT = 4;
+    const int Height = 4;
     int Length; // effective length, can be shorter than maxLength (N)
 
 public:
@@ -77,7 +77,7 @@ public:
 
         char val[16];
 
-        for (int i = 0; i < HEIGHT; i++)
+        for (int i = 0; i < Height; i++)
         {
             auto item = TopItem + i;
             bool isSelected = (item == SelectedItem) && EnableSelection;
@@ -110,7 +110,7 @@ public:
 
         char val[16];
 
-        for (int i = 0; i < HEIGHT; i++)
+        for (int i = 0; i < Height; i++)
         {
             auto item = TopItem + i;
             if (item >= Length)
@@ -168,7 +168,7 @@ public:
                 TopItem = 0;
             }
         }
-        if (SelectedItem - TopItem >= HEIGHT)
+        if (SelectedItem - TopItem >= Height)
         {
             if (QuadMode)
             {
@@ -203,7 +203,7 @@ public:
             else
             {
                 SelectedItem = Length - 1;
-                TopItem = SelectedItem - HEIGHT + 1;
+                TopItem = SelectedItem - Height + 1;
             }
         }
         if (SelectedItem < TopItem)

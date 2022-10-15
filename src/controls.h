@@ -27,7 +27,8 @@ class ControlManager
     // clip the top and bottom range to ensure the pot can reach min and max reliably
     const int PotDeadSpace = 4;
     const float PotScaler = 1024.0 / (1024.0 - 2*PotDeadSpace);
-    const int PotHysteresis = 4;
+    const float Pot10BitScale = 1.0 / 1023.0;
+    const int PotHysteresis = 8;
 
 public:
     bool EnableFilter = true;
@@ -48,6 +49,8 @@ public:
 
         float delta = PotState[pot] - prevVal;
         PotMomentum[pot] = PotMomentum[pot] * 0.99 + delta;
+        PotMomentum[pot] = PotMomentum[pot] > 10 ? 10 : PotMomentum[pot];
+        PotMomentum[pot] = PotMomentum[pot] < -10 ? -10 : PotMomentum[pot];
     }
 
     inline float GetPotMomentum(int pot)
@@ -68,6 +71,11 @@ private:
     }
 
 public:
+    inline float GetPotRaw(int pot)
+    {
+        return ScalePot(PotState[pot]) * Pot10BitScale;
+    }
+
     inline PotUpdate GetPot(int pot)
     {
         if (pot < 0 || pot > 3)
@@ -75,23 +83,24 @@ public:
 
         float currentOutput = PotOutputValue[pot];
         float p = ScalePot(PotState[pot]);
+        
+        // Talk about over-engineered :)
         float delta = fabsf(p - currentOutput);
+        bool beyondHyst = delta > PotHysteresis;
+        bool isNew = delta > 0.0001;
+        bool atLeast1Different = delta >= 1;
+        bool highMomentum = fabsf(PotMomentum[pot]) > 1.5;
+        bool maxBoundary = p == 1023;
+        bool minBoundary = p == 0;
 
-        bool newValue = delta >= 1;
-        //LogInfof("potState: %.3f p: %.3f old: %.3f newValue: %d", PotState[pot], p, PotOutputValue[pot], newValue ? 1 : 0)
-        bool snapToMax = p >= 1022 && currentOutput != 1023;
-        bool snapToMin = p <= 1 && currentOutput != 0;
-
-        // new value is sufficiently different from old one, or momentum is high - emit new value
-        if (newValue && ((delta > PotHysteresis) || (fabsf(PotMomentum[pot]) > 1.5)) || snapToMax || snapToMin)
+        if ((isNew && beyondHyst) || (isNew && highMomentum && atLeast1Different) || (isNew && (maxBoundary || minBoundary)))
         {
-            //LogInfof("Potstate: %.3f p: %.3f", PotState[pot], p);
             PotOutputValue[pot] = p;
-            return PotUpdate(p, true);
+            return PotUpdate(p * Pot10BitScale, true);
         }
         else
         {
-            return PotUpdate(PotOutputValue[pot], false);
+            return PotUpdate(PotOutputValue[pot] * Pot10BitScale, false);
         }
     }
 

@@ -147,7 +147,7 @@ public:
         return !CallbackComplete;
     }
 
-    DataBuffer* BeginAudioCallback()
+    DataBuffer* BeginAudioProcessing()
     {
         if (CallbackComplete)
             return 0;
@@ -156,7 +156,7 @@ public:
         return const_cast<DataBuffer*>(BufProcessing);
     }
 
-    void EndAudioCallback()
+    void EndAudioProcessing()
     {
         CallbackComplete = true;
         Timers::Lap(Timers::TIMER_TOTAL);

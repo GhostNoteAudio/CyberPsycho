@@ -9,6 +9,7 @@
 #include "utils.h"
 #include <i2c_driver_wire.h>
 #include "periodic_execution.h"
+//#include "audio_yield.h"
 
 InputProcessor inProcessor;
 AudioIo audio;
@@ -54,10 +55,10 @@ void HandleAudio(DataBuffer* data)
     //auto max = Utils::Max(fpData.Cv[3], fpData.Size);
     //LogInfof("Min: %f - Max: %f", min, max)
 
-    for (int i = 0; i < 16; i++)
+    for (int i = 0; i < data->Size; i++)
         data->Out[3][i] = data->Cv[3][i];
 
-    //delayMicroseconds(340);
+    //delayMicroseconds(240);
 }
 
 void setup()
@@ -75,11 +76,14 @@ void setup()
     Serial.println("Done");
 
     master.begin(1000000);
+    //HandleAudio = HandleAudioFunction;
 }
 
 PerfTimer pt;
 PeriodicExecution execPrint(1000);
 PeriodicExecution execPrintFast(100);
+PeriodicExecution updateState(1);
+PeriodicExecution updateMenu(10);
 
 void loop()
 {
@@ -94,8 +98,6 @@ void loop()
     delay(1);
 
     return;
-
-
 
     pt.Start();
     if (execPrint.Go())
@@ -115,14 +117,15 @@ void loop()
 
     if (audio.Available())
     {
-        auto buf = audio.BeginAudioCallback();
+        auto buf = audio.BeginAudioProcessing();
         HandleAudio(buf);
-        audio.EndAudioCallback();
+        audio.EndAudioProcessing();
 
         controls.UpdatePotState(0);
         controls.UpdatePotState(1);
         menuManager.HandlePotUpdate(0, controls.GetPot(0).Value);
         menuManager.HandlePotUpdate(1, controls.GetPot(1).Value);
+
         menuManager.Render();
     }
 
