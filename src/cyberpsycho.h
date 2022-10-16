@@ -1,5 +1,5 @@
 #include "Arduino.h"
-#include "menu_manager.h"
+#include "display_manager.h"
 #include "controls.h"
 #include "audio_io.h"
 #include "input_processor.h"
@@ -17,7 +17,7 @@ namespace Cyber
 {
     extern AudioIo audio;
     extern InputProcessor inProcessor;
-    extern MenuManager menuManager;
+    extern DisplayManager displayManager;
     extern ControlManager controls;
     extern I2CMaster& i2cMaster;
 }

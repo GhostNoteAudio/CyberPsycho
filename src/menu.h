@@ -18,11 +18,18 @@ namespace Cyber
         float Values[32] = {0};
         std::function<void(float, char*)> Formatters[32];
         std::function<void(int, float)> ValueChangedCallback = 0;
+        std::function<void(Adafruit_SSD1306*)> RenderCustomDisplayCallback = 0;
+        
+        //Todo: Implement these, build "default" implementations that work for most menus, like switch handling which should almost always be the same
+        std::function<void(Menu*, int)> HandleEncoderUpdate = 0;
+        std::function<void(Menu*, int, float)> HandlePotUpdate = 0;
+        std::function<void(Menu*, int, bool)> HandleSwitchUpdate = 0;
 
-        int TopItem;
-        int SelectedItem;
-        bool EnableSelection;
-        bool QuadMode;
+        int TopItem = 0;
+        int SelectedItem = 0;
+        bool EnableSelection = true;
+        bool QuadMode = false;
+        bool CustomOnlyMode = false;
 
         inline Menu()
         {
@@ -66,12 +73,17 @@ namespace Cyber
         
         inline void Render(Adafruit_SSD1306* display)
         {
-            if (QuadMode)
-                RenderQuad(display);
-            else
-                RenderSerial(display);
-        }
+            if (!CustomOnlyMode)
+            {
+                if (QuadMode)
+                    RenderQuad(display);
+                else
+                    RenderSerial(display);
+            }
 
+            if (RenderCustomDisplayCallback != 0)
+                RenderCustomDisplayCallback(display);
+        }
 
         inline void RenderSerial(Adafruit_SSD1306* display)
         {
@@ -96,11 +108,12 @@ namespace Cyber
                     display->setTextColor(SSD1306_WHITE);
                 }
 
+                YieldAudio();
                 display->setCursor(2, 4 + 16 * i);
                 display->println(Captions[item]);
 
+                YieldAudio();
                 Formatters[item](Values[item], val);
-                
                 int w = GetStringWidth(display, val);
                 display->setCursor(display->width() - w - 2, 4 + 16 * i);
                 display->println(val);
@@ -136,13 +149,15 @@ namespace Cyber
                     display->setTextColor(SSD1306_WHITE);
                 }
 
+                YieldAudio();
+
                 int w = GetStringWidth(display, Captions[item]);
                 int xPos = x == 0 ? 2 : display->width() - 2 - w;
                 display->setCursor(xPos, 4 + 32 * y);
                 display->println(Captions[item]);
 
+                YieldAudio();
                 Formatters[item](Values[item], val);
-                
                 w = GetStringWidth(display, val);
                 xPos = x == 0 ? 2 : display->width() - 2 - w;
                 display->setCursor(xPos, 4 + 16 * (2*y+1));

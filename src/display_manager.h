@@ -14,7 +14,7 @@ namespace Cyber
     const int ChunkSize = 16;
     const int TotalChunks = 1024 / ChunkSize;
 
-    class MenuManager
+    class DisplayManager
     {
         const int SCREEN_WIDTH = 128;
         const int SCREEN_HEIGHT = 64;
@@ -25,7 +25,7 @@ namespace Cyber
     public:
         Menu* ActiveMenu;
 
-        inline MenuManager() : display(SCREEN_WIDTH, SCREEN_HEIGHT, &Wire, OLED_RESET, 1000000, 1000000)
+        inline DisplayManager() : display(SCREEN_WIDTH, SCREEN_HEIGHT, &Wire, OLED_RESET, 1000000, 1000000)
         {
             ActiveMenu = 0;
         }

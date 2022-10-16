@@ -30,7 +30,7 @@ namespace Cyber
         const int PotDeadSpace = 4;
         const float PotScaler = 1024.0 / (1024.0 - 2*PotDeadSpace);
         const float Pot10BitScale = 1.0 / 1023.0;
-        const int PotHysteresis = 8;
+        const int PotHysteresis = 10;
 
     public:
         bool EnableFilter = true;
@@ -89,9 +89,9 @@ namespace Cyber
             // Talk about over-engineered :)
             float delta = fabsf(p - currentOutput);
             bool beyondHyst = delta > PotHysteresis;
-            bool isNew = delta > 0.0001;
+            bool isNew = delta > 0.001;
             bool atLeast1Different = delta >= 1;
-            bool highMomentum = fabsf(PotMomentum[pot]) > 1.5;
+            bool highMomentum = fabsf(PotMomentum[pot]) > 2;
             bool maxBoundary = p == 1023;
             bool minBoundary = p == 0;
 

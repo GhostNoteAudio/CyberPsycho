@@ -6,7 +6,7 @@ namespace Cyber
 {
     AudioIo audio;
     InputProcessor inProcessor;
-    MenuManager menuManager;
+    DisplayManager displayManager;
     ControlManager controls;
     I2CMaster& i2cMaster = Master;
 }
