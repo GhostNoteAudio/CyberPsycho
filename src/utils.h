@@ -88,7 +88,7 @@ namespace Cyber
             T max = std::numeric_limits<T>::min();
             for (int i = 0; i < len; i++)
             {
-                float val = data[i];
+                T val = data[i];
                 max = val > max ? val : max;
             }
             return max;
@@ -100,10 +100,21 @@ namespace Cyber
             T min = std::numeric_limits<T>::max();
             for (int i = 0; i < len; i++)
             {
-                float val = data[i];
+                T val = data[i];
                 min = val < min ? val : min;
             }
             return min;
+        }
+
+        template<typename T>
+        inline T Mean(T* data, int len)
+        {
+            T sum = 0;
+            for (int i = 0; i < len; i++)
+            {
+                sum += data[i];
+            }
+            return sum / len;
         }
 
         inline float DB2Gainf(float input)

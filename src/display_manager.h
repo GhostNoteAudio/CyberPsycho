@@ -5,7 +5,7 @@
 #include <Adafruit_SSD1306.h>
 
 #include "logging.h"
-#include "menu.h"
+#include "menus.h"
 
 namespace Cyber
 {
@@ -23,11 +23,9 @@ namespace Cyber
         Adafruit_SSD1306 display;
 
     public:
-        Menu* ActiveMenu;
-
         inline DisplayManager() : display(SCREEN_WIDTH, SCREEN_HEIGHT, &Wire, OLED_RESET, 1000000, 1000000)
         {
-            ActiveMenu = 0;
+            Menus::ActiveMenu = 0;
         }
 
         inline void Init()
@@ -38,28 +36,9 @@ namespace Cyber
             }
         }
 
-        inline void HandlePotUpdate(int idx, float value)
-        {
-            if (!ActiveMenu)
-                return;
-
-            if (idx == 0)
-            {
-                int selectedIdx = (value-0.001) * ActiveMenu->GetLength();
-                while(ActiveMenu->SelectedItem < selectedIdx)
-                    ActiveMenu->MoveDown();
-                while(ActiveMenu->SelectedItem > selectedIdx)
-                    ActiveMenu->MoveUp();
-            }
-            if (idx == 1)
-            {
-                ActiveMenu->SetValue(ActiveMenu->SelectedItem, value);
-            }
-        }
-
         inline void Render()
         {
-            ActiveMenu->Render(GetDisplay());
+            Menus::ActiveMenu->Render(GetDisplay());
         }
         
         inline void Clear()

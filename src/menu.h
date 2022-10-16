@@ -4,9 +4,21 @@
 #include <Adafruit_GFX.h>
 #include <Adafruit_SSD1306.h>
 #include "audio_yield.h"
+#include <fonts/font.h>
+#include <fonts/font2.h>
+#include <fonts/font3.h>
 
 namespace Cyber
 {
+    class Menu;
+
+    namespace Menus
+    {
+        void HandleEncoderDefault(Menu* menu, int tick);
+        void HandlePotDefault(Menu* menu, int idx, float value);
+        void HandleSwitchDefault(Menu* menu, int idx, bool value);
+    }
+
     class Menu
     {
         const int Height = 4;
@@ -21,9 +33,9 @@ namespace Cyber
         std::function<void(Adafruit_SSD1306*)> RenderCustomDisplayCallback = 0;
         
         //Todo: Implement these, build "default" implementations that work for most menus, like switch handling which should almost always be the same
-        std::function<void(Menu*, int)> HandleEncoderUpdate = 0;
-        std::function<void(Menu*, int, float)> HandlePotUpdate = 0;
-        std::function<void(Menu*, int, bool)> HandleSwitchUpdate = 0;
+        std::function<void(Menu*, int)> HandleEncoderCallback = Menus::HandleEncoderDefault;
+        std::function<void(Menu*, int, float)> HandlePotCallback = Menus::HandlePotDefault;
+        std::function<void(Menu*, int, bool)> HandleSwitchCallback = Menus::HandleSwitchDefault;
 
         int TopItem = 0;
         int SelectedItem = 0;
@@ -39,9 +51,35 @@ namespace Cyber
             }
         }
 
+        inline void HandleEncoder(int tick)
+        {
+            HandleEncoderCallback(this, tick);
+        }
+
+        inline void HandlePot(int idx, float value)
+        {
+            HandlePotCallback(this, idx, value);
+        }
+
+        inline void HandleSwitch(int idx, bool value)
+        {
+            HandleSwitchCallback(this, idx, value);
+        }
+
+        inline void SetSelectedItem(int idx)
+        {
+            if (idx < 0) idx = 0;
+            if (idx >= Length) idx = Length - 1;
+            
+            while(SelectedItem < idx)
+                MoveDown();
+            while(SelectedItem > idx)
+                MoveUp();
+        }
+
         inline void SetValue(int idx, float value)
         {
-            if (idx >= Length)
+            if (idx >= Length || idx < 0)
                 return;
 
             Values[idx] = value;
@@ -88,14 +126,18 @@ namespace Cyber
         inline void RenderSerial(Adafruit_SSD1306* display)
         {
             display->clearDisplay();
+            display->setFont(&AtlantisInternational_jen08pt7b);
             display->setTextSize(1);
-
+                
             char val[16];
 
             for (int i = 0; i < Height; i++)
             {
                 YieldAudio();
                 auto item = TopItem + i;
+                if (item >= Length)
+                    break;
+
                 bool isSelected = (item == SelectedItem) && EnableSelection;
 
                 if (isSelected)
@@ -109,13 +151,13 @@ namespace Cyber
                 }
 
                 YieldAudio();
-                display->setCursor(2, 4 + 16 * i);
+                display->setCursor(2, 10 + 16 * i);
                 display->println(Captions[item]);
 
                 YieldAudio();
                 Formatters[item](Values[item], val);
                 int w = GetStringWidth(display, val);
-                display->setCursor(display->width() - w - 2, 4 + 16 * i);
+                display->setCursor(display->width() - w - 2, 10 + 16 * i);
                 display->println(val);
             }
         }
@@ -153,14 +195,14 @@ namespace Cyber
 
                 int w = GetStringWidth(display, Captions[item]);
                 int xPos = x == 0 ? 2 : display->width() - 2 - w;
-                display->setCursor(xPos, 4 + 32 * y);
+                display->setCursor(xPos, 10 + 32 * y);
                 display->println(Captions[item]);
 
                 YieldAudio();
                 Formatters[item](Values[item], val);
                 w = GetStringWidth(display, val);
                 xPos = x == 0 ? 2 : display->width() - 2 - w;
-                display->setCursor(xPos, 4 + 16 * (2*y+1));
+                display->setCursor(xPos, 10 + 16 * (2*y+1));
                 display->println(val);
             }
         }

@@ -2,13 +2,80 @@
 #include <fonts/font.h>
 #include <fonts/font2.h>
 #include <fonts/font3.h>
+#include "utils.h"
+#include "logging.h"
 
 namespace Cyber
 {
+    namespace Scope
+    {
+        extern uint16_t data[128];
+        extern uint8_t downsampling;
+        extern uint16_t triggerFreq;
+    }
+
     namespace Menus
     {
+        Menu* ActiveMenu;
+
         Menu initMenu;
         Menu globalMenu;
+        Menu scopeMenu;
+
+        void BuildScopeMenu()
+        {
+            scopeMenu.SetLength(4);
+            scopeMenu.CustomOnlyMode = true;
+            scopeMenu.RenderCustomDisplayCallback = [](Adafruit_SSD1306* display)
+            {
+                display->clearDisplay();
+                float h = display->height();
+                
+                for (int x = 0; x < display->width(); x++)
+                {
+                    uint8_t y = Scope::data[x] >> 6; // 12 bit to 6 bit (0-63)
+                    display->drawPixel(x, (h-1) - y, SSD1306_WHITE);
+                }
+
+                display->setFont(&AtlantisInternational_jen08pt7b);
+                display->setTextSize(1);
+                display->setTextColor(SSD1306_BLACK);
+                display->setCursor(1, 62);
+                char readout[16];
+                auto readoutVal = scopeMenu.Values[3];
+                if (readoutVal < 0.25)
+                {}
+                else if (readoutVal < 0.5)
+                {
+                    display->fillRect(0, 55, 60, 9, SSD1306_WHITE);
+                    sprintf(readout, "Min: %d", Utils::Min(Scope::data, 128));
+                    display->println(readout);
+                }
+                else if (readoutVal < 0.75)
+                {
+                    display->fillRect(0, 55, 60, 9, SSD1306_WHITE);
+                    sprintf(readout, "Max: %d", Utils::Max(Scope::data, 128));
+                    display->println(readout);
+                }
+                else
+                {
+                    display->fillRect(0, 55, 60, 9, SSD1306_WHITE);
+                    sprintf(readout, "Mean: %d", Utils::Mean(Scope::data, 128));
+                    display->println(readout);
+                }
+            };
+            scopeMenu.HandlePotCallback = [](Menu* menu, int idx, float value)
+            {
+                if (idx == 1)
+                    Scope::downsampling = (int)(value * 7.99);
+                if (idx == 2)
+                    Scope::triggerFreq = 1024 + (int)(value * 4096);
+                if (idx == 3)
+                {
+                    menu->SetValue(idx, value);
+                }
+            };
+        }
 
         void BuildInitMenu()
         {
@@ -76,6 +143,46 @@ namespace Cyber
         {
             BuildInitMenu();
             BuildGlobalMenu();
+            BuildScopeMenu();
+        }
+
+        void HandleEncoderDefault(Menu* menu, int tick)
+        {
+            if (tick == 1 && !menu->QuadMode)
+                menu->MoveDown();
+            if (tick == 1 && menu->QuadMode)
+                menu->MoveDownPage();
+            if (tick == 1 && !menu->QuadMode)
+                menu->MoveUp();
+            if (tick == 1 && menu->QuadMode)
+                menu->MoveUpPage();
+        }
+
+        void HandlePotDefault(Menu* menu, int idx, float value)
+        {
+            if (menu->QuadMode)
+            {
+                menu->SetValue(menu->TopItem + idx, value);
+            }
+            else if (!menu->QuadMode && idx == 0)
+            {
+                menu->SetValue(menu->SelectedItem, value);
+            }
+
+            // hack for now
+            if (idx == 1)
+            {
+                int it = (value * 0.999) * menu->GetLength();
+                menu->SetSelectedItem(it);
+            }
+        }
+
+        void HandleSwitchDefault(Menu* menu, int idx, bool value)
+        {
+            if (idx == 0 && value)
+                ActiveMenu = &globalMenu;
+            if (idx == 1 && value)
+                ActiveMenu = &scopeMenu;
         }
     }
 }

@@ -8,6 +8,7 @@
 
 #include "periodic_execution.h"
 #include "menu.h"
+#include "menus.h"
 #include "counter.h"
 #include "logging.h"
 #include "utils.h"
@@ -20,4 +21,14 @@ namespace Cyber
     extern DisplayManager displayManager;
     extern ControlManager controls;
     extern I2CMaster& i2cMaster;
+    extern ModalState modalState;
+
+    namespace Scope
+    {
+        extern uint16_t data[128];
+        extern uint8_t channel;
+        extern uint8_t downsampling;
+        extern uint16_t triggerFreq;
+        extern void ProcessScope(DataBuffer* data);
+    }
 }
