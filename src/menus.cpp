@@ -60,7 +60,7 @@ namespace Cyber
                 else
                 {
                     display->fillRect(0, 55, 60, 9, SSD1306_WHITE);
-                    sprintf(readout, "Mean: %d", Utils::Mean(Scope::data, 128));
+                    sprintf(readout, "Mean: %d", (int)Utils::Mean(Scope::data, 128));
                     display->println(readout);
                 }
             };

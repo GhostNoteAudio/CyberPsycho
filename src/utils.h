@@ -107,9 +107,9 @@ namespace Cyber
         }
 
         template<typename T>
-        inline T Mean(T* data, int len)
+        inline double Mean(T* data, int len)
         {
-            T sum = 0;
+            double sum = 0;
             for (int i = 0; i < len; i++)
             {
                 sum += data[i];
