@@ -7,6 +7,7 @@
 #include <fonts/font.h>
 #include <fonts/font2.h>
 #include <fonts/font3.h>
+#include "controls.h"
 
 namespace Cyber
 {
@@ -70,7 +71,7 @@ namespace Cyber
         {
             if (idx < 0) idx = 0;
             if (idx >= Length) idx = Length - 1;
-            
+
             while(SelectedItem < idx)
                 MoveDown();
             while(SelectedItem > idx)

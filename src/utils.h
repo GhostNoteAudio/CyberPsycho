@@ -106,15 +106,59 @@ namespace Cyber
             return min;
         }
 
+        inline float Max(float* data, int len)
+        {
+            float max = -std::numeric_limits<float>::max();
+            for (int i = 0; i < len; i++)
+            {
+                float val = data[i];
+                max = val > max ? val : max;
+            }
+            return max;
+        }
+
+        inline float Min(float* data, int len)
+        {
+            float min = std::numeric_limits<float>::max();
+            for (int i = 0; i < len; i++)
+            {
+                float val = data[i];
+                min = val < min ? val : min;
+            }
+            return min;
+        }
+
+        inline double Max(double* data, int len)
+        {
+            double max = -std::numeric_limits<double>::max();
+            for (int i = 0; i < len; i++)
+            {
+                double val = data[i];
+                max = val > max ? val : max;
+            }
+            return max;
+        }
+
+        inline double Min(double* data, int len)
+        {
+            double min = std::numeric_limits<double>::max();
+            for (int i = 0; i < len; i++)
+            {
+                double val = data[i];
+                min = val < min ? val : min;
+            }
+            return min;
+        }
+
         template<typename T>
-        inline double Mean(T* data, int len)
+        inline T Mean(T* data, int len)
         {
             double sum = 0;
             for (int i = 0; i < len; i++)
             {
                 sum += data[i];
             }
-            return sum / len;
+            return (T)(sum / len);
         }
 
         inline float DB2Gainf(float input)

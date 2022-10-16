@@ -1,5 +1,8 @@
+#pragma once
 #include "Arduino.h"
 #include "pins.h"
+#include "logging.h"
+#include "utils.h"
 
 namespace Cyber
 {
@@ -15,14 +18,18 @@ namespace Cyber
         }
     };
 
+    const int POT_FIR_SIZE = 20;
+
     // Note: Ideal update frequency for this is about 1Khz
     class ControlManager
     {
         int ButtonCounter[4] = {0};
         bool ButtonState[4] = {false};
-        float PotState[4] = {0.0};
+        float PotState[4][POT_FIR_SIZE] = {{0.0}};
+        int potStateIdx[4] = {0};
         
         // used to smooth pot behaviour
+        float PotExcursionPoint[4] = {0.0};
         float PotMomentum[4] = {0.0};
         float PotOutputValue[4] = {0.0};
 
@@ -31,28 +38,32 @@ namespace Cyber
         const float PotScaler = 1024.0 / (1024.0 - 2*PotDeadSpace);
         const float Pot10BitScale = 1.0 / 1023.0;
         const int PotHysteresis = 10;
+        const int PotExcursionJump = 10;
 
     public:
-        bool EnableFilter = true;
-
         inline void UpdatePotState(int pot)   
         {
-            float prevVal = PotState[pot];
+            potStateIdx[pot] = (potStateIdx[pot] + 1) % POT_FIR_SIZE;
+            int idxWrite = potStateIdx[pot];
 
             int pin = 0;
             if (pot == 0) pin = PIN_POT0;
             if (pot == 1) pin = PIN_POT1;
             if (pot == 2) pin = PIN_POT2;
             if (pot == 3) pin = PIN_POT3;
-            if (EnableFilter)
-                PotState[pot] = PotState[pot] * 0.9 + analogRead(pin) * 0.1;
-            else
-                PotState[pot] = analogRead(pin);
+            float newVal = analogRead(pin);
+            PotState[pot][idxWrite] = newVal;
+            float meanVal = Utils::Mean(PotState[pot], POT_FIR_SIZE);
 
-            float delta = PotState[pot] - prevVal;
+            float delta = 0;
+            if (fabsf(meanVal - PotExcursionPoint[pot]) > PotExcursionJump)
+            {
+                PotExcursionPoint[pot] = meanVal;
+                delta = 2 * PotExcursionJump;
+            }
+
             PotMomentum[pot] = PotMomentum[pot] * 0.99 + delta;
-            PotMomentum[pot] = PotMomentum[pot] > 10 ? 10 : PotMomentum[pot];
-            PotMomentum[pot] = PotMomentum[pot] < -10 ? -10 : PotMomentum[pot];
+            PotMomentum[pot] = PotMomentum[pot] > 200 ? 200 : PotMomentum[pot];          
         }
 
         inline float GetPotMomentum(int pot)
@@ -61,6 +72,14 @@ namespace Cyber
                 return 0;
 
             return PotMomentum[pot];
+        }
+
+        inline float GetPotExcursionPoint(int pot)
+        {
+            if (pot < 0 || pot > 3)
+                return 0;
+
+            return PotExcursionPoint[pot];
         }
 
     private:
@@ -75,7 +94,8 @@ namespace Cyber
     public:
         inline float GetPotRaw(int pot)
         {
-            return ScalePot(PotState[pot]) * Pot10BitScale;
+            float potVal = Utils::Mean(PotState[pot], POT_FIR_SIZE);
+            return ScalePot(potVal) * Pot10BitScale;
         }
 
         inline PotUpdate GetPot(int pot)
@@ -84,14 +104,15 @@ namespace Cyber
                 return PotUpdate(0, false);
 
             float currentOutput = PotOutputValue[pot];
-            float p = ScalePot(PotState[pot]);
+            float pv = Utils::Mean(PotState[pot], POT_FIR_SIZE);
+            float p = ScalePot(pv);
             
             // Talk about over-engineered :)
             float delta = fabsf(p - currentOutput);
             bool beyondHyst = delta > PotHysteresis;
             bool isNew = delta > 0.001;
             bool atLeast1Different = delta >= 1;
-            bool highMomentum = fabsf(PotMomentum[pot]) > 2;
+            bool highMomentum = fabsf(PotMomentum[pot]) > 1.0;
             bool maxBoundary = p == 1023;
             bool minBoundary = p == 0;
 
@@ -113,7 +134,7 @@ namespace Cyber
             int b2 = digitalRead(PIN_BTN2);
             int b3 = digitalRead(PIN_BTN3);
 
-            int scaler = EnableFilter ? 2 : 300;
+            int scaler = 8;
             int halfScaler = scaler >> 1;
             ButtonCounter[0] += (-halfScaler + scaler*b0);
             ButtonCounter[1] += (-halfScaler + scaler*b1);
@@ -165,4 +186,6 @@ namespace Cyber
             return ButtonState[button];
         }
     };
+
+    extern ControlManager controls;
 }

@@ -15,8 +15,6 @@ namespace Cyber
         float ioLoad = perfIo.PeriodAvg() / MaxTimeInterruptMicros;
         float processYieldLoad = (perfAudio.PeriodAvg() + perfYield.PeriodDecay()) / MaxTimeAudioProcessingMicros;
         float totalLoad = ioLoad + processYieldLoad;
-
-        LogInfof("ioLoad: %.3f :: processYieldLoad: %.3f", ioLoad, processYieldLoad)
         return totalLoad;
     }
 }

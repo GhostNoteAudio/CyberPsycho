@@ -18,6 +18,7 @@ namespace Cyber
         extern Menu initMenu;
         extern Menu globalMenu;
         extern Menu scopeMenu;
+        extern Menu calibrateMenu;
 
         void Init();
     }

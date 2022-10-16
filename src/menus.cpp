@@ -4,6 +4,7 @@
 #include <fonts/font3.h>
 #include "utils.h"
 #include "logging.h"
+#include "input_processor.h"
 
 namespace Cyber
 {
@@ -21,6 +22,7 @@ namespace Cyber
         Menu initMenu;
         Menu globalMenu;
         Menu scopeMenu;
+        Menu calibrateMenu;
 
         void BuildScopeMenu()
         {
@@ -139,11 +141,53 @@ namespace Cyber
             globalMenu.QuadMode = false;
         }
 
+        void BuildCalibrateMenu()
+        {
+            calibrateMenu.Captions[0] = "CV1 Offset";
+            calibrateMenu.Captions[1] = "CV2 Offset";
+            calibrateMenu.Captions[2] = "CV3 Offset";
+            calibrateMenu.Captions[3] = "CV4 Offset";
+            calibrateMenu.Captions[4] = "Mod1 Offset";
+            calibrateMenu.Captions[5] = "Mod2 Offset";
+            calibrateMenu.Captions[6] = "Mod3 Offset";
+            calibrateMenu.Captions[7] = "Mod4 Offset";
+            calibrateMenu.Captions[8] = "CV1 Scale";
+            calibrateMenu.Captions[9] = "CV2 Scale";
+            calibrateMenu.Captions[10] = "CV3 Scale";
+            calibrateMenu.Captions[11] = "CV4 Scale";
+            calibrateMenu.Captions[12] = "Mod1 Scale";
+            calibrateMenu.Captions[13] = "Mod2 Scale";
+            calibrateMenu.Captions[14] = "Mod3 Scale";
+            calibrateMenu.Captions[15] = "Mod4 Scale";
+
+            for (int i = 0; i < 8; i++)
+                calibrateMenu.Formatters[i] = [](float v, char* s) { sprintf(s, "%d", (int)((2*v-1)*256)); };
+
+            for (int i = 8; i < 16; i++)
+                calibrateMenu.Formatters[i] = [](float v, char* s) { sprintf(s, "%.3f", 0.8+v*0.4); };
+
+            calibrateMenu.ValueChangedCallback = [](int idx, float v)
+            {
+                if (idx < 4) inProcessor.OffsetCv[idx] = (int)((2*v-1)*256);
+                else if (idx < 8) inProcessor.OffsetMod[idx-4] = (int)((2*v-1)*256);
+                else if (idx < 12) inProcessor.ScaleCv[idx-8] = 0.8+v*0.4;
+                else if (idx < 16) inProcessor.ScaleMod[idx-12] = 0.8+v*0.4;
+            };
+
+            calibrateMenu.SetLength(16);
+            calibrateMenu.SelectedItem = 0;
+            calibrateMenu.TopItem = 0;
+            calibrateMenu.EnableSelection = true;
+            calibrateMenu.QuadMode = false;
+
+        }
+
         void Init()
         {
             BuildInitMenu();
             BuildGlobalMenu();
             BuildScopeMenu();
+            BuildCalibrateMenu();
         }
 
         void HandleEncoderDefault(Menu* menu, int tick)
@@ -183,6 +227,8 @@ namespace Cyber
                 ActiveMenu = &globalMenu;
             if (idx == 1 && value)
                 ActiveMenu = &scopeMenu;
+            if (idx == 2 && value)
+                ActiveMenu = &calibrateMenu;
         }
     }
 }

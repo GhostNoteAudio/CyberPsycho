@@ -8,7 +8,7 @@ using namespace Cyber;
 void HandleAudioFunction(DataBuffer* data)
 {
     Scope::ProcessScope(data);
-    //auto fpData = inProcessor.ConvertToFp(data);
+    auto fpData = inProcessor.ConvertToFp(data);
     //auto min = Utils::Min(fpData.Cv[3], fpData.Size);
     //auto max = Utils::Max(fpData.Cv[3], fpData.Size);
     //LogInfof("Min: %f - Max: %f", min, max)
@@ -61,7 +61,7 @@ void loop()
         //LogInfof("Audio Time : %f %f %f", pa->Period(), pa->PeriodAvg(), pa->PeriodDecay());
         //LogInfof("Yield Time : %f %f %f", py->Period(), py->PeriodAvg(), py->PeriodDecay());
         //LogInfof("IO Time : %f %f %f", pi->Period(), pi->PeriodAvg(), pi->PeriodDecay());
-        LogInfof("CPU Load: %.3f", cpuLoad);
+        //LogInfof("CPU Load: %.3f", cpuLoad);
         
     }
 
