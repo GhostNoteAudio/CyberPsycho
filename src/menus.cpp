@@ -110,31 +110,38 @@ namespace Cyber
 
         void BuildGlobalMenu()
         {
-            globalMenu.Captions[0] = "CV 1 Offset";
-            globalMenu.Captions[1] = "CV 2 Offset";
-            globalMenu.Captions[2] = "CV 3 Offset";
-            globalMenu.Captions[3] = "CV 4 Offset";
-
-            globalMenu.Captions[4] = "Mod 1 Offset";
-            globalMenu.Captions[5] = "Mod 2 Offset";
-            globalMenu.Captions[6] = "Mod 3 Offset";
-            globalMenu.Captions[7] = "Mod 4 Offset";
+            globalMenu.Captions[0] = "Clock Source";
+            globalMenu.Captions[1] = "Clock Scale";
+            globalMenu.Captions[2] = "BPM";
+            globalMenu.Captions[3] = "Gate Filter";
+            globalMenu.Captions[4] = "> Load Preset";
+            globalMenu.Captions[5] = "> Save Preset";
+            globalMenu.Captions[6] = "> Init Program";
+            globalMenu.Captions[7] = "> Calibrate";
+            globalMenu.Captions[8] = "> Scope";
 
             globalMenu.Values[0] = 0.0;
             globalMenu.Values[1] = 0.0;
-            globalMenu.Values[2] = 0.0;
+            globalMenu.Values[2] = 0.358; // 120 bpm
             globalMenu.Values[3] = 0.0;
-            globalMenu.Values[4] = 0.5;
-            globalMenu.Values[5] = 0.5;
-            globalMenu.Values[6] = 0.5;
-            globalMenu.Values[7] = 0.5;
+            globalMenu.Values[4] = 0.0;
+            globalMenu.Values[5] = 0.0;
+            globalMenu.Values[6] = 0.0;
+            globalMenu.Values[7] = 0.0;
+            globalMenu.Values[8] = 0.0;
 
-            for (int i = 0; i < 8; i++)
-            {
-                globalMenu.Formatters[i] = [](float v, char* s) { sprintf(s, "%.3f", (2*v-1)); };
-            }
-            
-            globalMenu.SetLength(8);
+            int clockScaleLut[12] = {1,2,4,8,12,16,24,32,48,64,96,128};
+            char* clockSources[3] = {"Int", "Ext", "Midi"};
+            char* gateFilters[4] = {"Off", "Mild", "Normal", "High"};
+
+            globalMenu.Formatters[0] = [clockSources](float v, char* s) { strcpy(s, clockSources[(int)(v*2.999)]); };
+            globalMenu.Formatters[1] = [clockScaleLut](float v, char* s) { sprintf(s, "%d", clockScaleLut[(int)(v*12.999)]); };
+            globalMenu.Formatters[2] = [](float v, char* s) { sprintf(s, "%d", (int)(20 + 280*v)); };
+            globalMenu.Formatters[3] = [gateFilters](float v, char* s) { strcpy(s, gateFilters[(int)(v*3.999)]); };
+            for (int i=4; i<=8; i++)
+                globalMenu.Formatters[i] = [](float v, char* s) { strcpy(s, ""); };
+
+            globalMenu.SetLength(9);
             globalMenu.SelectedItem = 0;
             globalMenu.TopItem = 0;
             globalMenu.EnableSelection = true;
@@ -179,7 +186,6 @@ namespace Cyber
             calibrateMenu.TopItem = 0;
             calibrateMenu.EnableSelection = true;
             calibrateMenu.QuadMode = false;
-
         }
 
         void Init()

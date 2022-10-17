@@ -18,7 +18,7 @@ namespace Cyber
         }
     };
 
-    const int POT_FIR_SIZE = 20;
+    const int POT_FIR_SIZE = 60;
 
     // Note: Ideal update frequency for this is about 1Khz
     class ControlManager
@@ -38,7 +38,7 @@ namespace Cyber
         const float PotScaler = 1024.0 / (1024.0 - 2*PotDeadSpace);
         const float Pot10BitScale = 1.0 / 1023.0;
         const int PotHysteresis = 10;
-        const int PotExcursionJump = 10;
+        const int PotExcursionJump = 4;
 
     public:
         inline void UpdatePotState(int pot)   
