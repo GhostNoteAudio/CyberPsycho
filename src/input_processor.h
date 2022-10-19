@@ -20,7 +20,7 @@ namespace Cyber
         int OffsetMod[4] = {0, 0, 0, 0};
         float ScaleCv[4] = {1,1,1,1};
         float ScaleMod[4] = {1,1,1,1};
-        int16_t GateSpeed[4] = {64,64,64,64}; // 1 = slowest, 255 = instant change, no filtering
+        int16_t GateSpeed = 64; // 1 = slowest, 255 = instant change, no filtering
 
         inline FpBuffer ConvertToFp(DataBuffer* buf)
         {
@@ -43,7 +43,7 @@ namespace Cyber
                 for (int i = 0; i < buf->Size; i++)
                 {
                     bool g = false;
-                    InputGate[idx] += (-1+2*buf->Gate[idx][i]) * GateSpeed[idx];
+                    InputGate[idx] += (-1+2*buf->Gate[idx][i]) * GateSpeed;
                     if (InputGate[idx] > 255) InputGate[idx] = 255;
                     if (InputGate[idx] < 0) InputGate[idx] = 0;
                     if (InputGate[idx] < GateThresLow) g = false;

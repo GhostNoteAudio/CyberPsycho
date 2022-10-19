@@ -29,7 +29,7 @@ namespace Cyber
         const int MaxLength = 32;
         const char* Captions[32] = {0};
         float Values[32] = {0};
-        std::function<void(float, char*)> Formatters[32];
+        std::function<void(int, float, char*)> Formatters[32];
         std::function<void(int, float)> ValueChangedCallback = 0;
         std::function<void(Adafruit_SSD1306*)> RenderCustomDisplayCallback = 0;
         
@@ -48,8 +48,17 @@ namespace Cyber
         {
             for (int i = 0; i < MaxLength; i++)
             {
-                Formatters[i] = [](float v, char* dest) { sprintf(dest, "%.2f", v); };
+                Formatters[i] = [](int idx, float v, char* dest) { sprintf(dest, "%.2f", v); };
             }
+        }
+
+        inline void ReapplyAllValues()
+        {
+            // Reads all the values and re-sets them to the same value, invoking the callbacks along the way
+            // useful for ensuring all values applied to other components that interact with callback
+
+            for (int i = 0; i < Length; i++)
+                SetValue(i, Values[i]);            
         }
 
         inline void HandleEncoder(int tick)
@@ -159,7 +168,7 @@ namespace Cyber
                 display->println(Captions[item]);
 
                 YieldAudio();
-                Formatters[item](Values[item], val);
+                Formatters[item](item, Values[item], val);
                 int w = GetStringWidth(display, val);
                 display->setCursor(display->width() - w - 2, 10 + 16 * i);
                 display->println(val);
@@ -203,7 +212,7 @@ namespace Cyber
                 display->println(Captions[item]);
 
                 YieldAudio();
-                Formatters[item](Values[item], val);
+                Formatters[item](item, Values[item], val);
                 w = GetStringWidth(display, val);
                 xPos = x == 0 ? 2 : display->width() - 2 - w;
                 display->setCursor(xPos, 10 + 16 * (2*y+1));

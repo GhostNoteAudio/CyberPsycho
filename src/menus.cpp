@@ -23,6 +23,8 @@ namespace Cyber
         Menu globalMenu;
         Menu scopeMenu;
         Menu calibrateMenu;
+        Menu voiceMenu;
+        Menu pitchTrigMenu;
 
         void BuildScopeMenu()
         {
@@ -131,21 +133,39 @@ namespace Cyber
             globalMenu.Values[8] = 0.0;
 
             int clockScaleLut[12] = {1,2,4,8,12,16,24,32,48,64,96,128};
-            char* clockSources[3] = {"Int", "Ext", "Midi"};
-            char* gateFilters[4] = {"Off", "Mild", "Normal", "High"};
+            const char* clockSources[3] = {"Int", "Ext", "Midi"};
+            const char* gateFilters[4] = {"Off", "Mild", "Normal", "High"};
+            int gateFilterValues[4] = {255, 128, 64, 16};
 
-            globalMenu.Formatters[0] = [clockSources](float v, char* s) { strcpy(s, clockSources[(int)(v*2.999)]); };
-            globalMenu.Formatters[1] = [clockScaleLut](float v, char* s) { sprintf(s, "%d", clockScaleLut[(int)(v*12.999)]); };
-            globalMenu.Formatters[2] = [](float v, char* s) { sprintf(s, "%d", (int)(20 + 280*v)); };
-            globalMenu.Formatters[3] = [gateFilters](float v, char* s) { strcpy(s, gateFilters[(int)(v*3.999)]); };
+            globalMenu.Formatters[0] = [clockSources](int idx, float v, char* s) { strcpy(s, clockSources[(int)(v*2.999)]); };
+            globalMenu.Formatters[1] = [clockScaleLut](int idx, float v, char* s) { sprintf(s, "%d", clockScaleLut[(int)(v*12.999)]); };
+            globalMenu.Formatters[2] = [](int idx, float v, char* s) { sprintf(s, "%d", (int)(20 + 280*v)); };
+            globalMenu.Formatters[3] = [gateFilters](int idx, float v, char* s) { strcpy(s, gateFilters[(int)(v*3.999)]); };
             for (int i=4; i<=8; i++)
-                globalMenu.Formatters[i] = [](float v, char* s) { strcpy(s, ""); };
+                globalMenu.Formatters[i] = [](int idx, float v, char* s) { strcpy(s, ""); };
 
             globalMenu.SetLength(9);
             globalMenu.SelectedItem = 0;
             globalMenu.TopItem = 0;
             globalMenu.EnableSelection = true;
             globalMenu.QuadMode = false;
+
+            globalMenu.ValueChangedCallback = [gateFilterValues](int idx, float value)
+            {
+                if (idx == 3)
+                    inProcessor.GateSpeed = gateFilterValues[(int)(value*3.999)];
+            };
+
+            globalMenu.HandleSwitchCallback = [](Menu* menu, int idx, bool value)
+            {
+                if (idx == 3 && value)
+                {
+                    if (menu->SelectedItem == 7)
+                        ActiveMenu = &calibrateMenu;
+                    else if (menu->SelectedItem == 8)
+                        ActiveMenu = &scopeMenu;
+                }
+            };
         }
 
         void BuildCalibrateMenu()
@@ -168,10 +188,10 @@ namespace Cyber
             calibrateMenu.Captions[15] = "Mod4 Scale";
 
             for (int i = 0; i < 8; i++)
-                calibrateMenu.Formatters[i] = [](float v, char* s) { sprintf(s, "%d", (int)((2*v-1)*256)); };
+                calibrateMenu.Formatters[i] = [](int idx, float v, char* s) { sprintf(s, "%d", (int)((2*v-1)*256)); };
 
             for (int i = 8; i < 16; i++)
-                calibrateMenu.Formatters[i] = [](float v, char* s) { sprintf(s, "%.3f", 0.8+v*0.4); };
+                calibrateMenu.Formatters[i] = [](int idx, float v, char* s) { sprintf(s, "%.3f", 0.8+v*0.4); };
 
             calibrateMenu.ValueChangedCallback = [](int idx, float v)
             {
@@ -188,12 +208,67 @@ namespace Cyber
             calibrateMenu.QuadMode = false;
         }
 
+        void BuildVoiceMenu()
+        {
+            voiceMenu.Captions[0] = "In Gain";
+            voiceMenu.Captions[1] = "Out Gain";
+            //voiceMenu.Captions[x] = "> Load Preset";
+            //voiceMenu.Captions[x] = "> Save Preset";
+            voiceMenu.Captions[2] = "> Init Voice";
+            voiceMenu.Captions[3] = "> Clear All Mods";
+            voiceMenu.Captions[4] = "Midi Ch";
+            voiceMenu.Captions[5] = "Audio In L";
+            voiceMenu.Captions[6] = "Audio In R";
+            voiceMenu.Captions[7] = "Audio Out L";
+            voiceMenu.Captions[8] = "Audio Out R";
+            voiceMenu.Captions[9] = "CV In";
+            voiceMenu.Captions[10] = "Gate In";
+
+            voiceMenu.Formatters[0] = [](int idx, float v, char* s) { sprintf(s, "%.2fdB", -12+24*v); };
+            voiceMenu.Formatters[1] = [](int idx, float v, char* s) { sprintf(s, "%.2fdB", -12+24*v); };
+            voiceMenu.Formatters[2] = [](int idx, float v, char* s) { strcpy(s, ""); };
+            voiceMenu.Formatters[3] = [](int idx, float v, char* s) { strcpy(s, ""); };
+            voiceMenu.Formatters[4] = [](int idx, float v, char* s) 
+            { 
+                int ch = (int)(17.999*v);
+                if (ch == 0) strcpy(s, "Off");
+                else if (ch == 1) strcpy(s, "Omni");
+                else sprintf(s, "%d", ch-1); 
+            };
+            
+            for(int i=5; i<=10; i++)
+                voiceMenu.Formatters[i] = [](int idx, float v, char* s) { sprintf(s, "%d", (int)(1+3.999*v)); };
+
+            voiceMenu.SetLength(11);
+            voiceMenu.SelectedItem = 0;
+            voiceMenu.TopItem = 0;
+            voiceMenu.EnableSelection = true;
+            voiceMenu.QuadMode = false;
+        }
+
+        void BuildPitchTrigMenu()
+        {
+            pitchTrigMenu.SetLength(0);
+            pitchTrigMenu.CustomOnlyMode = true;
+            pitchTrigMenu.RenderCustomDisplayCallback = [](Adafruit_SSD1306* display)
+            {
+                display->clearDisplay();
+                display->setFont(&AtlantisInternational_jen08pt7b);
+                display->setTextSize(1);
+                display->setTextColor(SSD1306_WHITE);
+                display->setCursor(30, 30);
+                display->println("Coming Soon");
+            };
+        }
+
         void Init()
         {
             BuildInitMenu();
             BuildGlobalMenu();
             BuildScopeMenu();
             BuildCalibrateMenu();
+            BuildVoiceMenu();
+            BuildPitchTrigMenu();
         }
 
         void HandleEncoderDefault(Menu* menu, int tick)
@@ -232,9 +307,9 @@ namespace Cyber
             if (idx == 0 && value)
                 ActiveMenu = &globalMenu;
             if (idx == 1 && value)
-                ActiveMenu = &scopeMenu;
+                ActiveMenu = &voiceMenu;
             if (idx == 2 && value)
-                ActiveMenu = &calibrateMenu;
+                ActiveMenu = &pitchTrigMenu;
         }
     }
 }
