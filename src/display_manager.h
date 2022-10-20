@@ -50,8 +50,14 @@ namespace Cyber
             return &display;
         }
 
+        // Method breaks down data transfer to the display into small chunks, and schedules transmissions
+        // asynchronously
         inline void Transfer()
         {
+            // don't call this function until the master has finished the previous transmission!
+            // otherwise you'll block here
+            while (!i2cMaster.finished()) {}
+
             int _page_start_offset = 2; // for the SH1106
             uint8_t DC_BYTE = 0x40;
             uint8_t pageCount = ((SCREEN_HEIGHT + 7) / 8);
@@ -65,14 +71,15 @@ namespace Cyber
             }
 
             // New page boundary, issue start commands for that page
-            if (pageBytesRemaining == bytesPerPage)
+            if (sendStartBuffer)
             {
                 txbufStart[0] = 0x00;
                 txbufStart[1] = (uint8_t)(SH110X_SETPAGEADDR + p);
                 txbufStart[2] = (uint8_t)(0x10 + ((0 + _page_start_offset) >> 4));
                 txbufStart[3] = (uint8_t)((0 + _page_start_offset) & 0xF);
                 i2cMaster.write_async(SCREEN_ADDRESS, txbufStart, 4, true);
-                while(!i2cMaster.finished()) {}
+                sendStartBuffer = false;
+                return;
             }
             
             uint8_t to_write = min(pageBytesRemaining, (uint8_t)ChunkSize);
@@ -82,19 +89,19 @@ namespace Cyber
                 txbuf[i+1] = ptr[i];
 
             i2cMaster.write_async(SCREEN_ADDRESS, txbuf, to_write+1, true);
-            while(!i2cMaster.finished()) {}
 
             ptr += to_write;
             pageBytesRemaining -= to_write;
-
             if (pageBytesRemaining == 0)
             {
                 p = (p+1) % pageCount;
                 pageBytesRemaining = bytesPerPage;
+                sendStartBuffer = true;
             }
         }
 
     private:
+        bool sendStartBuffer = true;
         int p = 0;
         uint8_t pageBytesRemaining = SCREEN_WIDTH;
         uint8_t *ptr;
@@ -102,4 +109,6 @@ namespace Cyber
         uint8_t txbufStart[4];
         uint8_t txbuf[ChunkSize+1];
     };
+
+    extern DisplayManager displayManager;
 }

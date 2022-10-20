@@ -13,17 +13,16 @@ namespace Cyber
 
         if (audio.Available())
         {
-            GetPerfAudio()->Start();
             auto buf = audio.BeginAudioProcessing();
             if (HandleAudioCb == 0)
             {
                 LogInfo("HandleAudioCb has not been set!");
-                return;
             }
-
-            HandleAudioCb(buf);
+            else
+            {
+                HandleAudioCb(buf);
+            }
             audio.EndAudioProcessing();
-            GetPerfAudio()->Stop();
         }
 
         GetPerfYield()->Start();

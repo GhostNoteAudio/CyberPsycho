@@ -79,7 +79,7 @@ namespace Cyber
 
             period = periodLocal;
             periodAvg = periodAvg * 0.99 + periodLocal * 0.01;
-            periodDecay *= 0.99999;
+            periodDecay *= 0.9999;
         }
 
         inline double Period()

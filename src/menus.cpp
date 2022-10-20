@@ -5,16 +5,10 @@
 #include "utils.h"
 #include "logging.h"
 #include "input_processor.h"
+#include "scope.h"
 
 namespace Cyber
-{
-    namespace Scope
-    {
-        extern uint16_t data[128];
-        extern uint8_t downsampling;
-        extern uint16_t triggerFreq;
-    }
-
+{    
     namespace Menus
     {
         Menu* ActiveMenu;
@@ -165,6 +159,8 @@ namespace Cyber
                     else if (menu->SelectedItem == 8)
                         ActiveMenu = &scopeMenu;
                 }
+                else
+                    HandleSwitchDefault(menu, idx, value);
             };
         }
 
@@ -285,6 +281,7 @@ namespace Cyber
 
         void HandlePotDefault(Menu* menu, int idx, float value)
         {
+            LogInfof("Handling pot %d, value %f", idx, value);
             if (menu->QuadMode)
             {
                 menu->SetValue(menu->TopItem + idx, value);
@@ -304,6 +301,7 @@ namespace Cyber
 
         void HandleSwitchDefault(Menu* menu, int idx, bool value)
         {
+            LogInfof("Handling switch %d, value %d", idx, (int)value);
             if (idx == 0 && value)
                 ActiveMenu = &globalMenu;
             if (idx == 1 && value)

@@ -18,13 +18,27 @@ namespace Cyber
         }
     };
 
+    struct ButtonUpdate
+    {
+        bool Value;
+        bool IsNew;
+
+        ButtonUpdate(bool val, bool isNew)
+        {
+            Value = val;
+            IsNew = isNew;
+        }
+    };
+
     const int POT_FIR_SIZE = 60;
 
     // Note: Ideal update frequency for this is about 1Khz
     class ControlManager
     {
-        int ButtonCounter[4] = {0};
-        bool ButtonState[4] = {false};
+        int ButtonCounter[8] = {0};
+        bool ButtonState[8] = {false};
+        bool ButtonOutputValue[8] = {false};
+
         float PotState[4][POT_FIR_SIZE] = {{0.0}};
         int potStateIdx[4] = {0};
         
@@ -41,17 +55,32 @@ namespace Cyber
         const int PotExcursionJump = 4;
 
     public:
-        inline void UpdatePotState(int pot)   
+        inline void UpdatePotAndButton(int idx)
+        {
+            int bitA = (idx & 0b001) > 0;
+            int bitB = (idx & 0b010) > 0;
+            int bitC = (idx & 0b100) > 0;
+
+            digitalWrite(PIN_MUX_A, bitA);
+            digitalWrite(PIN_MUX_B, bitB);
+            digitalWrite(PIN_MUX_C, bitC);
+            delayMicroseconds(2);
+
+            auto btnVal = digitalRead(PIN_BTN_IN);
+            UpdateButtonState(idx, btnVal);
+
+            // Todo: Encoder switch handling
+            if (idx < 4)
+            {
+                auto potVal = analogRead(PIN_POT_IN);
+                UpdatePotState(idx, potVal);
+            }
+        }
+    private:
+        inline void UpdatePotState(int pot, float newVal)
         {
             potStateIdx[pot] = (potStateIdx[pot] + 1) % POT_FIR_SIZE;
             int idxWrite = potStateIdx[pot];
-
-            int pin = 0;
-            if (pot == 0) pin = PIN_POT_IN;// PIN_POT0;
-            if (pot == 1) pin = PIN_POT_IN;//PIN_POT1;
-            if (pot == 2) pin = PIN_POT_IN;//PIN_POT2;
-            if (pot == 3) pin = PIN_POT_IN;//PIN_POT3;
-            float newVal = analogRead(pin);
             PotState[pot][idxWrite] = newVal;
             float meanVal = Utils::Mean(PotState[pot], POT_FIR_SIZE);
 
@@ -82,7 +111,6 @@ namespace Cyber
             return PotExcursionPoint[pot];
         }
 
-    private:
         inline float ScalePot(float p)
         {
             p = (p - PotDeadSpace) * PotScaler;
@@ -127,63 +155,34 @@ namespace Cyber
             }
         }
 
-        inline void UpdateButtonState()
+        inline void UpdateButtonState(int idx, int value)
         {
-            int b0 = 0;//digitalRead(PIN_BTN0);
-            int b1 = 0;//digitalRead(PIN_BTN1);
-            int b2 = 0;//digitalRead(PIN_BTN2);
-            int b3 = 0;//digitalRead(PIN_BTN3);
-
             int scaler = 8;
             int halfScaler = scaler >> 1;
-            ButtonCounter[0] += (-halfScaler + scaler*b0);
-            ButtonCounter[1] += (-halfScaler + scaler*b1);
-            ButtonCounter[2] += (-halfScaler + scaler*b2);
-            ButtonCounter[3] += (-halfScaler + scaler*b3);
+            ButtonCounter[idx] += (-halfScaler + scaler*value);
+            
+            if (ButtonCounter[idx] < 0)
+                ButtonCounter[idx] = 0;
 
-            if (ButtonCounter[0] < 0)
-                ButtonCounter[0] = 0;
-            if (ButtonCounter[1] < 0)
-                ButtonCounter[1] = 0;
-            if (ButtonCounter[2] < 0)
-                ButtonCounter[2] = 0;
-            if (ButtonCounter[3] < 0)
-                ButtonCounter[3] = 0;
-
-            if (ButtonCounter[0] > 15)
-                ButtonCounter[0] = 15;
-            if (ButtonCounter[1] > 15)
-                ButtonCounter[1] = 15;
-            if (ButtonCounter[2] > 15)
-                ButtonCounter[2] = 15;
-            if (ButtonCounter[3] > 15)
-                ButtonCounter[3] = 15;
-
-            if (ButtonCounter[0] > 12)
-                ButtonState[0] = true;
-            if (ButtonCounter[1] > 12)
-                ButtonState[1] = true;
-            if (ButtonCounter[2] > 12)
-                ButtonState[2] = true;
-            if (ButtonCounter[3] > 12)
-                ButtonState[3] = true;
-
-            if (ButtonCounter[0] < 3)
-                ButtonState[0] = false;
-            if (ButtonCounter[1] < 3)
-                ButtonState[1] = false;
-            if (ButtonCounter[2] < 3)
-                ButtonState[2] = false;
-            if (ButtonCounter[3] < 3)
-                ButtonState[3] = false;
+            if (ButtonCounter[idx] > 15)
+                ButtonCounter[idx] = 15;
+            
+            if (ButtonCounter[idx] > 12)
+                ButtonState[idx] = true;
+            
+            if (ButtonCounter[idx] < 3)
+                ButtonState[idx] = false;
         }
 
-        inline bool GetButton(int button)
+        inline ButtonUpdate GetButton(int idx)
         {
-            if (button < 0 || button > 3)
-                return false;
+            if (idx < 0 || idx >= 8)
+                return ButtonUpdate(false, false);
 
-            return ButtonState[button];
+            auto val = ButtonState[idx];
+            bool isNew = val != ButtonOutputValue[idx];
+            ButtonOutputValue[idx] = val;
+            return ButtonUpdate(val, isNew);
         }
     };
 

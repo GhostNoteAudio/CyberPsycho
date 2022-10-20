@@ -2,7 +2,7 @@
 #include "menu.h"
 
 namespace Cyber
-{
+{    
     class ModalState
     {
     public:

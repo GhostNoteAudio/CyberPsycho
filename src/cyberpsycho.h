@@ -13,22 +13,4 @@
 #include "logging.h"
 #include "utils.h"
 #include "timers.h"
-
-namespace Cyber
-{
-    extern AudioIo audio;
-    extern InputProcessor inProcessor;
-    extern DisplayManager displayManager;
-    extern ControlManager controls;
-    extern I2CMaster& i2cMaster;
-    extern ModalState modalState;
-
-    namespace Scope
-    {
-        extern uint16_t data[128];
-        extern uint8_t channel;
-        extern uint8_t downsampling;
-        extern uint16_t triggerFreq;
-        extern void ProcessScope(DataBuffer* data);
-    }
-}
+#include "scope.h"

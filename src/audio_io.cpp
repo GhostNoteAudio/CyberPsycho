@@ -12,8 +12,17 @@
 
 namespace Cyber
 {
-    void AudioIo::Init()
+    AudioIo::AudioIo()
     {
+        bufferIdx = 0;
+        BufTransmitting = &BufferA;
+        BufProcessing = &BufferB;
+        CallbackComplete = true;
+        BufferUnderrun = false;
+    }
+
+    void AudioIo::Init()
+    {        
         pinMode(PIN_CS_DAC0, OUTPUT);
         pinMode(PIN_CS_DAC1, OUTPUT);
         pinMode(PIN_CS_ADC, OUTPUT);
@@ -74,6 +83,11 @@ namespace Cyber
         BufferUnderrun = false;
         bufferIdx = 0;
         ioLoop.begin(InvokeProcessAudio, 1000000.0/SAMPLERATE);
+    }
+
+    void AudioIo::StopProcessing()
+    {
+        ioLoop.end();
     }
 
     void AudioIo::ProcessAudioX()
@@ -141,15 +155,14 @@ namespace Cyber
 
     DataBuffer* AudioIo::BeginAudioProcessing()
     {
-        if (CallbackComplete)
-            return 0;
-
+        GetPerfAudio()->Start();
         return const_cast<DataBuffer*>(BufProcessing);
     }
 
     void AudioIo::EndAudioProcessing()
     {
         CallbackComplete = true;
+        GetPerfAudio()->Stop();
     }
 
 

@@ -14,12 +14,14 @@ namespace Cyber
         uint16_t AdcValues[8] = {0};
 
     public:
+        AudioIo();
         void Init();
         void SampleAdc(int channel);
         void ProcessAdcValues();
         void SetDac(int channel, uint16_t value);
         void LatchDac();
         void StartProcessing();
+        void StopProcessing();
         void ProcessAudioX();
         bool Available();
         DataBuffer* BeginAudioProcessing();
@@ -29,7 +31,7 @@ namespace Cyber
         IntervalTimer ioLoop;
         DataBuffer BufferA;
         DataBuffer BufferB;
-        int bufferIdx;
+        volatile int bufferIdx;
         volatile DataBuffer* BufTransmitting;
         volatile DataBuffer* BufProcessing;
         volatile bool CallbackComplete;

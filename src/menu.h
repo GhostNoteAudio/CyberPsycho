@@ -68,9 +68,9 @@ namespace Cyber
 
         inline void HandlePot(int idx, float value)
         {
-            LogInfof("Pot momentum: %.4f", controls.GetPotMomentum(0));
+            //LogInfof("Pot momentum: %.4f", controls.GetPotMomentum(0));
             //LogInfof("Pot excursion point: %.4f", controls.GetPotExcursionPoint(0));
-            LogInfof("Pot value: %.4f", controls.GetPot(0).Value*1023);
+            //LogInfof("Pot value: %.4f", controls.GetPot(0).Value*1023);
             HandlePotCallback(this, idx, value);
         }
 
