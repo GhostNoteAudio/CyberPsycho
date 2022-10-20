@@ -1,5 +1,6 @@
 #include "Arduino.h"
 #include "cyberpsycho.h"
+#include <SdFat.h>
 
 using namespace Cyber;
 
@@ -19,10 +20,12 @@ void HandleAudioFunction(DataBuffer* data)
     //delayMicroseconds(600);
 }
 
+SdFat sd;
+
 void setup()
 {
     Serial.begin(9600);
-    //while(!Serial) {}
+    while(!Serial) {}
     Serial.println("Starting...");
 
     Menus::Init();
@@ -30,11 +33,40 @@ void setup()
     Menus::ActiveMenu = &Menus::initMenu;
 
     audio.Init();
-    audio.StartProcessing();
+    //audio.StartProcessing();
     Serial.println("Done");
 
     i2cMaster.begin(1000000);
     HandleAudioCb = HandleAudioFunction;
+
+    pinMode(PIN_GATE0, INPUT);
+    pinMode(PIN_GATE1, INPUT);
+    pinMode(PIN_GATE2, INPUT);
+    pinMode(PIN_GATE3, INPUT);
+    pinMode(PIN_CLK, INPUT);
+
+    pinMode(PIN_LATCH_DAC, OUTPUT);
+    pinMode(PIN_CS_SD, OUTPUT);
+    pinMode(PIN_CS_ADC, OUTPUT);
+    pinMode(PIN_CS_DAC1, OUTPUT);
+    pinMode(PIN_CS_DAC0, OUTPUT);
+
+    pinMode(PIN_MOSI, OUTPUT);
+    // pinMode(PIN_MISO, OUTPUT); ??
+    pinMode(PIN_SCK, OUTPUT);
+
+    pinMode(PIN_LATCH_LED, OUTPUT);
+    
+    pinMode(PIN_MUX_C, OUTPUT);
+    pinMode(PIN_MUX_B, OUTPUT);
+    pinMode(PIN_MUX_A, OUTPUT);
+    
+    pinMode(PIN_ENC_A, INPUT);
+    pinMode(PIN_ENC_B, INPUT);
+    pinMode(PIN_BTN_IN, INPUT);
+    pinMode(PIN_POT_IN, INPUT);
+    
+    Serial1.begin(31250);
 }
 
 PeriodicExecution execPrint(1000);
@@ -44,8 +76,8 @@ PeriodicExecution updateMenu(10);
 
 void loop()
 {
-    YieldAudio();
-
+    //YieldAudio();
+/*
     if (execPrint.Go())
     {
         if (audio.BufferUnderrun)
@@ -75,10 +107,10 @@ void loop()
         controls.UpdatePotState(3);
         controls.UpdateButtonState();
     }
-
+*/
     if (updateMenu.Go())
     {
-        auto p0 = controls.GetPot(0);
+        /*auto p0 = controls.GetPot(0);
         auto p1 = controls.GetPot(1);
         auto p2 = controls.GetPot(2);
         auto p3 = controls.GetPot(3);
@@ -105,11 +137,11 @@ void loop()
         if (btn3)
             Menus::ActiveMenu->HandleSwitch(3, btn3);
 
-        YieldAudio();
+        YieldAudio();*/
         displayManager.Render();
     }
 
-    YieldAudio();
+    //YieldAudio();
 
     if (i2cMaster.finished())
     {

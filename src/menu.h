@@ -2,7 +2,7 @@
 
 #include <functional>
 #include <Adafruit_GFX.h>
-#include <Adafruit_SSD1306.h>
+#include <Adafruit_SH110X.h>
 #include "audio_yield.h"
 #include <fonts/font.h>
 #include <fonts/font2.h>
@@ -31,7 +31,7 @@ namespace Cyber
         float Values[32] = {0};
         std::function<void(int, float, char*)> Formatters[32];
         std::function<void(int, float)> ValueChangedCallback = 0;
-        std::function<void(Adafruit_SSD1306*)> RenderCustomDisplayCallback = 0;
+        std::function<void(Adafruit_SH1106G*)> RenderCustomDisplayCallback = 0;
         
         //Todo: Implement these, build "default" implementations that work for most menus, like switch handling which should almost always be the same
         std::function<void(Menu*, int)> HandleEncoderCallback = Menus::HandleEncoderDefault;
@@ -114,7 +114,7 @@ namespace Cyber
             Length = len;
         }
 
-        inline int GetStringWidth(Adafruit_SSD1306* display, const char* str)
+        inline int GetStringWidth(Adafruit_SH1106G* display, const char* str)
         {
             int16_t x, y;
             uint16_t w, h;
@@ -122,7 +122,7 @@ namespace Cyber
             return w;
         }
         
-        inline void Render(Adafruit_SSD1306* display)
+        inline void Render(Adafruit_SH1106G* display)
         {
             if (!CustomOnlyMode)
             {
@@ -136,7 +136,7 @@ namespace Cyber
                 RenderCustomDisplayCallback(display);
         }
 
-        inline void RenderSerial(Adafruit_SSD1306* display)
+        inline void RenderSerial(Adafruit_SH1106G* display)
         {
             display->clearDisplay();
             display->setFont(&AtlantisInternational_jen08pt7b);
@@ -155,12 +155,12 @@ namespace Cyber
 
                 if (isSelected)
                 {
-                    display->fillRect(0, 16 * i, display->width(), 16, SSD1306_WHITE);
-                    display->setTextColor(SSD1306_BLACK);
+                    display->fillRect(0, 16 * i, display->width(), 16, SH110X_WHITE);
+                    display->setTextColor(SH110X_BLACK);
                 }
                 else
                 {
-                    display->setTextColor(SSD1306_WHITE);
+                    display->setTextColor(SH110X_WHITE);
                 }
 
                 YieldAudio();
@@ -175,7 +175,7 @@ namespace Cyber
             }
         }
 
-        inline void RenderQuad(Adafruit_SSD1306* display)
+        inline void RenderQuad(Adafruit_SH1106G* display)
         {
             display->clearDisplay();
             display->setTextSize(1);
@@ -196,12 +196,12 @@ namespace Cyber
 
                 if (isSelected)
                 {
-                    display->fillRect(x * 64, 2 * 16 * y, display->width() / 2, 32, SSD1306_WHITE);
-                    display->setTextColor(SSD1306_BLACK);
+                    display->fillRect(x * 64, 2 * 16 * y, display->width() / 2, 32, SH110X_WHITE);
+                    display->setTextColor(SH110X_BLACK);
                 }
                 else
                 {
-                    display->setTextColor(SSD1306_WHITE);
+                    display->setTextColor(SH110X_WHITE);
                 }
 
                 YieldAudio();

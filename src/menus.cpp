@@ -30,7 +30,7 @@ namespace Cyber
         {
             scopeMenu.SetLength(4);
             scopeMenu.CustomOnlyMode = true;
-            scopeMenu.RenderCustomDisplayCallback = [](Adafruit_SSD1306* display)
+            scopeMenu.RenderCustomDisplayCallback = [](Adafruit_SH1106G* display)
             {
                 display->clearDisplay();
                 float h = display->height();
@@ -38,12 +38,12 @@ namespace Cyber
                 for (int x = 0; x < display->width(); x++)
                 {
                     uint8_t y = Scope::data[x] >> 6; // 12 bit to 6 bit (0-63)
-                    display->drawPixel(x, (h-1) - y, SSD1306_WHITE);
+                    display->drawPixel(x, (h-1) - y, SH110X_WHITE);
                 }
 
                 display->setFont(&AtlantisInternational_jen08pt7b);
                 display->setTextSize(1);
-                display->setTextColor(SSD1306_BLACK);
+                display->setTextColor(SH110X_BLACK);
                 display->setCursor(1, 62);
                 char readout[16];
                 auto readoutVal = scopeMenu.Values[3];
@@ -51,19 +51,19 @@ namespace Cyber
                 {}
                 else if (readoutVal < 0.5)
                 {
-                    display->fillRect(0, 55, 60, 9, SSD1306_WHITE);
+                    display->fillRect(0, 55, 60, 9, SH110X_WHITE);
                     sprintf(readout, "Min: %d", Utils::Min(Scope::data, 128));
                     display->println(readout);
                 }
                 else if (readoutVal < 0.75)
                 {
-                    display->fillRect(0, 55, 60, 9, SSD1306_WHITE);
+                    display->fillRect(0, 55, 60, 9, SH110X_WHITE);
                     sprintf(readout, "Max: %d", Utils::Max(Scope::data, 128));
                     display->println(readout);
                 }
                 else
                 {
-                    display->fillRect(0, 55, 60, 9, SSD1306_WHITE);
+                    display->fillRect(0, 55, 60, 9, SH110X_WHITE);
                     sprintf(readout, "Mean: %d", (int)Utils::Mean(Scope::data, 128));
                     display->println(readout);
                 }
@@ -84,12 +84,12 @@ namespace Cyber
         void BuildInitMenu()
         {
             initMenu.CustomOnlyMode = true;
-            initMenu.RenderCustomDisplayCallback = [](Adafruit_SSD1306* display)
+            initMenu.RenderCustomDisplayCallback = [](Adafruit_SH1106G* display)
             {
                 display->clearDisplay();
                 display->setFont(&AtlantisInternational_jen08pt7b);
                 display->setTextSize(2);
-                display->setTextColor(SSD1306_WHITE);
+                display->setTextColor(SH110X_WHITE);
                 int w = initMenu.GetStringWidth(display, "Cyberpsycho");
                 int offset = (display->width() - w) / 2;
                 display->setCursor(offset, 22);
@@ -250,12 +250,12 @@ namespace Cyber
         {
             pitchTrigMenu.SetLength(0);
             pitchTrigMenu.CustomOnlyMode = true;
-            pitchTrigMenu.RenderCustomDisplayCallback = [](Adafruit_SSD1306* display)
+            pitchTrigMenu.RenderCustomDisplayCallback = [](Adafruit_SH1106G* display)
             {
                 display->clearDisplay();
                 display->setFont(&AtlantisInternational_jen08pt7b);
                 display->setTextSize(1);
-                display->setTextColor(SSD1306_WHITE);
+                display->setTextColor(SH110X_WHITE);
                 display->setCursor(30, 30);
                 display->println("Coming Soon");
             };

@@ -47,10 +47,10 @@ namespace Cyber
             int idxWrite = potStateIdx[pot];
 
             int pin = 0;
-            if (pot == 0) pin = PIN_POT0;
-            if (pot == 1) pin = PIN_POT1;
-            if (pot == 2) pin = PIN_POT2;
-            if (pot == 3) pin = PIN_POT3;
+            if (pot == 0) pin = PIN_POT_IN;// PIN_POT0;
+            if (pot == 1) pin = PIN_POT_IN;//PIN_POT1;
+            if (pot == 2) pin = PIN_POT_IN;//PIN_POT2;
+            if (pot == 3) pin = PIN_POT_IN;//PIN_POT3;
             float newVal = analogRead(pin);
             PotState[pot][idxWrite] = newVal;
             float meanVal = Utils::Mean(PotState[pot], POT_FIR_SIZE);
@@ -129,10 +129,10 @@ namespace Cyber
 
         inline void UpdateButtonState()
         {
-            int b0 = digitalRead(PIN_BTN0);
-            int b1 = digitalRead(PIN_BTN1);
-            int b2 = digitalRead(PIN_BTN2);
-            int b3 = digitalRead(PIN_BTN3);
+            int b0 = 0;//digitalRead(PIN_BTN0);
+            int b1 = 0;//digitalRead(PIN_BTN1);
+            int b2 = 0;//digitalRead(PIN_BTN2);
+            int b3 = 0;//digitalRead(PIN_BTN3);
 
             int scaler = 8;
             int halfScaler = scaler >> 1;

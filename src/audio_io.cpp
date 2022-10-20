@@ -17,11 +17,11 @@ namespace Cyber
         pinMode(PIN_CS_DAC0, OUTPUT);
         pinMode(PIN_CS_DAC1, OUTPUT);
         pinMode(PIN_CS_ADC, OUTPUT);
-        pinMode(PIN_LATCH, OUTPUT);
+        pinMode(PIN_LATCH_DAC, OUTPUT);
         digitalWrite(PIN_CS_DAC0, HIGH);
         digitalWrite(PIN_CS_DAC1, HIGH);
         digitalWrite(PIN_CS_ADC, HIGH);
-        digitalWrite(PIN_LATCH, HIGH);
+        digitalWrite(PIN_LATCH_DAC, HIGH);
         TsyDMASPI0.begin(SPISettings(12000000, MSBFIRST, SPI_MODE0));
     }
 
@@ -60,9 +60,9 @@ namespace Cyber
 
     void AudioIo::LatchDac()
     {
-        digitalWrite(PIN_LATCH, LOW);
+        digitalWrite(PIN_LATCH_DAC, LOW);
         SpinWait(20);
-        digitalWrite(PIN_LATCH, HIGH);
+        digitalWrite(PIN_LATCH_DAC, HIGH);
         SpinWait(20);
     }
 
