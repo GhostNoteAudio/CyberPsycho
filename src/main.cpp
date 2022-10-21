@@ -105,10 +105,20 @@ void loop()
             YieldAudio();
             controls.UpdatePotAndButton(i);
         }
+
+        controls.UpdateEncoderState();
     }
 
     if (updateMenu.Go())
     {
+        auto ev = controls.GetEncoderDelta();
+        auto eb = controls.GetEncoderButton();
+        if (ev.IsNew)
+            Menus::ActiveMenu->HandleEncoder(ev.Value);
+        
+        if (eb.IsNew)
+            Menus::ActiveMenu->HandleEncoderSwitch(eb.Value);
+
         for (int i = 0; i < 4; i++)
         {
             auto potVal = controls.GetPot(i);

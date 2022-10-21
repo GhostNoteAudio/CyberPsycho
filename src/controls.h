@@ -6,38 +6,35 @@
 
 namespace Cyber
 {
-    struct PotUpdate
+    template<typename T>
+    struct ControlUpdate
     {
-        float Value;
+        T Value;
         bool IsNew;
 
-        PotUpdate(float val, bool isNew)
+        ControlUpdate(T val, bool isNew)
         {
             Value = val;
             IsNew = isNew;
         }
     };
 
-    struct ButtonUpdate
-    {
-        bool Value;
-        bool IsNew;
-
-        ButtonUpdate(bool val, bool isNew)
-        {
-            Value = val;
-            IsNew = isNew;
-        }
-    };
+    typedef ControlUpdate<float> PotUpdate;
+    typedef ControlUpdate<bool> ButtonUpdate;
+    typedef ControlUpdate<int> EncoderUpdate;
 
     const int POT_FIR_SIZE = 60;
 
     // Note: Ideal update frequency for this is about 1Khz
     class ControlManager
     {
-        int ButtonCounter[8] = {0};
-        bool ButtonState[8] = {false};
-        bool ButtonOutputValue[8] = {false};
+        int EncoderState = 0;
+        int EncoderValue = 0;
+
+        // Encoder switch is the 9th button!
+        int ButtonCounter[9] = {0};
+        bool ButtonState[9] = {false};
+        bool ButtonOutputValue[9] = {false};
 
         float PotState[4][POT_FIR_SIZE] = {{0.0}};
         int potStateIdx[4] = {0};
@@ -55,6 +52,31 @@ namespace Cyber
         const int PotExcursionJump = 4;
 
     public:
+        inline void UpdateEncoderState()
+        {
+            int prevState = EncoderState;
+
+            int a = !digitalRead(PIN_ENC_A);
+            int b = !digitalRead(PIN_ENC_B);
+            if (EncoderState == 0 && a && !b) EncoderState = 1;
+            else if (EncoderState == 0 && !a && b) EncoderState = 3;
+            else if (EncoderState == 1 && a && b) EncoderState = 2;
+            else if (EncoderState == 1 && !a && !b) EncoderState = 0;
+            else if (EncoderState == 2 && !a && b) EncoderState = 3;
+            else if (EncoderState == 2 && a && !b) EncoderState = 1;
+            else if (EncoderState == 3 && !a && !b) EncoderState = 0;
+            else if (EncoderState == 3 && a && b) EncoderState = 2;
+
+            if (EncoderState == 1 && prevState == 0) EncoderValue--;
+            else if (EncoderState == 2 && prevState == 1) EncoderValue--;
+            else if (EncoderState == 3 && prevState == 2) EncoderValue--;
+            else if (EncoderState == 0 && prevState == 3) EncoderValue--;
+            else if (EncoderState == 3 && prevState == 0) EncoderValue++;
+            else if (EncoderState == 2 && prevState == 3) EncoderValue++;
+            else if (EncoderState == 1 && prevState == 2) EncoderValue++;
+            else if (EncoderState == 0 && prevState == 1) EncoderValue++;
+        }
+
         inline void UpdatePotAndButton(int idx)
         {
             int bitA = (idx & 0b001) > 0;
@@ -74,6 +96,12 @@ namespace Cyber
             {
                 auto potVal = analogRead(PIN_POT_IN);
                 UpdatePotState(idx, potVal);
+            }
+            else if (idx == 4)
+            {
+                // special case for encoder switch, which is analog #4, but stored as button #8
+                auto encoderSwitch = digitalRead(PIN_POT_IN);
+                UpdateButtonState(8, !encoderSwitch);
             }
         }
     private:
@@ -157,9 +185,7 @@ namespace Cyber
 
         inline void UpdateButtonState(int idx, int value)
         {
-            int scaler = 8;
-            int halfScaler = scaler >> 1;
-            ButtonCounter[idx] += (-halfScaler + scaler*value);
+            ButtonCounter[idx] += (-1 + 2*value);
             
             if (ButtonCounter[idx] < 0)
                 ButtonCounter[idx] = 0;
@@ -183,6 +209,22 @@ namespace Cyber
             bool isNew = val != ButtonOutputValue[idx];
             ButtonOutputValue[idx] = val;
             return ButtonUpdate(val, isNew);
+        }
+
+        inline ButtonUpdate GetEncoderButton()
+        {
+            int idx = 8;
+            auto val = ButtonState[idx];
+            bool isNew = val != ButtonOutputValue[idx];
+            ButtonOutputValue[idx] = val;
+            return ButtonUpdate(val, isNew);
+        }
+
+        inline EncoderUpdate GetEncoderDelta()
+        {
+            int delta = EncoderValue / 4;
+            EncoderValue -= delta * 4;
+            return EncoderUpdate(delta, delta != 0);
         }
     };
 

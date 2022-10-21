@@ -8,7 +8,7 @@
 #include "scope.h"
 
 namespace Cyber
-{    
+{   
     namespace Menus
     {
         Menu* ActiveMenu;
@@ -130,6 +130,11 @@ namespace Cyber
             const char* clockSources[3] = {"Int", "Ext", "Midi"};
             const char* gateFilters[4] = {"Off", "Mild", "Normal", "High"};
             int gateFilterValues[4] = {255, 128, 64, 16};
+
+            globalMenu.Ticks[0] = 1.0/(sizeof(clockSources) / sizeof(char*))+0.001;
+            globalMenu.Ticks[1] = 1.0/(sizeof(clockScaleLut) / sizeof(int))+0.001;
+            globalMenu.Ticks[2] = 1.0/280.0;
+            globalMenu.Ticks[3] = 1.0/(sizeof(gateFilters) / sizeof(char*))+0.001;
 
             globalMenu.Formatters[0] = [clockSources](int idx, float v, char* s) { strcpy(s, clockSources[(int)(v*2.999)]); };
             globalMenu.Formatters[1] = [clockScaleLut](int idx, float v, char* s) { sprintf(s, "%d", clockScaleLut[(int)(v*12.999)]); };
@@ -269,45 +274,52 @@ namespace Cyber
 
         void HandleEncoderDefault(Menu* menu, int tick)
         {
-            if (tick == 1 && !menu->QuadMode)
-                menu->MoveDown();
-            if (tick == 1 && menu->QuadMode)
-                menu->MoveDownPage();
-            if (tick == 1 && !menu->QuadMode)
-                menu->MoveUp();
-            if (tick == 1 && menu->QuadMode)
-                menu->MoveUpPage();
+            if (!menu->EditMode)
+            {
+                if (tick == 1 && !menu->QuadMode)
+                    menu->MoveDown();
+                if (tick == 1 && menu->QuadMode)
+                    menu->MoveDownPage();
+                if (tick == -1 && !menu->QuadMode)
+                    menu->MoveUp();
+                if (tick == -1 && menu->QuadMode)
+                    menu->MoveUpPage();
+            }
+            else if (menu->EditMode && !menu->QuadMode)
+            {
+                menu->TickValue(menu->SelectedItem, tick);
+            }
+        }
+
+        void HandleEncoderSwitchDefault(Menu* menu, bool value)
+        {
+            if (value && !menu->QuadMode)
+                menu->EditMode = !menu->EditMode;
         }
 
         void HandlePotDefault(Menu* menu, int idx, float value)
         {
-            LogInfof("Handling pot %d, value %f", idx, value);
             if (menu->QuadMode)
             {
                 menu->SetValue(menu->TopItem + idx, value);
-            }
-            else if (!menu->QuadMode && idx == 0)
-            {
-                menu->SetValue(menu->SelectedItem, value);
-            }
-
-            // hack for now
-            if (idx == 1)
-            {
-                int it = (value * 0.999) * menu->GetLength();
-                menu->SetSelectedItem(it);
             }
         }
 
         void HandleSwitchDefault(Menu* menu, int idx, bool value)
         {
             LogInfof("Handling switch %d, value %d", idx, (int)value);
-            if (idx == 0 && value)
+            
+            if (idx == 0)
+                modalState.Shift = value;
+            else if (idx == 1 && value && modalState.Shift)
                 ActiveMenu = &globalMenu;
-            if (idx == 1 && value)
+            else if (idx == 2 && value && modalState.Shift)
                 ActiveMenu = &voiceMenu;
-            if (idx == 2 && value)
+            else if (idx == 3 && value && modalState.Shift)
                 ActiveMenu = &pitchTrigMenu;
+
+            if ((idx == 1 || idx == 2 || idx == 3) && modalState.Shift)
+                ActiveMenu->EditMode = false;
         }
     }
 }

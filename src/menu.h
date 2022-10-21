@@ -16,6 +16,7 @@ namespace Cyber
     namespace Menus
     {
         void HandleEncoderDefault(Menu* menu, int tick);
+        void HandleEncoderSwitchDefault(Menu* menu, bool value);
         void HandlePotDefault(Menu* menu, int idx, float value);
         void HandleSwitchDefault(Menu* menu, int idx, bool value);
     }
@@ -29,17 +30,20 @@ namespace Cyber
         const int MaxLength = 32;
         const char* Captions[32] = {0};
         float Values[32] = {0};
+        float Ticks[32] = {0};
         std::function<void(int, float, char*)> Formatters[32];
         std::function<void(int, float)> ValueChangedCallback = 0;
         std::function<void(Adafruit_SH1106G*)> RenderCustomDisplayCallback = 0;
         
         //Todo: Implement these, build "default" implementations that work for most menus, like switch handling which should almost always be the same
         std::function<void(Menu*, int)> HandleEncoderCallback = Menus::HandleEncoderDefault;
+        std::function<void(Menu*, bool)> HandleEncoderSwitchCallback = Menus::HandleEncoderSwitchDefault;
         std::function<void(Menu*, int, float)> HandlePotCallback = Menus::HandlePotDefault;
         std::function<void(Menu*, int, bool)> HandleSwitchCallback = Menus::HandleSwitchDefault;
 
         int TopItem = 0;
         int SelectedItem = 0;
+        bool EditMode = false; // scroll vs edit
         bool EnableSelection = true;
         bool QuadMode = false;
         bool CustomOnlyMode = false;
@@ -50,6 +54,10 @@ namespace Cyber
             {
                 Formatters[i] = [](int idx, float v, char* dest) { sprintf(dest, "%.2f", v); };
             }
+
+            // set default tick size
+            for (int i = 0; i < 32; i++)
+                Ticks[i] = 1.0/128.0;
         }
 
         inline void ReapplyAllValues()
@@ -64,6 +72,11 @@ namespace Cyber
         inline void HandleEncoder(int tick)
         {
             HandleEncoderCallback(this, tick);
+        }
+
+        inline void HandleEncoderSwitch(bool value)
+        {
+            HandleEncoderSwitchCallback(this, value);
         }
 
         inline void HandlePot(int idx, float value)
@@ -90,11 +103,24 @@ namespace Cyber
                 MoveUp();
         }
 
+        inline void TickValue(int idx, int ticks)
+        {
+            if (idx >= Length || idx < 0)
+                return;
+
+            float delta = Ticks[idx] * ticks;
+            float newValue = Values[idx] + delta;
+            LogInfof("New value: %.3f", newValue);
+            SetValue(idx, newValue);
+        }
+
         inline void SetValue(int idx, float value)
         {
             if (idx >= Length || idx < 0)
                 return;
 
+            if (value < 0) value = 0;
+            if (value > 1) value = 1;
             Values[idx] = value;
 
             if (ValueChangedCallback != 0)
@@ -170,7 +196,11 @@ namespace Cyber
                 YieldAudio();
                 Formatters[item](item, Values[item], val);
                 int w = GetStringWidth(display, val);
-                display->setCursor(display->width() - w - 2, 10 + 16 * i);
+                int x = display->width() - w - 2;
+                int y = 10 + 16 * i;
+                display->setCursor(x, y);
+                if (isSelected && EditMode)
+                    display->fillTriangle(x-8, y+1, x-8, y-7, x-4, y-3, SH110X_BLACK);
                 display->println(val);
             }
         }
