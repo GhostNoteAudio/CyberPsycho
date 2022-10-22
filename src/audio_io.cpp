@@ -37,17 +37,16 @@ namespace Cyber
     void AudioIo::SampleAdc(int channel)
     {
         uint8_t* data = AdcTxBuf[channel];
-        data[0] = 0b00000110 | (channel & 0b100) >> 2;
-        data[1] = (channel & 0b011) << 6;
-        data[2] = 0;
-        TsyDMASPI0.queue(AdcTxBuf[channel], AdcRxBuf[channel], 3, PIN_CS_ADC);
+        data[0] = channel << 3;
+        data[1] = 0;
+        TsyDMASPI0.queue(AdcTxBuf[channel], AdcRxBuf[channel], 2, PIN_CS_ADC);
     }
 
     void AudioIo::ProcessAdcValues()
     {
         for (int i = 0; i < 8; i++)
         {
-            AdcValues[i] = ((AdcRxBuf[i][1] & 0b00001111) << 8) | AdcRxBuf[i][2];
+            AdcValues[i] = ((AdcRxBuf[i][0] & 0x0F) << 8) | AdcRxBuf[i][1];
         }
     }
 

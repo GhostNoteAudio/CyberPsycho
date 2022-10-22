@@ -7,8 +7,8 @@ namespace Cyber
     class AudioIo
     {
     private:
-        uint8_t AdcTxBuf[8][3];
-        uint8_t AdcRxBuf[8][3];
+        uint8_t AdcTxBuf[8][2];
+        uint8_t AdcRxBuf[8][2];
         uint8_t DacTxBuf[4][2];
         uint8_t DacRxBuf[2]; // discard
         uint16_t AdcValues[8] = {0};

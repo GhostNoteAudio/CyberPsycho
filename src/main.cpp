@@ -24,21 +24,6 @@ SdFat sd;
 
 void setup()
 {
-    Serial.begin(9600);
-    //while(!Serial) {}
-    Serial.println("Starting...");
-
-    Menus::Init();
-    displayManager.Init();
-    Menus::ActiveMenu = &Menus::initMenu;
-
-    audio.Init();
-    //audio.StartProcessing();
-    Serial.println("Done");
-
-    i2cMaster.begin(1000000);
-    HandleAudioCb = HandleAudioFunction;
-
     pinMode(PIN_GATE0, INPUT);
     pinMode(PIN_GATE1, INPUT);
     pinMode(PIN_GATE2, INPUT);
@@ -52,7 +37,7 @@ void setup()
     pinMode(PIN_CS_DAC0, OUTPUT);
 
     pinMode(PIN_MOSI, OUTPUT);
-    // pinMode(PIN_MISO, OUTPUT); ??
+    pinMode(PIN_MISO, INPUT);
     pinMode(PIN_SCK, OUTPUT);
 
     pinMode(PIN_LATCH_LED, OUTPUT);
@@ -65,8 +50,24 @@ void setup()
     pinMode(PIN_ENC_B, INPUT);
     pinMode(PIN_BTN_IN, INPUT);
     pinMode(PIN_POT_IN, INPUT);
-    
-    Serial1.begin(31250);
+
+    Serial1.begin(31250); // Midi input
+    Serial.begin(9600); // USB Serial
+    //while(!Serial) {}
+    Serial.println("Starting...");
+
+    Menus::Init();
+    displayManager.Init();
+    Menus::ActiveMenu = &Menus::initMenu;
+
+    audio.Init();
+    audio.StartProcessing();
+    Serial.println("Done");
+
+    i2cMaster.begin(1000000);
+    HandleAudioCb = HandleAudioFunction;
+
+    SPI.begin();
 }
 
 PeriodicExecution execPrint(1000);

@@ -22,7 +22,7 @@ namespace Cyber
                     if (scopeWritePtr < 128)
                     {
                         if (channel <= 3)
-                            data[scopeWritePtr] = db->Mod[channel][i];
+                            data[scopeWritePtr] = db->Cv[channel][i];
                         else if (channel <= 7)
                             data[scopeWritePtr] = db->Mod[channel-4][i];
                     }

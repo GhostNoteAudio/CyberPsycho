@@ -29,10 +29,12 @@ namespace Cyber
     public:
         const int MaxLength = 32;
         const char* Captions[32] = {0};
-        float Values[32] = {0};
-        float Ticks[32] = {0};
-        std::function<void(int, float, char*)> Formatters[32];
-        std::function<void(int, float)> ValueChangedCallback = 0;
+        int16_t Values[32] = {0};
+        int16_t Min[32] = {0};
+        int16_t Max[32] = {0};
+        int16_t Ticks[32] = {0};
+        std::function<void(int, int16_t, char*)> Formatters[32];
+        std::function<void(int, int16_t)> ValueChangedCallback = 0;
         std::function<void(Adafruit_SH1106G*)> RenderCustomDisplayCallback = 0;
         
         //Todo: Implement these, build "default" implementations that work for most menus, like switch handling which should almost always be the same
@@ -52,12 +54,15 @@ namespace Cyber
         {
             for (int i = 0; i < MaxLength; i++)
             {
-                Formatters[i] = [](int idx, float v, char* dest) { sprintf(dest, "%.2f", v); };
+                Formatters[i] = [](int idx, int16_t v, char* dest) { sprintf(dest, "%d", v); };
             }
 
-            // set default tick size
+            // set default tick and max size
             for (int i = 0; i < 32; i++)
-                Ticks[i] = 1.0/128.0;
+            {
+                Ticks[i] = 1;
+                Max[i] = 100;
+            }
         }
 
         inline void ReapplyAllValues()
@@ -108,19 +113,19 @@ namespace Cyber
             if (idx >= Length || idx < 0)
                 return;
 
-            float delta = Ticks[idx] * ticks;
-            float newValue = Values[idx] + delta;
-            LogInfof("New value: %.3f", newValue);
+            int delta = Ticks[idx] * ticks;
+            int newValue = Values[idx] + delta;
+            LogInfof("New value: %d", newValue);
             SetValue(idx, newValue);
         }
 
-        inline void SetValue(int idx, float value)
+        inline void SetValue(int idx, int16_t value)
         {
             if (idx >= Length || idx < 0)
                 return;
 
-            if (value < 0) value = 0;
-            if (value > 1) value = 1;
+            if (value < Min[idx]) value = Min[idx];
+            if (value > Max[idx]) value = Max[idx];
             Values[idx] = value;
 
             if (ValueChangedCallback != 0)

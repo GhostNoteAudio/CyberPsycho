@@ -41,21 +41,20 @@ namespace Cyber
                 display->setCursor(1, 62);
                 char readout[16];
                 auto readoutVal = scopeMenu.Values[3];
-                if (readoutVal < 0.25)
-                {}
-                else if (readoutVal < 0.5)
+
+                if (readoutVal == 1)
                 {
                     display->fillRect(0, 55, 60, 9, SH110X_WHITE);
                     sprintf(readout, "Min: %d", Utils::Min(Scope::data, 128));
                     display->println(readout);
                 }
-                else if (readoutVal < 0.75)
+                else if (readoutVal == 2)
                 {
                     display->fillRect(0, 55, 60, 9, SH110X_WHITE);
                     sprintf(readout, "Max: %d", Utils::Max(Scope::data, 128));
                     display->println(readout);
                 }
-                else
+                else if (readoutVal == 3)
                 {
                     display->fillRect(0, 55, 60, 9, SH110X_WHITE);
                     sprintf(readout, "Mean: %d", (int)Utils::Mean(Scope::data, 128));
@@ -64,14 +63,14 @@ namespace Cyber
             };
             scopeMenu.HandlePotCallback = [](Menu* menu, int idx, float value)
             {
+                if (idx == 0)
+                    Scope::channel = (int)(value * 7.99);
                 if (idx == 1)
                     Scope::downsampling = (int)(value * 7.99);
                 if (idx == 2)
                     Scope::triggerFreq = 1024 + (int)(value * 4096);
                 if (idx == 3)
-                {
-                    menu->SetValue(idx, value);
-                }
+                    menu->SetValue(idx, (int)(value*3.999));
             };
         }
 
@@ -116,32 +115,33 @@ namespace Cyber
             globalMenu.Captions[7] = "> Calibrate";
             globalMenu.Captions[8] = "> Scope";
 
-            globalMenu.Values[0] = 0.0;
-            globalMenu.Values[1] = 0.0;
-            globalMenu.Values[2] = 0.358; // 120 bpm
-            globalMenu.Values[3] = 0.0;
-            globalMenu.Values[4] = 0.0;
-            globalMenu.Values[5] = 0.0;
-            globalMenu.Values[6] = 0.0;
-            globalMenu.Values[7] = 0.0;
-            globalMenu.Values[8] = 0.0;
+            globalMenu.Values[0] = 0;
+            globalMenu.Values[1] = 0;
+            globalMenu.Values[2] = 120;
+            globalMenu.Values[3] = 0;
+            globalMenu.Values[4] = 0;
+            globalMenu.Values[5] = 0;
+            globalMenu.Values[6] = 0;
+            globalMenu.Values[7] = 0;
+            globalMenu.Values[8] = 0;
 
             int clockScaleLut[12] = {1,2,4,8,12,16,24,32,48,64,96,128};
             const char* clockSources[3] = {"Int", "Ext", "Midi"};
             const char* gateFilters[4] = {"Off", "Mild", "Normal", "High"};
             int gateFilterValues[4] = {255, 128, 64, 16};
 
-            globalMenu.Ticks[0] = 1.0/(sizeof(clockSources) / sizeof(char*))+0.001;
-            globalMenu.Ticks[1] = 1.0/(sizeof(clockScaleLut) / sizeof(int))+0.001;
-            globalMenu.Ticks[2] = 1.0/280.0;
-            globalMenu.Ticks[3] = 1.0/(sizeof(gateFilters) / sizeof(char*))+0.001;
+            globalMenu.Max[0] = 2;
+            globalMenu.Max[1] = 11;
+            globalMenu.Max[2] = 300;
+            globalMenu.Max[3] = 3;
 
-            globalMenu.Formatters[0] = [clockSources](int idx, float v, char* s) { strcpy(s, clockSources[(int)(v*2.999)]); };
-            globalMenu.Formatters[1] = [clockScaleLut](int idx, float v, char* s) { sprintf(s, "%d", clockScaleLut[(int)(v*12.999)]); };
-            globalMenu.Formatters[2] = [](int idx, float v, char* s) { sprintf(s, "%d", (int)(20 + 280*v)); };
-            globalMenu.Formatters[3] = [gateFilters](int idx, float v, char* s) { strcpy(s, gateFilters[(int)(v*3.999)]); };
+            globalMenu.Min[2] = 20;
+
+            globalMenu.Formatters[0] = [clockSources](int idx, int16_t v, char* s) { strcpy(s, clockSources[v]); };
+            globalMenu.Formatters[1] = [clockScaleLut](int idx, int16_t v, char* s) { sprintf(s, "%d", clockScaleLut[v]); };
+            globalMenu.Formatters[3] = [gateFilters](int idx, int16_t v, char* s) { strcpy(s, gateFilters[v]); };
             for (int i=4; i<=8; i++)
-                globalMenu.Formatters[i] = [](int idx, float v, char* s) { strcpy(s, ""); };
+                globalMenu.Formatters[i] = [](int idx, int16_t v, char* s) { strcpy(s, ""); };
 
             globalMenu.SetLength(9);
             globalMenu.SelectedItem = 0;
@@ -149,23 +149,20 @@ namespace Cyber
             globalMenu.EnableSelection = true;
             globalMenu.QuadMode = false;
 
-            globalMenu.ValueChangedCallback = [gateFilterValues](int idx, float value)
+            globalMenu.ValueChangedCallback = [gateFilterValues](int idx, int16_t value)
             {
                 if (idx == 3)
-                    inProcessor.GateSpeed = gateFilterValues[(int)(value*3.999)];
+                    inProcessor.GateSpeed = gateFilterValues[value];
             };
 
-            globalMenu.HandleSwitchCallback = [](Menu* menu, int idx, bool value)
+            globalMenu.HandleEncoderSwitchCallback = [](Menu* menu, bool value)
             {
-                if (idx == 3 && value)
-                {
-                    if (menu->SelectedItem == 7)
-                        ActiveMenu = &calibrateMenu;
-                    else if (menu->SelectedItem == 8)
-                        ActiveMenu = &scopeMenu;
-                }
+                if (menu->SelectedItem == 7)
+                    ActiveMenu = &calibrateMenu;
+                else if (menu->SelectedItem == 8)
+                    ActiveMenu = &scopeMenu;
                 else
-                    HandleSwitchDefault(menu, idx, value);
+                    HandleEncoderSwitchDefault(menu, value);
             };
         }
 
@@ -188,18 +185,60 @@ namespace Cyber
             calibrateMenu.Captions[14] = "Mod3 Scale";
             calibrateMenu.Captions[15] = "Mod4 Scale";
 
-            for (int i = 0; i < 8; i++)
-                calibrateMenu.Formatters[i] = [](int idx, float v, char* s) { sprintf(s, "%d", (int)((2*v-1)*256)); };
+            calibrateMenu.Min[0] = -256;
+            calibrateMenu.Min[1] = -256;
+            calibrateMenu.Min[2] = -256;
+            calibrateMenu.Min[3] = -256;
+            calibrateMenu.Min[4] = -256;
+            calibrateMenu.Min[5] = -256;
+            calibrateMenu.Min[6] = -256;
+            calibrateMenu.Min[7] = -256;
+
+            calibrateMenu.Max[0] = 256;
+            calibrateMenu.Max[1] = 256;
+            calibrateMenu.Max[2] = 256;
+            calibrateMenu.Max[3] = 256;
+            calibrateMenu.Max[4] = 256;
+            calibrateMenu.Max[5] = 256;
+            calibrateMenu.Max[6] = 256;
+            calibrateMenu.Max[7] = 256;
+
+            calibrateMenu.Min[8] = 800;
+            calibrateMenu.Min[9] = 800;
+            calibrateMenu.Min[10] = 800;
+            calibrateMenu.Min[11] = 800;
+            calibrateMenu.Min[12] = 800;
+            calibrateMenu.Min[13] = 800;
+            calibrateMenu.Min[14] = 800;
+            calibrateMenu.Min[15] = 800;
+
+            calibrateMenu.Max[8] = 1200;
+            calibrateMenu.Max[9] = 1200;
+            calibrateMenu.Max[10] = 1200;
+            calibrateMenu.Max[11] = 1200;
+            calibrateMenu.Max[12] = 1200;
+            calibrateMenu.Max[13] = 1200;
+            calibrateMenu.Max[14] = 1200;
+            calibrateMenu.Max[15] = 1200;
+
+            calibrateMenu.Values[8] = 1000;
+            calibrateMenu.Values[9] = 1000;
+            calibrateMenu.Values[10] = 1000;
+            calibrateMenu.Values[11] = 1000;
+            calibrateMenu.Values[12] = 1000;
+            calibrateMenu.Values[13] = 1000;
+            calibrateMenu.Values[14] = 1000;
+            calibrateMenu.Values[15] = 1000;
 
             for (int i = 8; i < 16; i++)
-                calibrateMenu.Formatters[i] = [](int idx, float v, char* s) { sprintf(s, "%.3f", 0.8+v*0.4); };
+                calibrateMenu.Formatters[i] = [](int idx, int16_t v, char* s) { sprintf(s, "%.3f", v*0.001); };
 
             calibrateMenu.ValueChangedCallback = [](int idx, float v)
             {
-                if (idx < 4) inProcessor.OffsetCv[idx] = (int)((2*v-1)*256);
-                else if (idx < 8) inProcessor.OffsetMod[idx-4] = (int)((2*v-1)*256);
-                else if (idx < 12) inProcessor.ScaleCv[idx-8] = 0.8+v*0.4;
-                else if (idx < 16) inProcessor.ScaleMod[idx-12] = 0.8+v*0.4;
+                if (idx < 4) inProcessor.OffsetCv[idx] = v;
+                else if (idx < 8) inProcessor.OffsetMod[idx-4] = v;
+                else if (idx < 12) inProcessor.ScaleCv[idx-8] = v*0.001;
+                else if (idx < 16) inProcessor.ScaleMod[idx-12] = v*0.001;
             };
 
             calibrateMenu.SetLength(16);
@@ -225,20 +264,40 @@ namespace Cyber
             voiceMenu.Captions[9] = "CV In";
             voiceMenu.Captions[10] = "Gate In";
 
-            voiceMenu.Formatters[0] = [](int idx, float v, char* s) { sprintf(s, "%.2fdB", -12+24*v); };
-            voiceMenu.Formatters[1] = [](int idx, float v, char* s) { sprintf(s, "%.2fdB", -12+24*v); };
-            voiceMenu.Formatters[2] = [](int idx, float v, char* s) { strcpy(s, ""); };
-            voiceMenu.Formatters[3] = [](int idx, float v, char* s) { strcpy(s, ""); };
-            voiceMenu.Formatters[4] = [](int idx, float v, char* s) 
+            voiceMenu.Values[5] = 1;
+            voiceMenu.Values[6] = 1;
+            voiceMenu.Values[7] = 1;
+            voiceMenu.Values[8] = 1;
+            voiceMenu.Values[9] = 1;
+            voiceMenu.Values[10] = 1;
+
+            voiceMenu.Max[0] = 24;
+            voiceMenu.Max[1] = 24;
+            voiceMenu.Max[4] = 17;
+            voiceMenu.Max[5] = 4;
+            voiceMenu.Max[6] = 4;
+            voiceMenu.Max[7] = 4;
+            voiceMenu.Max[8] = 4;
+            voiceMenu.Max[9] = 4;
+            voiceMenu.Max[10] = 4;
+
+            voiceMenu.Min[5] = 1;
+            voiceMenu.Min[6] = 1;
+            voiceMenu.Min[7] = 1;
+            voiceMenu.Min[8] = 1;
+            voiceMenu.Min[9] = 1;
+            voiceMenu.Min[10] = 1;
+
+            voiceMenu.Formatters[0] = [](int idx, int16_t v, char* s) { sprintf(s, "%ddB", -12+v); };
+            voiceMenu.Formatters[1] = [](int idx, int16_t v, char* s) { sprintf(s, "%ddB", -12+v); };
+            voiceMenu.Formatters[2] = [](int idx, int16_t v, char* s) { strcpy(s, ""); };
+            voiceMenu.Formatters[3] = [](int idx, int16_t v, char* s) { strcpy(s, ""); };
+            voiceMenu.Formatters[4] = [](int idx, int16_t v, char* s) 
             { 
-                int ch = (int)(17.999*v);
-                if (ch == 0) strcpy(s, "Off");
-                else if (ch == 1) strcpy(s, "Omni");
-                else sprintf(s, "%d", ch-1); 
+                if (v == 0) strcpy(s, "Off");
+                else if (v == 1) strcpy(s, "Omni");
+                else sprintf(s, "%d", v-1); 
             };
-            
-            for(int i=5; i<=10; i++)
-                voiceMenu.Formatters[i] = [](int idx, float v, char* s) { sprintf(s, "%d", (int)(1+3.999*v)); };
 
             voiceMenu.SetLength(11);
             voiceMenu.SelectedItem = 0;
