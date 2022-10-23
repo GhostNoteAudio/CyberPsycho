@@ -21,10 +21,14 @@ namespace Cyber
                 {
                     if (scopeWritePtr < 128)
                     {
-                        if (channel <= 3)
-                            data[scopeWritePtr] = db->Cv[channel][i];
-                        else if (channel <= 7)
-                            data[scopeWritePtr] = db->Mod[channel-4][i];
+                        if (channel == 0) data[scopeWritePtr] = db->Cv[0][i];
+                        else if (channel == 1) data[scopeWritePtr] = db->Cv[1][i];
+                        else if (channel == 2) data[scopeWritePtr] = db->Cv[2][i];
+                        else if (channel == 3) data[scopeWritePtr] = db->Cv[3][i];
+                        else if (channel == 4) data[scopeWritePtr] = db->Mod[0][i];
+                        else if (channel == 5) data[scopeWritePtr] = db->Mod[1][i];
+                        else if (channel == 6) data[scopeWritePtr] = db->Mod[2][i];
+                        else if (channel == 7) data[scopeWritePtr] = db->Mod[3][i];
                     }
                     scopeWritePtr++;
                 }

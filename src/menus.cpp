@@ -11,6 +11,9 @@ namespace Cyber
 {   
     namespace Menus
     {
+        int lastChangeMillis = 0;
+        int lastChangeIdx = 0;
+
         Menu* ActiveMenu;
 
         Menu initMenu;
@@ -22,6 +25,7 @@ namespace Cyber
 
         void BuildScopeMenu()
         {
+            
             scopeMenu.SetLength(4);
             scopeMenu.CustomOnlyMode = true;
             scopeMenu.RenderCustomDisplayCallback = [](Adafruit_SH1106G* display)
@@ -31,6 +35,8 @@ namespace Cyber
                 
                 for (int x = 0; x < display->width(); x++)
                 {
+                    if (x % 16 == 0)
+                        YieldAudio();
                     uint8_t y = Scope::data[x] >> 6; // 12 bit to 6 bit (0-63)
                     display->drawPixel(x, (h-1) - y, SH110X_WHITE);
                 }
@@ -38,26 +44,42 @@ namespace Cyber
                 display->setFont(&AtlantisInternational_jen08pt7b);
                 display->setTextSize(1);
                 display->setTextColor(SH110X_BLACK);
-                display->setCursor(1, 62);
+                display->setCursor(65, 62);
                 char readout[16];
                 auto readoutVal = scopeMenu.Values[3];
+                YieldAudio();
 
                 if (readoutVal == 1)
                 {
-                    display->fillRect(0, 55, 60, 9, SH110X_WHITE);
+                    display->fillRect(64, 55, 60, 9, SH110X_WHITE);
                     sprintf(readout, "Min: %d", Utils::Min(Scope::data, 128));
                     display->println(readout);
                 }
                 else if (readoutVal == 2)
                 {
-                    display->fillRect(0, 55, 60, 9, SH110X_WHITE);
+                    display->fillRect(64, 55, 60, 9, SH110X_WHITE);
                     sprintf(readout, "Max: %d", Utils::Max(Scope::data, 128));
                     display->println(readout);
                 }
                 else if (readoutVal == 3)
                 {
-                    display->fillRect(0, 55, 60, 9, SH110X_WHITE);
+                    display->fillRect(64, 55, 60, 9, SH110X_WHITE);
                     sprintf(readout, "Mean: %d", (int)Utils::Mean(Scope::data, 128));
+                    display->println(readout);
+                }
+                YieldAudio();
+
+                bool shouldDisplayChange = (millis() - lastChangeMillis) < 2000;
+                if (shouldDisplayChange)
+                {
+                    display->fillRect(0, 55, 60, 9, SH110X_WHITE);
+                    display->setCursor(1, 62);
+                    char readout[16];
+                    int dsEffective = (1<<Scope::downsampling);
+
+                    if (lastChangeIdx == 0) sprintf(readout, "Channel: %d", Scope::channel);
+                    if (lastChangeIdx == 1) sprintf(readout, "Divide: %d", dsEffective);
+                    if (lastChangeIdx == 2) sprintf(readout, "Freq: %d", Scope::triggerFreq);
                     display->println(readout);
                 }
             };
@@ -66,11 +88,17 @@ namespace Cyber
                 if (idx == 0)
                     Scope::channel = (int)(value * 7.99);
                 if (idx == 1)
-                    Scope::downsampling = (int)(value * 7.99);
+                    Scope::downsampling = (int)(value * 9.99);
                 if (idx == 2)
                     Scope::triggerFreq = 1024 + (int)(value * 4096);
                 if (idx == 3)
                     menu->SetValue(idx, (int)(value*3.999));
+
+                if (idx < 3)
+                {
+                    lastChangeIdx = idx;
+                    lastChangeMillis = millis();
+                }
             };
         }
 
