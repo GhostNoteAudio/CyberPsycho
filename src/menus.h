@@ -21,6 +21,7 @@ namespace Cyber
         extern Menu calibrateMenu;
         extern Menu voiceMenu;
         extern Menu pitchTrigMenu;
+        extern Menu generatorSelectMenu;
 
         void Init();
     }

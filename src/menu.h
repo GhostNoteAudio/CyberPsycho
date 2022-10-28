@@ -12,14 +12,10 @@
 namespace Cyber
 {
     class Menu;
-
-    namespace Menus
-    {
-        void HandleEncoderDefault(Menu* menu, int tick);
-        void HandleEncoderSwitchDefault(Menu* menu, bool value);
-        void HandlePotDefault(Menu* menu, int idx, float value);
-        void HandleSwitchDefault(Menu* menu, int idx, bool value);
-    }
+    void HandleEncoderDefault(Menu* menu, int tick);
+    void HandleEncoderSwitchDefault(Menu* menu, bool value);
+    void HandlePotDefault(Menu* menu, int idx, float value);
+    void HandleSwitchDefault(Menu* menu, int idx, bool value);
 
     class Menu
     {
@@ -38,10 +34,10 @@ namespace Cyber
         std::function<void(Adafruit_SH1106G*)> RenderCustomDisplayCallback = 0;
         
         //Todo: Implement these, build "default" implementations that work for most menus, like switch handling which should almost always be the same
-        std::function<void(Menu*, int)> HandleEncoderCallback = Menus::HandleEncoderDefault;
-        std::function<void(Menu*, bool)> HandleEncoderSwitchCallback = Menus::HandleEncoderSwitchDefault;
-        std::function<void(Menu*, int, float)> HandlePotCallback = Menus::HandlePotDefault;
-        std::function<void(Menu*, int, bool)> HandleSwitchCallback = Menus::HandleSwitchDefault;
+        std::function<void(Menu*, int)> HandleEncoderCallback = HandleEncoderDefault;
+        std::function<void(Menu*, bool)> HandleEncoderSwitchCallback = HandleEncoderSwitchDefault;
+        std::function<void(Menu*, int, float)> HandlePotCallback = HandlePotDefault;
+        std::function<void(Menu*, int, bool)> HandleSwitchCallback = HandleSwitchDefault;
 
         int TopItem = 0;
         int SelectedItem = 0;

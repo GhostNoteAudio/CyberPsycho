@@ -34,7 +34,7 @@ void PreventStartupBleep()
 void RegisterAllGenerators()
 {
     const char* kick1Name = "Kick 1";
-    generatorRegistry.Add([]{return new Kick1();}, kick1Name, []{return (Adafruit_GFX*)0;});
+    generatorRegistry.Add([]{return new Kick1();}, kick1Name, [](Adafruit_GFX* x){Kick1::SplashScreen(x);});
 
     Voices[0].generator = generatorRegistry.CreateInstance(0);
 }

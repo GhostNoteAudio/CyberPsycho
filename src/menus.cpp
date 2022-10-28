@@ -8,6 +8,7 @@
 #include "scope.h"
 #include "generators/kick1.h"
 #include "voices.h"
+#include "generatorRegistry.h"
 
 namespace Cyber
 {
@@ -26,10 +27,10 @@ namespace Cyber
         Menu calibrateMenu;
         Menu voiceMenu;
         Menu pitchTrigMenu;
+        Menu generatorSelectMenu;
 
         void BuildScopeMenu()
         {
-            
             scopeMenu.SetLength(4);
             scopeMenu.CustomOnlyMode = true;
             scopeMenu.RenderCustomDisplayCallback = [](Adafruit_SH1106G* display)
@@ -353,6 +354,21 @@ namespace Cyber
             };
         }
 
+        void BuildGeneratorSelectMenu()
+        {
+            generatorSelectMenu.SetLength(1);
+            generatorSelectMenu.CustomOnlyMode = true;
+            generatorSelectMenu.RenderCustomDisplayCallback = [](Adafruit_SH1106G* display)
+            {
+                generatorRegistry.SplashScreenBuilders[0](display);
+                if (generatorSelectMenu.EditMode)
+                {
+                    display->fillTriangle(118, 8, 126, 8, 122, 4, SH110X_WHITE);
+                    display->fillTriangle(118, 55, 126, 55, 122, 59, SH110X_WHITE);
+                }
+            };
+        }
+
         void Init()
         {
             BuildInitMenu();
@@ -361,79 +377,9 @@ namespace Cyber
             BuildCalibrateMenu();
             BuildVoiceMenu();
             BuildPitchTrigMenu();
+            BuildGeneratorSelectMenu();
         }
 
-        void HandleEncoderDefault(Menu* menu, int tick)
-        {
-            if (!menu->EditMode)
-            {
-                if (tick == 1 && !menu->QuadMode)
-                    menu->MoveDown();
-                if (tick == 1 && menu->QuadMode)
-                    menu->MoveDownPage();
-                if (tick == -1 && !menu->QuadMode)
-                    menu->MoveUp();
-                if (tick == -1 && menu->QuadMode)
-                    menu->MoveUpPage();
-            }
-            else if (menu->EditMode && !menu->QuadMode)
-            {
-                menu->TickValue(menu->SelectedItem, tick);
-            }
-        }
-
-        void HandleEncoderSwitchDefault(Menu* menu, bool value)
-        {
-            if (value && !menu->QuadMode)
-                menu->EditMode = !menu->EditMode;
-        }
-
-        void HandlePotDefault(Menu* menu, int idx, float value)
-        {
-            if (menu->QuadMode)
-            {
-                menu->SetValue(menu->TopItem + idx, value * 100);
-            }
-        }
-
-        void HandleSwitchDefault(Menu* menu, int idx, bool value)
-        {
-            LogInfof("Handling switch %d, value %d", idx, (int)value);
-            
-            if (idx == 0)
-            {
-                if (value)
-                {
-                    modalState.Shift = true;
-                }
-                else
-                {
-                    if (modalState.Shift)
-                    {
-                        ActiveMenu = Voices[ActiveVoice].generator->GetMenu();
-                    }
-                    else
-                    {
-                        // noop
-                    }
-                    modalState.Shift = false;
-                }
-            }
-            else if (idx == 1 && value && modalState.Shift)
-            {
-                ActiveMenu = &globalMenu;
-                modalState.Shift = false;
-            }
-            else if (idx == 2 && value && modalState.Shift)
-            {
-                ActiveMenu = &voiceMenu;
-                modalState.Shift = false;
-            }
-            else if (idx == 3 && value && modalState.Shift)
-            {
-                ActiveMenu = &pitchTrigMenu;
-                modalState.Shift = false;
-            }
-        }
+        
     }
 }

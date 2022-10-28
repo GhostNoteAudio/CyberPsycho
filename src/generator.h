@@ -35,5 +35,5 @@ namespace Cyber
     };
 
     void YieldAudio();
-    void RegisterGenerator(std::function<Generator*(void)> factory, const char* name, std::function<Adafruit_GFX*(void)> splashScreenBuilder);
+    void RegisterGenerator(std::function<Generator*(void)> factory, const char* name, std::function<void(Adafruit_GFX*)> splashScreenBuilder);
 }
