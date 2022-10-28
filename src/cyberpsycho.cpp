@@ -10,4 +10,5 @@ namespace Cyber
     ControlManager controls;
     I2CMaster& i2cMaster = Master;
     ModalState modalState;
+    GeneratorRegistry<100> generatorRegistry;
 }

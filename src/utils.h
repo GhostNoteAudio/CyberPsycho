@@ -8,6 +8,21 @@ namespace Cyber
 {
     namespace Utils
     {
+        inline uint16_t To12Bit(float value)
+        {
+            return 2048 + value * 2047;
+        }
+
+        inline void To12Bit(uint16_t* dest, const float* source, int size)
+        {
+            int i = 0;
+            while(i < size)
+            {
+                dest[i] = 2048 + source[i] * 2047;
+                i++;
+            }
+        }
+
         template<typename T>
         inline T Clip1(T value)
         {

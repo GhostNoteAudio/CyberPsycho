@@ -1,26 +1,43 @@
 #include "Arduino.h"
 #include "cyberpsycho.h"
 #include <SdFat.h>
+#include "generators/kick1.h"
 
 using namespace Cyber;
-
-
 
 void HandleAudioFunction(DataBuffer* data)
 {
     Cyber::Scope::ProcessScope(data);
     auto fpData = inProcessor.ConvertToFp(data);
-    //auto min = Utils::Min(fpData.Cv[3], fpData.Size);
-    //auto max = Utils::Max(fpData.Cv[3], fpData.Size);
-    //LogInfof("Min: %f - Max: %f", min, max)
 
-    for (int i = 0; i < data->Size; i++)
-        data->Out[3][i] = data->Mod[3][i];
+    GeneratorArgs args;
+    args.Bpm = 120;
+    args.InputLeft = (AudioBuffer*)fpData.Mod[3];
+    args.OutputLeft = (AudioBuffer*)fpData.Out[3];
+    Voices[0].generator->Process(args);
 
-    //delayMicroseconds(600);
+    Utils::To12Bit(data->Out[3], fpData.Out[3], data->Size);
 }
 
 SdFat sd;
+
+void PreventStartupBleep()
+{
+    // Primes the serial port for data, otherwise there's a ~100ms stall just after startup
+    for (int i = 0; i < 10; i++)
+    {
+        delay(10);
+        LogInfo("Starting up...");
+    }
+}
+
+void RegisterAllGenerators()
+{
+    const char* kick1Name = "Kick 1";
+    generatorRegistry.Add([]{return new Kick1();}, kick1Name, []{return (Adafruit_GFX*)0;});
+
+    Voices[0].generator = generatorRegistry.CreateInstance(0);
+}
 
 void setup()
 {
@@ -61,13 +78,15 @@ void setup()
     Menus::ActiveMenu = &Menus::initMenu;
 
     audio.Init();
-    audio.StartProcessing();
     Serial.println("Done");
 
     i2cMaster.begin(1000000);
     HandleAudioCb = HandleAudioFunction;
 
+    PreventStartupBleep();
+    RegisterAllGenerators();
     SPI.begin();
+    audio.StartProcessing();
 }
 
 PeriodicExecution execPrint(1000);
@@ -78,7 +97,7 @@ PeriodicExecution updateMenu(10);
 void loop()
 {
     YieldAudio();
-
+    
     if (execPrint.Go())
     {
         if (audio.BufferUnderrun)
@@ -87,13 +106,14 @@ void loop()
             audio.BufferUnderrun = false;
         }
 
-        //auto py = GetPerfYield();
-        //auto pa = GetPerfAudio();
-        //auto pi = GetPerfIo();
+        auto py = GetPerfYield();
+        auto pa = GetPerfAudio();
+        auto pi = GetPerfIo();
         float cpuLoad = GetCpuLoad();
-        //LogInfof("Audio Time : %f %f %f", pa->Period(), pa->PeriodAvg(), pa->PeriodDecay());
-        //LogInfof("Yield Time : %f %f %f", py->Period(), py->PeriodAvg(), py->PeriodDecay());
-        //LogInfof("IO Time : %f %f %f", pi->Period(), pi->PeriodAvg(), pi->PeriodDecay());
+        LogInfof("Audio Time : %f %f %f", 0.5, 0.5, 0.5);
+        LogInfof("Audio Time : %f %f %f", pa->Period(), pa->PeriodAvg(), pa->PeriodDecay());
+        LogInfof("Yield Time : %f %f %f", py->Period(), py->PeriodAvg(), py->PeriodDecay());
+        LogInfof("IO Time : %f %f %f", pi->Period(), pi->PeriodAvg(), pi->PeriodDecay());
         LogInfof("CPU Load: %.3f", cpuLoad);
     }
 

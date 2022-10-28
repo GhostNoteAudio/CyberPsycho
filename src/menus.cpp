@@ -6,9 +6,13 @@
 #include "logging.h"
 #include "input_processor.h"
 #include "scope.h"
+#include "generators/kick1.h"
+#include "voices.h"
 
 namespace Cyber
-{   
+{
+    extern Kick1 kick;
+
     namespace Menus
     {
         int lastChangeMillis = 0;
@@ -388,7 +392,7 @@ namespace Cyber
         {
             if (menu->QuadMode)
             {
-                menu->SetValue(menu->TopItem + idx, value);
+                menu->SetValue(menu->TopItem + idx, value * 100);
             }
         }
 
@@ -397,16 +401,39 @@ namespace Cyber
             LogInfof("Handling switch %d, value %d", idx, (int)value);
             
             if (idx == 0)
-                modalState.Shift = value;
+            {
+                if (value)
+                {
+                    modalState.Shift = true;
+                }
+                else
+                {
+                    if (modalState.Shift)
+                    {
+                        ActiveMenu = Voices[ActiveVoice].generator->GetMenu();
+                    }
+                    else
+                    {
+                        // noop
+                    }
+                    modalState.Shift = false;
+                }
+            }
             else if (idx == 1 && value && modalState.Shift)
+            {
                 ActiveMenu = &globalMenu;
+                modalState.Shift = false;
+            }
             else if (idx == 2 && value && modalState.Shift)
+            {
                 ActiveMenu = &voiceMenu;
+                modalState.Shift = false;
+            }
             else if (idx == 3 && value && modalState.Shift)
+            {
                 ActiveMenu = &pitchTrigMenu;
-
-            if ((idx == 1 || idx == 2 || idx == 3) && modalState.Shift)
-                ActiveMenu->EditMode = false;
+                modalState.Shift = false;
+            }
         }
     }
 }

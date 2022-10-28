@@ -217,17 +217,23 @@ namespace Cyber
 
             char val[16];
 
-            for (int i = 0; i < Height; i++)
+            for (int k = 0; k < 4; k++)
             {
                 YieldAudio();
-                auto item = TopItem + i;
+                
+                int item;
+                if (k == 0) item = TopItem + 0;
+                if (k == 1) item = TopItem + 3;
+                if (k == 2) item = TopItem + 1;
+                if (k == 3) item = TopItem + 2;
+                
                 if (item >= Length)
                     break;
 
                 bool isSelected = (item == SelectedItem) && EnableSelection;
 
-                int x = i % 2;
-                int y = i / 2;
+                int x = k % 2;
+                int y = k / 2;
 
                 if (isSelected)
                 {

@@ -1,12 +1,12 @@
 #pragma once
 #include "constants.h"
+#include "stdint.h"
 
 namespace Cyber
 {
     template<int T>
-    class IOBuffer
+    struct DataBufferT
     {
-    public:
         const int Size = T;
         uint8_t Gate[4][T] = {{0}};
         uint16_t Cv[4][T] = {{0}};
@@ -15,9 +15,8 @@ namespace Cyber
     };
 
     template<int T>
-    class FloatBuffer
+    struct FpBufferT
     {
-    public:
         const int Size = T;
         bool Gate[4][T] = {{0}};
         float Cv[4][T] = {{0}};
@@ -25,6 +24,13 @@ namespace Cyber
         float Out[4][T] = {{0}};
     };
 
-    typedef IOBuffer<BUFFER_SIZE> DataBuffer;
-    typedef FloatBuffer<BUFFER_SIZE> FpBuffer;
+    template<int T>
+    struct AudioBufferT
+    {
+        float Data[T];
+    };
+
+    typedef DataBufferT<BUFFER_SIZE> DataBuffer;
+    typedef FpBufferT<BUFFER_SIZE> FpBuffer;
+    typedef AudioBufferT<BUFFER_SIZE> AudioBuffer;
 }

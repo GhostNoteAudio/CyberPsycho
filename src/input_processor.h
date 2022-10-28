@@ -51,7 +51,6 @@ namespace Cyber
                     output.Gate[idx][i] = g;
                 }
             }
-
             return output;
         }
     };

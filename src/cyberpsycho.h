@@ -14,3 +14,5 @@
 #include "utils.h"
 #include "timers.h"
 #include "scope.h"
+#include "voices.h"
+#include "generatorRegistry.h"
