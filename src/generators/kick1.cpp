@@ -19,6 +19,13 @@ namespace Cyber
         menu.Captions[4] = "Boost";
         menu.Captions[5] = "Fold";
 
+        menu.Values[0] = 20;
+        menu.Values[1] = 20;
+        menu.Values[2] = 20;
+        menu.Values[3] = 3;
+        menu.Values[4] = 2;
+        menu.Values[5] = 0;
+
         menu.SetLength(6);
         menu.SelectedItem = 0;
         menu.TopItem = 0;

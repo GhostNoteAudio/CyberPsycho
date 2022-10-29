@@ -46,9 +46,9 @@ namespace Cyber
         }
 
     public:
-        inline static void SplashScreen(Adafruit_GFX* display)
+        inline static void SplashScreen(Adafruit_SH1106G* display)
         {
-            display->fillScreen(SH110X_BLACK);
+            display->clearDisplay();
             display->setTextColor(SH110X_WHITE);
             display->setFont(&AtlantisInternational_jen08pt7b);
             display->setTextSize(2);
