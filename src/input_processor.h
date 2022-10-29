@@ -1,6 +1,7 @@
 #pragma once
 #include <Arduino.h>
 #include "io_buffer.h"
+#include "logging.h"
 
 namespace Cyber
 {
@@ -13,6 +14,7 @@ namespace Cyber
         const float ModRange = 5;
         
         int InputGate[4];
+        bool Gate[4];
 
     public:
         // Adjustments
@@ -42,13 +44,12 @@ namespace Cyber
             {
                 for (int i = 0; i < buf->Size; i++)
                 {
-                    bool g = false;
-                    InputGate[idx] += (-1+2*buf->Gate[idx][i]) * GateSpeed;
+                    InputGate[idx] += (-1+2*((int)buf->Gate[idx][i])) * GateSpeed;
                     if (InputGate[idx] > 255) InputGate[idx] = 255;
                     if (InputGate[idx] < 0) InputGate[idx] = 0;
-                    if (InputGate[idx] < GateThresLow) g = false;
-                    if (InputGate[idx] > GateThresHigh) g = true;
-                    output.Gate[idx][i] = g;
+                    if (InputGate[idx] < GateThresLow) Gate[idx] = false;
+                    if (InputGate[idx] > GateThresHigh) Gate[idx] = true;
+                    output.Gate[idx][i] = Gate[idx];
                 }
             }
             return output;

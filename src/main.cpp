@@ -12,8 +12,9 @@ void HandleAudioFunction(DataBuffer* data)
 
     GeneratorArgs args;
     args.Bpm = 120;
-    args.InputLeft = (AudioBuffer*)fpData.Mod[3];
-    args.OutputLeft = (AudioBuffer*)fpData.Out[3];
+    args.InputLeft = fpData.Mod[3];
+    args.OutputLeft = fpData.Out[3];
+    args.Gate = fpData.Gate[3];
     Voices[0].generator->Process(args);
 
     Utils::To12Bit(data->Out[3], fpData.Out[3], data->Size);

@@ -5,7 +5,7 @@ namespace Cyber
 {
     Kick1::Kick1()
     {
-         menu.Captions[0] = "Param0";
+        menu.Captions[0] = "Param0";
         menu.Captions[1] = "Param1";
         menu.Captions[2] = "Param2";
         menu.Captions[3] = "Param3";
@@ -15,6 +15,11 @@ namespace Cyber
         menu.TopItem = 0;
         menu.EnableSelection = false;
         menu.QuadMode = true;
+
+        ampEnv.Mode = Modules::Envelope::EnvMode::AR1shot;
+        ampEnv.AttackSamples = 10;
+        ampEnv.ReleaseSamples = 4400;
+        ampEnv.UpdateParams();
     }
 
 
@@ -27,7 +32,16 @@ namespace Cyber
     {
         for (int i = 0; i < args.Size; i++)
         {
-            args.OutputLeft->Data[i] = args.InputLeft->Data[i];
+            float sample = args.InputLeft[i];
+            bool gate = args.Gate[i];
+            float env = ampEnv.Process(gate);
+
+            if (i ==0)
+            {
+                LogInfof("Env: %.3f Gate: %d - env stage: %d", env, (int)gate, ampEnv.Stage);
+            }
+
+            args.OutputLeft[i] = env * sample;
         }
     }
 

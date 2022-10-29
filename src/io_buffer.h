@@ -24,13 +24,6 @@ namespace Cyber
         float Out[4][T] = {{0}};
     };
 
-    template<int T>
-    struct AudioBufferT
-    {
-        float Data[T];
-    };
-
     typedef DataBufferT<BUFFER_SIZE> DataBuffer;
     typedef FpBufferT<BUFFER_SIZE> FpBuffer;
-    typedef AudioBufferT<BUFFER_SIZE> AudioBuffer;
 }

@@ -18,11 +18,11 @@ namespace Cyber
     void ts();
 }
 
-#define LogDebug(msg) { if (LogLevel >= LogLevelDebug) { ts(); Serial.println(msg); }}
-#define LogDebugf(fmt, ...) {if (LogLevel >= LogLevelDebug) { ts(); Serial.printf(fmt, __VA_ARGS__); Serial.println(""); }}
-#define LogInfo(msg) {if (LogLevel >= LogLevelInfo) { ts(); Serial.println(msg); }}
-#define LogInfof(fmt, ...) {if (LogLevel >= LogLevelInfo) { ts(); Serial.printf(fmt, __VA_ARGS__); Serial.println(""); }}
-#define LogWarn(msg) {if (LogLevel >= LogLevelWarn) { ts(); Serial.println(msg); }}
-#define LogWarnf(fmt, ...) {if (LogLevel >= LogLevelWarn) { ts(); Serial.printf(fmt, __VA_ARGS__); Serial.println(""); }}
-#define LogError(msg) {if (LogLevel >= LogLevelError) { ts(); Serial.println(msg); }}
-#define LogErrorf(fmt, ...) {if (LogLevel >= LogLevelError) { ts(); Serial.printf(fmt, __VA_ARGS__); Serial.println(""); }}
+#define LogDebug(msg) { if (Cyber::LogLevel >= Cyber::LogLevelDebug) { Cyber::ts(); Serial.println(msg); }}
+#define LogDebugf(fmt, ...) {if (Cyber::LogLevel >= Cyber::LogLevelDebug) { Cyber::ts(); Serial.printf(fmt, __VA_ARGS__); Serial.println(""); }}
+#define LogInfo(msg) {if (Cyber::LogLevel >= Cyber::LogLevelInfo) { Cyber::ts(); Serial.println(msg); }}
+#define LogInfof(fmt, ...) {if (Cyber::LogLevel >= Cyber::LogLevelInfo) { Cyber::ts(); Serial.printf(fmt, __VA_ARGS__); Serial.println(""); }}
+#define LogWarn(msg) {if (Cyber::LogLevel >= Cyber::LogLevelWarn) { Cyber::ts(); Serial.println(msg); }}
+#define LogWarnf(fmt, ...) {if (Cyber::LogLevel >= Cyber::LogLevelWarn) { Cyber::ts(); Serial.printf(fmt, __VA_ARGS__); Serial.println(""); }}
+#define LogError(msg) {if (Cyber::LogLevel >= Cyber::LogLevelError) { Cyber::ts(); Serial.println(msg); }}
+#define LogErrorf(fmt, ...) {if (Cyber::LogLevel >= Cyber::LogLevelError) { Cyber::ts(); Serial.printf(fmt, __VA_ARGS__); Serial.println(""); }}

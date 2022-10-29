@@ -3,6 +3,7 @@
 #include "generator.h"
 #include "menu.h"
 #include <fonts/font3.h>
+#include "modules/envelope.h"
 
 namespace Cyber
 {
@@ -10,6 +11,7 @@ namespace Cyber
     class Kick1 : public Generator
     {
         Menu menu;
+        Modules::Envelope ampEnv;
     public:
         Kick1();
         virtual Menu* GetMenu() override;

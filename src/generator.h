@@ -15,14 +15,14 @@ namespace Cyber
         bool StereoOut;
         float Bpm;
 
-        AudioBuffer* InputLeft;
-        AudioBuffer* InputRight;
-        AudioBuffer* OutputLeft;
-        AudioBuffer* OutputRight;
-        AudioBuffer* Gate;
-        AudioBuffer* Cv;
+        float* InputLeft;
+        float* InputRight;
+        float* OutputLeft;
+        float* OutputRight;
+        float* Cv;
+        bool* Gate;
         
-        std::function<AudioBuffer*(int)> GetModulation;
+        std::function<float*(int)> GetModulation;
     };
 
     class Generator
