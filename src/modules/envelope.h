@@ -1,3 +1,4 @@
+#pragma once
 #include "logging.h"
 
 namespace Modules
@@ -14,75 +15,107 @@ namespace Modules
         enum class EnvMode
         {
             AR = 0,
-            AR1shot = 1,
-            //AHR = 2,
-            //ADSR = 3,
-            //AHDRS = 4
+            //AHR = 1,
+            //ADSR = 2,
+            //AHDRS = 3
         };
 
-    public:
+    private:
+        float ExpMin = 0.001; // -60db
+        float ExpScaler = (1.0/(1.0 - 0.001)); // used to scale output from [0.001, 1] to [0, 1]
+
         int Stage = 4; // 0=attack, 1=hold, 2=decay, 3=sustain, 4=release
         int SamplesSinceStage = 1000000000; // how many samples have been processed since entering the current stage
         bool currentGate = false;
+        
+        // Linear mode
         float AttackInc;
         float DecayInc;
         float ReleaseInc;
+
+        // Exp mode
+        float AttackMultiplier;
+        float DecayMultiplier;
+        float ReleaseMultiplier;
+
+        float Output = 0;
 
     public:
         EnvMode Mode = EnvMode::AR;
         CurveMode AttackMode = CurveMode::Linear;
         CurveMode DecayMode = CurveMode::Linear;
+        CurveMode ReleaseMode = CurveMode::Linear;
         float AttackSamples = 1000;
         float HoldSamples = 0;
         float DecaySamples = 1000;
         float SustainLevel = 0.5;
         float ReleaseSamples = 1000;
-        bool ResetOnTrig = true;
+        bool ResetOnTrig = true; // if true, will always reset env output to zero on trigger
+        bool OneShot = false; // if true, will latch gate until the end of the release phase is reached. Useful for permission sounds
 
-        float Output = 0;
-
-        void UpdateParams()
+        int GetCurrentStage()
         {
+            return Stage;
+        }
+
+        float GetOutput()
+        {
+            bool scale = false;
+            if (Stage == 0 && AttackMode == CurveMode::Exp) scale = true;
+            if (Stage == 2 && DecayMode == CurveMode::Exp) scale = true;
+            if (Stage == 4 && ReleaseMode == CurveMode::Exp) scale = true;
+            return scale ? (Output - ExpMin) * ExpScaler : Output;
+        }
+
+        void UpdateParams(float minimumExpDb = -60)
+        {
+            ExpMin = pow10(minimumExpDb / 20.0);
+            ExpScaler = 1.0/(1.0 - ExpMin);
+            minimumExpDb = -minimumExpDb;
+
             AttackInc = 1.0 / AttackSamples;
             DecayInc = 1.0 / DecaySamples;
             ReleaseInc = 1.0 / ReleaseSamples;
+
+            // calculate the multiplier M, as so:
+            // ExpMin * M^Samples = 1.0  - for attack
+            // or
+            // 1.0 * M^Samples = ExpMin  - for decay and release
+            AttackMultiplier = pow10((minimumExpDb/AttackSamples) / 20.0);
+            DecayMultiplier = 1.0 / pow10((minimumExpDb/DecaySamples) / 20.0);
+            ReleaseMultiplier = 1.0 / pow10((minimumExpDb/ReleaseSamples) / 20.0);
         }
 
     private:
-        void ProcessAr(bool trig, bool gate)
+        void ProcessAr()
         {
-            if (trig)
+            if (Stage == 4) // Release
             {
-                Stage = 0;
-                if (ResetOnTrig)
-                    Output = 0;
-            }
-
-            if (Stage == 4)
-            {
-                Output -= ReleaseInc;
-                if (Output < 0)
-                    Output = 0;
-            }
-
-            if (Stage == 0)
-            {
-                LogInfo("Bang in stage 0");
-                if (gate || Mode == EnvMode::AR1shot)
+                if (ReleaseMode == CurveMode::Linear)
                 {
-                    Output += AttackInc;
-                    if (Output >= 1)
-                    {
-                        Output = 1;
-                        Stage = 4;
-                    }
-                }
-                else
-                {
-                    Stage = 4;
                     Output -= ReleaseInc;
                     if (Output < 0)
                         Output = 0;
+                }
+                else
+                {
+                    Output *= ReleaseMultiplier;
+                    if (Output < ExpMin)
+                        Output = ExpMin;
+                }
+            }
+
+            if (Stage == 0) // Attack
+            {
+                if (AttackMode == CurveMode::Linear)
+                    Output += AttackInc;
+                else
+                    Output *= AttackMultiplier;
+
+                if (Output >= 1)
+                {
+                    Output = 1;
+                    Stage = 4;
                 }
             }
         }
@@ -93,27 +126,29 @@ namespace Modules
             bool trig = !this->currentGate && gate;
             int stageOrig = Stage;
 
-            /*if (trig)
+            if (trig)
             {
-                LogInfof("Trig! gate: %d, currentGate: %d", gate, this->currentGate);
-            }*/
+                Stage = 0;
+                if (ResetOnTrig)
+                    Output = AttackMode == CurveMode::Linear ? 0 : ExpMin;
+            }
 
-            if (Mode == EnvMode::AR || Mode == EnvMode::AR1shot)
-                ProcessAr(trig, gate);
+            if (!gate && !OneShot)
+            {
+                Stage = 4;
+            }
+
+            if (Mode == EnvMode::AR || Mode == EnvMode::AR)
+                ProcessAr();
 
             this->currentGate = gate;
-
-            /*if (trig)
-            {
-                LogInfof("I just set currentGate to %d, using gate %d", currentGate, gate);
-            }*/
 
             if (stageOrig == Stage)
                 SamplesSinceStage++;
             else
                 SamplesSinceStage = 1;
             
-            return Output;
+            return GetOutput();
         }
     };
 }

@@ -11,7 +11,11 @@ namespace Cyber
     class Kick1 : public Generator
     {
         Menu menu;
-        Modules::Envelope ampEnv;
+        int index;
+        float phasor;
+        bool currentGate;
+
+        //Modules::Envelope ampEnv;
     public:
         Kick1();
         virtual Menu* GetMenu() override;
@@ -19,7 +23,30 @@ namespace Cyber
         virtual void ProcessMidi(uint8_t type, uint8_t data0, uint8_t data1) override;
         virtual void ProcessOffline() override;
 
-        static void SplashScreen(Adafruit_GFX* display)
+    private:
+        float GetScaledParameter(int idx);
+
+        inline float Boost(float s, float gain)
+        {
+            return tanhf(s * gain);
+            // s = s * gain;
+            // s = s < -1 ? -1 : s > 1 ? 1 : s;
+            // return s;
+        }
+
+        inline float Fold(float s, float gain)
+        {
+            return sinf(s * gain);
+        }
+
+        inline void Trigger()
+        {
+            index = 0;
+            phasor = 0;
+        }
+
+    public:
+        inline static void SplashScreen(Adafruit_GFX* display)
         {
             display->fillScreen(SH110X_BLACK);
             display->setTextColor(SH110X_WHITE);

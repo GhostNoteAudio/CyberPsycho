@@ -360,10 +360,14 @@ namespace Cyber
             generatorSelectMenu.CustomOnlyMode = true;
             generatorSelectMenu.RenderCustomDisplayCallback = [](Adafruit_SH1106G* display)
             {
+                YieldAudio();
                 generatorRegistry.SplashScreenBuilders[0](display);
+                YieldAudio();
                 if (generatorSelectMenu.EditMode)
                 {
+                    YieldAudio();
                     display->fillTriangle(118, 8, 126, 8, 122, 4, SH110X_WHITE);
+                    YieldAudio();
                     display->fillTriangle(118, 55, 126, 55, 122, 59, SH110X_WHITE);
                 }
             };

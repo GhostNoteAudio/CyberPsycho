@@ -224,7 +224,7 @@ namespace Cyber
                 if (k == 3) item = TopItem + 2;
                 
                 if (item >= Length)
-                    break;
+                    continue;
 
                 bool isSelected = (item == SelectedItem) && EnableSelection;
 
