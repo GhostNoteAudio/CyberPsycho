@@ -13,7 +13,7 @@ namespace Cyber
         Menu menu;
         float pitch = 48;
         float gainAdjust = 1.0;
-        int phasor[7] = {0};
+        uint32_t phasor[7] = {0};
         float volumes[7] = {0};
         Modules::Biquad biq;
         

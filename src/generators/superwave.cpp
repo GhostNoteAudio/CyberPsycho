@@ -1,5 +1,6 @@
 #include "superwave.h"
 #include "menu.h"
+#include "modules/wavetable.h"
 
 namespace Cyber
 {
@@ -9,10 +10,10 @@ namespace Cyber
     const int CENT = 3;
 
     const int COUNT = 7;
-    const float OFFSETS[7] = {1-0.88997686, 1-0.93711560, 1-0.98047643, 0, 1-1.01991221, 1-1.06216538, 1-1.10745242};
-    const float GAINS[7] = {0.05, 0.2, 0.7, 1, 0.7, 0.2, 0.05};
+    const float OFFSETS[7] = {-0.1102, -0.0629, -0.0235, 0.0, 0.0217, 0.0593, 0.1056};
+    const float GAINS[7] = {0.1, 0.3, 0.7, 1, 0.65, 0.32, 0.08};
     
-    Superwave::Superwave()
+    Superwave::Superwave() : biq(Modules::Biquad::FilterType::HighPass, SAMPLERATE)
     {
         menu.Captions[SEMI] = "Semi";
         menu.Captions[PSPREAD] = "Pitch Sprd";
@@ -37,7 +38,7 @@ namespace Cyber
 
         for (int i = 0; i < COUNT; i++)
         {
-            phasor[i] = rand() % 32768;
+            phasor[i] = ((uint32_t)rand()) * 2;
         }
         biq.SetQ(0.707);
         Reset();
@@ -82,27 +83,23 @@ namespace Cyber
         Reset(pitchHz);
         //LogInfof("pspread: %.3f, pitch: %.3f", pspread, pitch);
 
-        for (int i = 0; i < args.Size; i++)
+        for (int n = 0; n < args.Size; n++)
         {
             float output = 0;
             for (int i=0; i<COUNT; i++)
             {
                 float hz = pitchHz * (1 + OFFSETS[i] * pspread);
-                int inc = ((double)hz / (double)SAMPLERATE) * 32768.0;
-                phasor[i] = (phasor[i] + inc) % 32768;
-                output += phasor[i] - 16384;
-                /*if (i==3)
-                {
-                    LogInfof("hz: %.3f, inc: %d, phasor: %d", hz,  inc, phasor[i]);
-                }*/
+                uint32_t inc = Modules::Wavetable::GetPhaseIncrement(hz);
+                phasor[i] += inc;
+                float v = (phasor[i] - 0x7FFFFFFF) * 4.6566128e-10f;
+                output += v * volumes[i];
             }
             
-            //output *= gainAdjust;
-            output *= 0.000006103515625;
-            //output = biq.Process(output); // high pass to remove aliasing below fundamental
-            //output += 0.07 * sinf(phasor[3] * 2 * M_PI); // increase fundamental frequency to compensate for high pass
+            output *= gainAdjust;
+            output = biq.Process(output); // high pass to remove aliasing below fundamental
+            output += 0.2 * Modules::Wavetable::SinFast(phasor[3]); // increase fundamental frequency to compensate for high pass
 
-            args.OutputLeft[i] = output;
+            args.OutputLeft[n] = output * 0.8;
         }
     }
 }

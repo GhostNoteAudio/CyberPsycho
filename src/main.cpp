@@ -3,6 +3,7 @@
 #include <SdFat.h>
 #include "generators/kick1.h"
 #include "generators/superwave.h"
+#include "modules/init.h"
 
 using namespace Cyber;
 
@@ -44,6 +45,8 @@ void RegisterAllGenerators()
 
 void setup()
 {
+    Modules::Init();
+    
     pinMode(PIN_GATE0, INPUT);
     pinMode(PIN_GATE1, INPUT);
     pinMode(PIN_GATE2, INPUT);
