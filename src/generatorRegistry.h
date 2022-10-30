@@ -13,11 +13,20 @@ namespace Cyber
         const char* Names[T];
         std::function<void(Adafruit_SH1106G*)> SplashScreenBuilders[T];
 
-        inline void Add(std::function<Generator*(void)> factory, const char* name, std::function<void(Adafruit_SH1106G*)> splashScreenBuilder)
+        // inline void Add(std::function<Generator*(void)> factory, const char* name, std::function<void(Adafruit_SH1106G*)> splashScreenBuilder)
+        // {
+        //     Factories[Count] = factory;
+        //     Names[Count] = name;
+        //     SplashScreenBuilders[Count] = splashScreenBuilder;
+        //     Count++;
+        // }
+
+        template<class TGen>
+        inline void Add()
         {
-            Factories[Count] = factory;
-            Names[Count] = name;
-            SplashScreenBuilders[Count] = splashScreenBuilder;
+            Factories[Count] = []{return new TGen();};
+            Names[Count] = TGen::GetName();
+            SplashScreenBuilders[Count] = [](Adafruit_SH1106G* display){TGen::SplashScreen(display);};
             Count++;
         }
 
@@ -28,9 +37,4 @@ namespace Cyber
     };
 
     extern GeneratorRegistry<100> generatorRegistry;
-
-    inline void RegisterGenerator(std::function<Generator*(void)> factory, const char* name, std::function<void(Adafruit_SH1106G*)> splashScreenBuilder)
-    {
-        generatorRegistry.Add(factory, name, splashScreenBuilder);
-    }
 }

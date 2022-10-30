@@ -19,10 +19,24 @@ namespace Cyber
         bool StereoInput = false;
         bool StereoOutput = false;
 
-        Generator* generator;
+        Generator* Gen = nullptr;
+        int GenIndex = 0;
         
     };
 
-    extern Voice Voices[4];
-    extern uint8_t ActiveVoice;
+    namespace Voices
+    {
+        extern Voice Voices[4];
+        extern uint8_t ActiveVoice;
+
+        inline Voice* GetActiveVoice()
+        {
+            return &Voices[ActiveVoice];
+        }
+
+        inline Generator* GetActiveGen()
+        {
+            return Voices[ActiveVoice].Gen;
+        }
+    }
 }

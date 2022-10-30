@@ -2,6 +2,10 @@
 
 namespace Cyber
 {
-    Voice Voices[4];
-    uint8_t ActiveVoice = 0;
+    namespace Voices
+    {
+        Voice Voices[4];
+        uint8_t ActiveVoice = 0;
+    }
 }
+

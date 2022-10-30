@@ -8,6 +8,12 @@ namespace Cyber
 {
     namespace Utils
     {
+        inline float Randf()
+        {
+            const float scaler = 1.0 / (((uint32_t)RAND_MAX)+1);
+            return rand() * scaler;
+        }
+
         inline uint16_t To12Bit(float value)
         {
             return 2048 + value * 2047;
@@ -246,6 +252,21 @@ namespace Cyber
             }
 
             ApplyHamming(buffer, N);
+        }
+
+        inline float Note2hz(float note)
+        {
+            return powf(2, (note-69)/12.0f) * 440.0f;
+        }
+
+        inline float Sum(float* data, int count)
+        {
+            float output = 0.0f;
+            for (int i = 0; i < count; i++)
+            {
+                output += data[i];
+            }
+            return output;
         }
     }
 }

@@ -8,17 +8,20 @@ namespace Cyber
     {
         if (!menu->EditMode)
         {
-            if (menu == Voices[ActiveVoice].generator->GetMenu())
+            // Go from generator edit menu to generator selection menu
+            if (menu == Voices::GetActiveGen()->GetMenu())
             {
                 if (menu->TopItem == 0 && tick == -1)
                 {
+                    generatorSelectMenu.Values[0] = Voices::GetActiveVoice()->GenIndex;
                     ActiveMenu = &generatorSelectMenu;
                     return;
                 }
             }
+            // Go from generator selection menu to generator edit menu
             if (menu == &generatorSelectMenu && tick == 1)
             {
-                ActiveMenu = Voices[ActiveVoice].generator->GetMenu();
+                ActiveMenu = Voices::GetActiveGen()->GetMenu();
                 return;
             }
 
@@ -41,13 +44,26 @@ namespace Cyber
     {
         if (value && !menu->QuadMode)
             menu->EditMode = !menu->EditMode;
+
+        // Assign new generator to active voice if changed
+        if (menu == &generatorSelectMenu && value && !menu->EditMode)
+        {
+            int selectedGen = menu->Values[0];
+            auto voice = Voices::GetActiveVoice();
+            if (voice->GenIndex != selectedGen)
+            {
+                delete voice->Gen;
+                voice->Gen = generatorRegistry.CreateInstance(selectedGen);
+                voice->GenIndex = selectedGen;
+            }
+        }
     }
 
     void HandlePotDefault(Menu* menu, int idx, float value)
     {
         if (menu->QuadMode)
         {
-            menu->SetValue(menu->TopItem + idx, value * 100);
+            menu->SetValueF(menu->TopItem + idx, value);
         }
     }
 
@@ -65,7 +81,7 @@ namespace Cyber
             {
                 if (modalState.Shift)
                 {
-                    ActiveMenu = Voices[ActiveVoice].generator->GetMenu();
+                    ActiveMenu = Voices::GetActiveGen()->GetMenu();
                 }
                 else
                 {

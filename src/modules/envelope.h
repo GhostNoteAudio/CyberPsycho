@@ -69,21 +69,26 @@ namespace Modules
 
         void UpdateParams(float minimumExpDb = -60)
         {
-            ExpMin = pow10(minimumExpDb / 20.0);
-            ExpScaler = 1.0/(1.0 - ExpMin);
+            const float div20 = (1.0 / 20.0);
+
+            ExpMin = pow10f(minimumExpDb * div20);
+            ExpScaler = 1.0f/(1.0f - ExpMin);
             minimumExpDb = -minimumExpDb;
 
-            AttackInc = 1.0 / AttackSamples;
-            DecayInc = 1.0 / DecaySamples;
-            ReleaseInc = 1.0 / ReleaseSamples;
+            AttackInc = 1.0f / AttackSamples;
+            DecayInc = 1.0f / DecaySamples;
+            ReleaseInc = 1.0f / ReleaseSamples;
 
             // calculate the multiplier M, as so:
             // ExpMin * M^Samples = 1.0  - for attack
             // or
             // 1.0 * M^Samples = ExpMin  - for decay and release
-            AttackMultiplier = pow10((minimumExpDb/AttackSamples) / 20.0);
-            DecayMultiplier = 1.0 / pow10((minimumExpDb/DecaySamples) / 20.0);
-            ReleaseMultiplier = 1.0 / pow10((minimumExpDb/ReleaseSamples) / 20.0);
+            // AttackMultiplier = pow10f((minimumExpDb/AttackSamples) * div20);
+            // DecayMultiplier = 1.0f / pow10f((minimumExpDb/DecaySamples) * div20);
+            // ReleaseMultiplier = 1.0f / pow10f((minimumExpDb/ReleaseSamples) * div20);
+            AttackMultiplier = pow10f((minimumExpDb*AttackInc) * div20);
+            DecayMultiplier = 1.0f / pow10f((minimumExpDb*DecayInc) * div20);
+            ReleaseMultiplier = 1.0f / pow10f((minimumExpDb*ReleaseInc) * div20);
         }
 
     private:

@@ -128,6 +128,20 @@ namespace Cyber
                 ValueChangedCallback(idx, value);
         }
 
+        inline void SetValueF(int idx, float value)
+        {
+            if (idx >= Length || idx < 0)
+                return;
+
+            if (value < 0) value = 0;
+            if (value > 1) value = 1;
+            int16_t v = Min[idx] + value * (Max[idx] - Min[idx]);
+            Values[idx] = v;
+
+            if (ValueChangedCallback != 0)
+                ValueChangedCallback(idx, v);
+        }
+
         inline int GetLength()
         {
             return Length;

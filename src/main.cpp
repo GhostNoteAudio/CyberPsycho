@@ -2,6 +2,7 @@
 #include "cyberpsycho.h"
 #include <SdFat.h>
 #include "generators/kick1.h"
+#include "generators/superwave.h"
 
 using namespace Cyber;
 
@@ -15,7 +16,7 @@ void HandleAudioFunction(DataBuffer* data)
     args.InputLeft = fpData.Mod[3];
     args.OutputLeft = fpData.Out[3];
     args.Gate = fpData.Gate[3];
-    Voices[0].generator->Process(args);
+    Voices::GetActiveGen()->Process(args);
 
     Utils::To12Bit(data->Out[3], fpData.Out[3], data->Size);
 }
@@ -34,10 +35,11 @@ void PreventStartupBleep()
 
 void RegisterAllGenerators()
 {
-    const char* kick1Name = "Kick 1";
-    generatorRegistry.Add([]{return new Kick1();}, kick1Name, [](Adafruit_SH1106G* x){Kick1::SplashScreen(x);});
+    generatorRegistry.Add<Kick1>();
+    generatorRegistry.Add<Superwave>();
 
-    Voices[0].generator = generatorRegistry.CreateInstance(0);
+    Voices::Voices[0].Gen = generatorRegistry.CreateInstance(1);
+    Voices::Voices[0].GenIndex = 1;
 }
 
 void setup()

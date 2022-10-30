@@ -7,6 +7,7 @@
 namespace Cyber
 {
     class Menu;
+    void YieldAudio();
 
     struct GeneratorArgs
     {
@@ -25,15 +26,22 @@ namespace Cyber
         std::function<float*(int)> GetModulation;
     };
 
+    struct GeneratorInfo
+    {
+        const int Version;
+        const char* GeneratorId;
+        const char* DisplayName;
+        const char* DeveloperName;
+        const char* Info;
+    };
+
     class Generator
     {
     public:
         virtual Menu* GetMenu() = 0;
         virtual void Process(GeneratorArgs args) = 0;
-        virtual void ProcessMidi(uint8_t type, uint8_t data0, uint8_t data1) = 0;
-        virtual void ProcessOffline() = 0;
+        virtual void ProcessMidi(uint8_t type, uint8_t data0, uint8_t data1) {}
+        virtual void ProcessOffline() {}
+        virtual ~Generator() {}
     };
-
-    void YieldAudio();
-    void RegisterGenerator(std::function<Generator*(void)> factory, const char* name, std::function<void(Adafruit_GFX*)> splashScreenBuilder);
 }

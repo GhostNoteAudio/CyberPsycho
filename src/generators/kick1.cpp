@@ -9,6 +9,8 @@ namespace Cyber
     const int FREQ = 3;
     const int BOOST = 4;
     const int FOLD = 5;
+    const int PSHAPE = 6;
+    const int ASHAPE = 7;
 
     Kick1::Kick1()
     {
@@ -18,6 +20,8 @@ namespace Cyber
         menu.Captions[3] = "Freq";
         menu.Captions[4] = "Boost";
         menu.Captions[5] = "Fold";
+        menu.Captions[6] = "Pitch Crv";
+        menu.Captions[7] = "Aamp Crv";
 
         menu.Values[0] = 20;
         menu.Values[1] = 20;
@@ -25,30 +29,44 @@ namespace Cyber
         menu.Values[3] = 3;
         menu.Values[4] = 2;
         menu.Values[5] = 0;
+        menu.Values[6] = 50;
+        menu.Values[7] = 50;
 
-        menu.SetLength(6);
+        menu.SetLength(8);
         menu.SelectedItem = 0;
         menu.TopItem = 0;
         menu.EnableSelection = false;
         menu.QuadMode = true;
-        /*
+        
         ampEnv.Mode = Modules::Envelope::EnvMode::AR;
         ampEnv.AttackMode = Modules::Envelope::CurveMode::Linear;
         ampEnv.ReleaseMode = Modules::Envelope::CurveMode::Exp;
-        ampEnv.AttackSamples = 10;
-        ampEnv.ReleaseSamples = 44000;
+        ampEnv.AttackSamples = 0;
+        ampEnv.ReleaseSamples = 20000;
+        ampEnv.OneShot = true;
+        ampEnv.ResetOnTrig = true;
         ampEnv.UpdateParams();
-        */
+
+        pitchEnv.Mode = Modules::Envelope::EnvMode::AR;
+        pitchEnv.AttackMode = Modules::Envelope::CurveMode::Linear;
+        pitchEnv.ReleaseMode = Modules::Envelope::CurveMode::Exp;
+        pitchEnv.AttackSamples = 0;
+        pitchEnv.ReleaseSamples = 20000;
+        pitchEnv.OneShot = true;
+        pitchEnv.ResetOnTrig = true;
+        pitchEnv.UpdateParams();
     }
 
     float Kick1::GetScaledParameter(int idx)
     {
-        if (idx == DECAY) return 0.01 + menu.Values[DECAY] * 0.02;
-        if (idx == PDEC) return 0.001 + menu.Values[PDEC] * 0.002;
+        if (idx == DECAY) return (0.01 + menu.Values[DECAY] * 0.01 *0.99) * SAMPLERATE;
+        if (idx == PDEC) return (0.002 + menu.Values[PDEC] * 0.01 * 0.5) * SAMPLERATE;
         if (idx == PMOD) return menu.Values[PMOD] * 10;
         if (idx == FREQ) return 10 + menu.Values[FREQ] * 2.90;
         if (idx == BOOST) return 1 + menu.Values[BOOST] * 0.2;
         if (idx == FOLD) return menu.Values[FOLD] * 0.1;
+        if (idx == PSHAPE) return 10 + menu.Values[PSHAPE] * 0.5;
+        if (idx == ASHAPE) return 10 + menu.Values[ASHAPE] * 0.5;
         return 0;
     }
 
@@ -67,38 +85,32 @@ namespace Cyber
         float freq = GetScaledParameter(FREQ);
         float boost = GetScaledParameter(BOOST);
         float fold = GetScaledParameter(FOLD);
+        float pshape = GetScaledParameter(PSHAPE);
+        float ashape = GetScaledParameter(ASHAPE);
+
+        ampEnv.ReleaseSamples = adecay;
+        pitchEnv.ReleaseSamples = pdecay;
+        ampEnv.UpdateParams(-ashape);
+        pitchEnv.UpdateParams(-pshape);
 
         for (int i = 0; i < args.Size; i++)
         {
             auto g = args.Gate[i];
             if (!currentGate && g)
-                Trigger();
+                phasor = 0;
             currentGate = g;
 
-            float t = index * fsinv;
-            float penv = expf(-t/pdecay);
-            float aenv = expf(-t/adecay);
+            float aenv = ampEnv.Process(g);
+            float penv = pitchEnv.Process(g);
             phasor += (pmod * penv + freq) * fsinv;
             float s = sinf(phasor * 2 * M_PI) * aenv;
 
-            //s = redux(s*10, 3)
             if (fold > 0)
-                s = Fold(s, fold);
+                s = sinf(s * fold);
             if (boost > 1)
-                s = Boost(s, boost);
+                s = tanhf(s * boost);
 
-            index += 1;
             args.OutputLeft[i] = s;
         }
-    }
-
-    void Kick1::ProcessMidi(uint8_t type, uint8_t data0, uint8_t data1)
-    {
-
-    }
-
-    void Kick1::ProcessOffline()
-    {
-
     }
 }
