@@ -22,9 +22,6 @@ namespace Modules
 		Drive = 0.0;
 		Cutoff = 1.0;
 		Resonance = 0.0;
-		ResonanceMod = 0.0;
-		CutoffMod = 0.0;
-		DriveMod = 0.0;
 		SetMode(InternalFilterMode::Lp24);
 
         ComputeCVtoAlpha();
@@ -34,14 +31,14 @@ namespace Modules
 		Update();
 	}
 
-	void FilterCascade::Process(float * input, int len)
+	void FilterCascade::Process(float * input, float* output, int len)
 	{
 		Update();
 		
 		for (int i = 0; i < len; i++)
 		{
 			float value = ProcessSample(input[i]) * gInv;
-			buffer[i] = value;
+			output[i] = value;
 		}
 	}
 
@@ -132,20 +129,19 @@ namespace Modules
 
 	void FilterCascade::Update()
 	{
-		float driveTotal = Drive + DriveMod;
-		driveTotal = Utils::Limit(driveTotal, 0.0f, 1.0f);
-
+		float driveTotal = Utils::Limit(Drive, 0.0f, 1.0f);
 		gain = (0.1f + 2.0f * driveTotal * driveTotal);
 
-		totalResonance = Resonance + ResonanceMod;
+		totalResonance = Resonance;
 		totalResonance = Utils::Limit(totalResonance, 0.0f, 1.0f);
-		totalResonance = Utils::Resp2oct(totalResonance) * 0.999f;
+		totalResonance = Utils::Resp2oct(totalResonance) * 1.02f;//0.999f;
 
-		// Voltage is 1V/OCt, C0 = 16.3516Hz
-		float noteNum = Cutoff + CutoffMod;
-		noteNum = Utils::Limit(noteNum, 0.0f, 136.0f);
-
-		p = CVtoAlpha[(int)noteNum];
+		// Voltage is 1V/Oct, C0 = 8.18Hz
+		float noteNum = Cutoff;
+		noteNum = Utils::Limit(noteNum, 0.0f, 135.999f);
+        int a = (int)noteNum;
+        float rem = noteNum - a;
+		p = CVtoAlpha[a] * (1-rem) + CVtoAlpha[a] * rem;
 
 		gInv = sqrt(1.0f / gain);
 		mx = 1.0f / Oversample;

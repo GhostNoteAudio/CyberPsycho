@@ -3,6 +3,7 @@
 #include "generator.h"
 #include "io_buffer.h"
 #include "generators/multimodeFilter.h"
+#include "generators/redux.h"
 
 namespace Cyber
 {
@@ -10,6 +11,7 @@ namespace Cyber
     {
     public:
         MultimodeFilter mmf;
+        Redux redux;
 
         float InGain = 1;
         float OutGain = 1;

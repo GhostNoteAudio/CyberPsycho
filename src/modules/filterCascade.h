@@ -49,14 +49,9 @@ namespace Modules
 		float Drive;
 		float Cutoff;
 		float Resonance;
-		float CutoffMod;
-		float ResonanceMod;
-		float DriveMod;
-
 		float c0, c1, c2, c3, c4;
 
 	private:
-		float buffer[Cyber::BUFFER_SIZE];
 		float gain;
 		float totalResonance;
 		float oversampledInput;
@@ -75,8 +70,7 @@ namespace Modules
 
 	public:
 		FilterCascade();
-		void Process(float* input, int len);
-		inline float* GetOutput() { return buffer; }
+		void Process(float* input, float* output, int len);
 		void SetMode(InternalFilterMode mode);
 
 	private:

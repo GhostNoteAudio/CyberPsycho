@@ -10,19 +10,26 @@ namespace Cyber
 
     void Voice::Process(FpBuffer* fpData)
     {
-        float temp[BUFFER_SIZE];
+        float temp1[BUFFER_SIZE];
+        float temp2[BUFFER_SIZE];
+
         GeneratorArgs args;
         args.Bpm = 120;
         args.InputLeft = fpData->Mod[3];
-        args.OutputLeft = temp;
+        args.OutputLeft = temp1;
         args.Gate = fpData->Gate[3];
 
         Gen->Process(args);
 
-        args.InputLeft = temp;
-        args.OutputLeft = fpData->Out[3];
+        args.InputLeft = temp1;
+        args.OutputLeft = temp2;
 
         mmf.Process(args);
+
+        args.InputLeft = temp2;
+        args.OutputLeft = fpData->Out[3];
+
+        redux.Process(args);
     }
 }
 

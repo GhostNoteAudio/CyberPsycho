@@ -102,10 +102,17 @@ namespace Cyber
                 ActiveMenu = Voices::GetActiveVoice()->mmf.GetMenu();
             }
         }
-        else if (idx == 2 && value && modalState.Shift)
+        else if (idx == 2 && value)
         {
-            ActiveMenu = &voiceMenu;
-            modalState.Shift = false;
+            if (modalState.Shift)
+            {
+                ActiveMenu = &voiceMenu;
+                modalState.Shift = false;
+            }
+            else
+            {
+                ActiveMenu = Voices::GetActiveVoice()->redux.GetMenu();
+            }
         }
         else if (idx == 3 && value && modalState.Shift)
         {
