@@ -25,7 +25,17 @@ namespace Cyber
         float GetScaledParameter(int idx);
 
     public:
-        inline static const char* GetName() { return "Kick One"; }
+        inline static GeneratorInfo GetInfo()
+        {
+            GeneratorInfo info;
+            info.DeveloperName = "Ghost Note Audio";
+            info.DisplayName = "Kick One";
+            info.GeneratorId = "GNA-Kick1";
+            info.Info = "X0X-esque kick drum synth.";
+            info.Version = 1000;
+            return info;
+        }
+
         inline static void SplashScreen(Adafruit_SH1106G* display)
         {
             display->clearDisplay();

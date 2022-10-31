@@ -1,13 +1,17 @@
 #pragma once
 
 #include "Arduino.h"
-#include <cmath>
 #include <algorithm>
 
 namespace Cyber
 {
     namespace Utils
     {
+        inline float Limit(float val, float min, float max)
+        {
+            return val < min ? min : val > max ? max : val;
+        }
+
         inline float Randf()
         {
             const float scaler = 1.0 / (((uint32_t)RAND_MAX)+1);
@@ -185,13 +189,13 @@ namespace Cyber
         inline float DB2Gainf(float input)
         {
             //return std::pow(10.0f, input / 20.0f);
-            return std::pow(10.0f, input * 0.05f);
+            return pow10f(input * 0.05f);
         }
 
         template<typename T>
         inline double DB2Gain(T input)
         {
-            return std::pow(10, input / 20.0);
+            return pow10f(input / 20.0);
         }
 
         template<typename T>
@@ -200,18 +204,36 @@ namespace Cyber
             //if (input < 0.0000001)
             //    return -100000;
 
-            return 20.0f * std::log10(input);
+            return 20.0f * log10f(input);
         }
 
-        inline double Response4Oct(double input)
-        {
-            return std::min((std::pow(16, input) - 1.0) * 0.066666666667, 1.0);
-        }
+        const float dec1Mult = (10/9.0) * 0.1;
+        const float dec2Mult = (100/99.0) * 0.01;
+        const float dec3Mult = (1000/999.0) * 0.001;
+        const float dec4Mult = (10000/9999.0) * 0.0001;
 
-        inline double Response2Dec(double input)
-        {
-            return std::min((std::pow(100, input) - 1.0) * 0.01010101010101, 1.0);
-        }
+        const float oct1Mult = (2/1.0) * 0.5;
+        const float oct2Mult = (4/3.0) * 0.25;
+        const float oct3Mult = (8/7.0) * 0.125;
+        const float oct4Mult = (16/15.0) * 0.0625;
+        const float oct5Mult = (32/31.0) * 0.03125;
+        const float oct6Mult = (64/63.0) * 0.015625;
+        const float oct7Mult = (128/127.0) * 0.0078125;
+        const float oct8Mult = (256/255.0) * 0.00390625;
+
+        inline float Resp1dec(float x) { return (pow10f(x) - 1) * dec1Mult; }
+        inline float Resp2dec(float x) { return (pow10f(2*x) - 1) * dec2Mult; }
+        inline float Resp3dec(float x) { return (pow10f(3*x) - 1) * dec3Mult; }
+        inline float Resp4dec(float x) { return (pow10f(4*x) - 1) * dec4Mult; }
+
+        inline float Resp1oct(float x) { return (powf(2, x) - 1) * oct1Mult; }
+        inline float Resp2oct(float x) { return (powf(2, 2*x) - 1) * oct2Mult; }
+        inline float Resp3oct(float x) { return (powf(2, 3*x) - 1) * oct3Mult; }
+        inline float Resp4oct(float x) { return (powf(2, 4*x) - 1) * oct4Mult; }
+        inline float Resp5oct(float x) { return (powf(2, 5*x) - 1) * oct5Mult; }
+        inline float Resp6oct(float x) { return (powf(2, 6*x) - 1) * oct6Mult; }
+        inline float Resp7oct(float x) { return (powf(2, 7*x) - 1) * oct7Mult; }
+        inline float Resp8oct(float x) { return (powf(2, 8*x) - 1) * oct8Mult; }
 
         // Truncates the end of an IR using a cosine window
         inline void TruncateCos(float* data, int dataSize, float fraction)

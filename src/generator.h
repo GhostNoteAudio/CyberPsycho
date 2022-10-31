@@ -28,11 +28,34 @@ namespace Cyber
 
     struct GeneratorInfo
     {
-        const int Version;
+        int Version;
         const char* GeneratorId;
         const char* DisplayName;
         const char* DeveloperName;
         const char* Info;
+
+        GeneratorInfo() 
+        {
+            Version = 0;
+            GeneratorId = "";
+            DisplayName = "";
+            DeveloperName = "";
+            Info = "";
+        }
+
+        GeneratorInfo(
+            int version, 
+            const char* generatorId, 
+            const char* displayName, 
+            const char* developerName, 
+            const char* info) 
+        {
+            Version = 0;
+            GeneratorId = "";
+            DisplayName = "";
+            DeveloperName = "";
+            Info = "";
+        }
     };
 
     class Generator
@@ -43,5 +66,9 @@ namespace Cyber
         virtual void ProcessMidi(uint8_t type, uint8_t data0, uint8_t data1) {}
         virtual void ProcessOffline() {}
         virtual ~Generator() {}
+
+        // Your class also needs to implement these two static functions
+        //static GeneratorInfo GetInfo();
+        //static void SplashScreen(Adafruit_SH1106G* display);
     };
 }

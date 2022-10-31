@@ -10,22 +10,14 @@ namespace Cyber
     public:
         int Count;
         std::function<Generator*(void)> Factories[T];
-        const char* Names[T];
+        GeneratorInfo Info[T];
         std::function<void(Adafruit_SH1106G*)> SplashScreenBuilders[T];
-
-        // inline void Add(std::function<Generator*(void)> factory, const char* name, std::function<void(Adafruit_SH1106G*)> splashScreenBuilder)
-        // {
-        //     Factories[Count] = factory;
-        //     Names[Count] = name;
-        //     SplashScreenBuilders[Count] = splashScreenBuilder;
-        //     Count++;
-        // }
 
         template<class TGen>
         inline void Add()
         {
             Factories[Count] = []{return new TGen();};
-            Names[Count] = TGen::GetName();
+            Info[Count] = TGen::GetInfo();
             SplashScreenBuilders[Count] = [](Adafruit_SH1106G* display){TGen::SplashScreen(display);};
             Count++;
         }

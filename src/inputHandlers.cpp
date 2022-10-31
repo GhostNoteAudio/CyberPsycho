@@ -90,10 +90,17 @@ namespace Cyber
                 modalState.Shift = false;
             }
         }
-        else if (idx == 1 && value && modalState.Shift)
+        else if (idx == 1 && value)
         {
-            ActiveMenu = &globalMenu;
-            modalState.Shift = false;
+            if (modalState.Shift)
+            {
+                ActiveMenu = &globalMenu;
+                modalState.Shift = false;
+            }
+            else
+            {
+                ActiveMenu = Voices::GetActiveVoice()->mmf.GetMenu();
+            }
         }
         else if (idx == 2 && value && modalState.Shift)
         {

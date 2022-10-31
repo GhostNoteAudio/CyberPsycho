@@ -69,7 +69,6 @@ namespace Cyber
         return 0;
     }
 
-
     Menu* Superwave::GetMenu()
     {
         return &menu;
@@ -81,7 +80,6 @@ namespace Cyber
         float pitch = 60 + GetScaledParameter(SEMI) + GetScaledParameter(CENT) * 0.01;
         float pitchHz = Utils::Note2hz(pitch);
         Reset(pitchHz);
-        //LogInfof("pspread: %.3f, pitch: %.3f", pspread, pitch);
 
         for (int n = 0; n < args.Size; n++)
         {

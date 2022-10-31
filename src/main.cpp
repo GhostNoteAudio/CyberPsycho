@@ -4,6 +4,7 @@
 #include "generators/kick1.h"
 #include "generators/superwave.h"
 #include "modules/init.h"
+#include "perftest.h"
 
 using namespace Cyber;
 
@@ -11,14 +12,7 @@ void HandleAudioFunction(DataBuffer* data)
 {
     Cyber::Scope::ProcessScope(data);
     auto fpData = inProcessor.ConvertToFp(data);
-
-    GeneratorArgs args;
-    args.Bpm = 120;
-    args.InputLeft = fpData.Mod[3];
-    args.OutputLeft = fpData.Out[3];
-    args.Gate = fpData.Gate[3];
-    Voices::GetActiveGen()->Process(args);
-
+    Voices::GetActiveVoice()->Process(&fpData);
     Utils::To12Bit(data->Out[3], fpData.Out[3], data->Size);
 }
 
@@ -46,7 +40,7 @@ void RegisterAllGenerators()
 void setup()
 {
     Modules::Init();
-    
+
     pinMode(PIN_GATE0, INPUT);
     pinMode(PIN_GATE1, INPUT);
     pinMode(PIN_GATE2, INPUT);
@@ -102,6 +96,9 @@ PeriodicExecution updateMenu(10);
 
 void loop()
 {
+    //RunBenchmark();
+    //return;
+
     YieldAudio();
     
     if (execPrint.Go())
@@ -116,7 +113,6 @@ void loop()
         auto pa = GetPerfAudio();
         auto pi = GetPerfIo();
         float cpuLoad = GetCpuLoad();
-        LogInfof("Audio Time : %f %f %f", 0.5, 0.5, 0.5);
         LogInfof("Audio Time : %f %f %f", pa->Period(), pa->PeriodAvg(), pa->PeriodDecay());
         LogInfof("Yield Time : %f %f %f", py->Period(), py->PeriodAvg(), py->PeriodDecay());
         LogInfof("IO Time : %f %f %f", pi->Period(), pi->PeriodAvg(), pi->PeriodDecay());

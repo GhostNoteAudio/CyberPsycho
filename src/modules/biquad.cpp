@@ -99,7 +99,7 @@ void Biquad::Update()
 	auto Fc = Frequency;
 	auto Fs = samplerate;
 
-	auto V = powf(10, abs(gainDB) / 20);
+	auto V = pow10f(abs(gainDB) / 20);
 	auto K = tanf(M_PI * Fc / Fs);
 	auto Q = q;
 	double norm = 1.0;

@@ -4,24 +4,20 @@
 #include "menu.h"
 #include <fonts/font3.h>
 #include "modules/biquad.h"
+#include "modules/filterCascade.h"
 
 namespace Cyber
 {
-
-    class Superwave : public Generator
+    class MultimodeFilter : public Generator
     {
         Menu menu;
-        float pitch = 48;
-        float gainAdjust = 1.0;
-        uint32_t phasor[7] = {0};
-        float volumes[7] = {0};
         Modules::Biquad biq;
+        Modules::FilterCascade cascade;
         
     public:
-        Superwave();
+        MultimodeFilter();
         virtual Menu* GetMenu() override;
         virtual void Process(GeneratorArgs args) override;
-        void Reset(float pitchHz = -1);
 
     private:
         float GetScaledParameter(int idx);
@@ -31,9 +27,9 @@ namespace Cyber
         {
             GeneratorInfo info;
             info.DeveloperName = "Ghost Note Audio";
-            info.DisplayName = "Superwave";
-            info.GeneratorId = "GNA-Superwave";
-            info.Info = "Supersaw oscillator with tunable parameters.";
+            info.DisplayName = "Multimode Filter";
+            info.GeneratorId = "GNA-MultimodeFilter";
+            info.Info = "Multi-mode filter.";
             info.Version = 1000;
             return info;
         }
@@ -44,9 +40,10 @@ namespace Cyber
             display->setTextColor(SH110X_WHITE);
             display->setFont(&AtlantisInternational_jen08pt7b);
             display->setTextSize(2);
-            display->setCursor(0, 32);
-            display->print("Superwave");
+            display->setCursor(0, 20);
+            display->print("MultiMode");
+            display->setCursor(20, 40);
+            display->print("Filter");
         }
     };
-
 }
