@@ -5,14 +5,12 @@ namespace Cyber
 {
     const int RATE = 0;
     const int BITCRUSH = 1;
-    const int LOWCUT = 2;
-    const int GAIN = 3;
+    const int GAIN = 2;
     
     Redux::Redux()
     {
         menu.Captions[RATE] = "Rate Reduce";
         menu.Captions[BITCRUSH] = "Bitcrush";
-        menu.Captions[LOWCUT] = "Low Cut";
         menu.Captions[GAIN] = "Gain";
         
         menu.Min[RATE] = 1;
@@ -23,37 +21,28 @@ namespace Cyber
 
         menu.Values[RATE] = 1;
         menu.Values[BITCRUSH] = 1200;
-        menu.Values[LOWCUT] = 0;
         menu.Values[GAIN] = 50;
 
-        for (int i = 0; i < 4; i++)
+        for (int i = 0; i < 3; i++)
         {
             menu.Formatters[i] = [this](int idx, int16_t value, char* target)
             {
                 float val = GetScaledParameter(idx);
-                const char* str = idx == 2 ? "Hz" : "";
-                sprintf(target, "%.1f%s", val, str);
+                sprintf(target, "%.1f", val);
             };
         }
         
-        menu.SetLength(4);
+        menu.SetLength(3);
         menu.SelectedItem = 0;
         menu.TopItem = 0;
         menu.EnableSelection = false;
         menu.QuadMode = true;
-
-        biquad.SetSamplerate(SAMPLERATE);
-        biquad.Type = Modules::Biquad::FilterType::HighPass;
-        biquad.SetQ(0.707);
-        biquad.Frequency = 200;
-        biquad.Update();
     }
 
     float Redux::GetScaledParameter(int idx)
     {
         if (idx == RATE) return 1 + Utils::Resp3dec(menu.Values[RATE] * 0.001) * 63;
         if (idx == BITCRUSH) return menu.Values[BITCRUSH] * 0.01;
-        if (idx == LOWCUT) return 10 + Utils::Resp3dec(menu.Values[LOWCUT] * 0.01) * 1990;
         if (idx == GAIN) return -12 + 24 * menu.Values[GAIN] * 0.01;
         return 0;
     }
@@ -68,14 +57,10 @@ namespace Cyber
     {
         float rate = GetScaledParameter(RATE);
         float bits = GetScaledParameter(BITCRUSH);
-        float lowcutFreq = GetScaledParameter(LOWCUT);
         float gain = Utils::DB2Gainf(GetScaledParameter(GAIN));
 
         float levels = powf(2, bits);
         float levelsInv = 1.0f/levels;
-
-        biquad.Frequency = lowcutFreq;
-        biquad.Update();
 
         for (int i = 0; i < args.Size; i++)
         {
@@ -99,7 +84,6 @@ namespace Cyber
             if (rate < 12)
                 s = ((int)(s * levels))*levelsInv;
 
-            s = biquad.Process(s);
             args.OutputLeft[i] = s;
         }
     }

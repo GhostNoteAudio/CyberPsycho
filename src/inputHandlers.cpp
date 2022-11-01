@@ -114,10 +114,17 @@ namespace Cyber
                 ActiveMenu = Voices::GetActiveVoice()->redux.GetMenu();
             }
         }
-        else if (idx == 3 && value && modalState.Shift)
+        else if (idx == 3 && value)
         {
-            ActiveMenu = &pitchTrigMenu;
-            modalState.Shift = false;
+            if (modalState.Shift)
+            {
+                ActiveMenu = &pitchTrigMenu;
+                modalState.Shift = false;
+            }
+            else
+            {
+                ActiveMenu = Voices::GetActiveVoice()->drive.GetMenu();
+            }
         }
     }
 }

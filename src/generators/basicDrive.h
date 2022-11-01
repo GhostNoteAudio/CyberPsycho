@@ -7,14 +7,14 @@
 
 namespace Cyber
 {
-    class Redux : public Generator
+    class BasicDrive : public Generator
     {
-        float phasor = 0;
-        float sample = 0;
+        Modules::Biquad biquadHp;
+        Modules::Biquad biquadLp;
         Menu menu;
 
     public:
-        Redux();
+        BasicDrive();
         virtual Menu* GetMenu() override;
         virtual void Process(GeneratorArgs args) override;
 
@@ -26,9 +26,9 @@ namespace Cyber
         {
             GeneratorInfo info;
             info.DeveloperName = "Ghost Note Audio";
-            info.DisplayName = "Redux";
-            info.GeneratorId = "GNA-Redux";
-            info.Info = "Bitcrusher and Samplerate reducer";
+            info.DisplayName = "Basic Drive";
+            info.GeneratorId = "GNA-BasicDrive";
+            info.Info = "Simple Drive/Distortion effect";
             info.Version = 1000;
             return info;
         }
@@ -39,8 +39,8 @@ namespace Cyber
             display->setTextColor(SH110X_WHITE);
             display->setFont(&AtlantisInternational_jen08pt7b);
             display->setTextSize(2);
-            display->setCursor(10, 32);
-            display->print("Redux");
+            display->setCursor(0, 32);
+            display->print("Basic Drive");
         }
     };
 

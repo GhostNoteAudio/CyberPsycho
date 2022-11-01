@@ -4,6 +4,7 @@
 #include "io_buffer.h"
 #include "generators/multimodeFilter.h"
 #include "generators/redux.h"
+#include "generators/basicDrive.h"
 
 namespace Cyber
 {
@@ -12,6 +13,7 @@ namespace Cyber
     public:
         MultimodeFilter mmf;
         Redux redux;
+        BasicDrive drive;
 
         float InGain = 1;
         float OutGain = 1;
