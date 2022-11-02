@@ -285,54 +285,57 @@ namespace Cyber
         {
             voiceMenu.Captions[0] = "In Gain";
             voiceMenu.Captions[1] = "Out Gain";
+            voiceMenu.Captions[2] = "Pitch Offset";
             //voiceMenu.Captions[x] = "> Load Preset";
             //voiceMenu.Captions[x] = "> Save Preset";
-            voiceMenu.Captions[2] = "> Init Voice";
-            voiceMenu.Captions[3] = "> Clear All Mods";
-            voiceMenu.Captions[4] = "Midi Ch";
-            voiceMenu.Captions[5] = "Audio In L";
-            voiceMenu.Captions[6] = "Audio In R";
-            voiceMenu.Captions[7] = "Audio Out L";
-            voiceMenu.Captions[8] = "Audio Out R";
-            voiceMenu.Captions[9] = "CV In";
-            voiceMenu.Captions[10] = "Gate In";
+            voiceMenu.Captions[3] = "> Init Voice";
+            voiceMenu.Captions[4] = "> Clear All Mods";
+            voiceMenu.Captions[5] = "Midi Ch";
+            voiceMenu.Captions[6] = "Audio In L";
+            voiceMenu.Captions[7] = "Audio In R";
+            voiceMenu.Captions[8] = "Audio Out L";
+            voiceMenu.Captions[9] = "Audio Out R";
+            voiceMenu.Captions[10] = "CV In";
+            voiceMenu.Captions[11] = "Gate In";
 
-            voiceMenu.Values[5] = 1;
             voiceMenu.Values[6] = 1;
             voiceMenu.Values[7] = 1;
             voiceMenu.Values[8] = 1;
             voiceMenu.Values[9] = 1;
             voiceMenu.Values[10] = 1;
+            voiceMenu.Values[11] = 1;
 
             voiceMenu.Max[0] = 24;
             voiceMenu.Max[1] = 24;
-            voiceMenu.Max[4] = 17;
-            voiceMenu.Max[5] = 4;
+            voiceMenu.Max[2] = 48;
+            voiceMenu.Max[5] = 17;
             voiceMenu.Max[6] = 4;
             voiceMenu.Max[7] = 4;
             voiceMenu.Max[8] = 4;
             voiceMenu.Max[9] = 4;
             voiceMenu.Max[10] = 4;
+            voiceMenu.Max[11] = 4;
 
-            voiceMenu.Min[5] = 1;
+            voiceMenu.Min[2] = -48;
             voiceMenu.Min[6] = 1;
             voiceMenu.Min[7] = 1;
             voiceMenu.Min[8] = 1;
             voiceMenu.Min[9] = 1;
             voiceMenu.Min[10] = 1;
+            voiceMenu.Min[11] = 1;
 
             voiceMenu.Formatters[0] = [](int idx, int16_t v, char* s) { sprintf(s, "%ddB", -12+v); };
             voiceMenu.Formatters[1] = [](int idx, int16_t v, char* s) { sprintf(s, "%ddB", -12+v); };
-            voiceMenu.Formatters[2] = [](int idx, int16_t v, char* s) { strcpy(s, ""); };
             voiceMenu.Formatters[3] = [](int idx, int16_t v, char* s) { strcpy(s, ""); };
-            voiceMenu.Formatters[4] = [](int idx, int16_t v, char* s) 
+            voiceMenu.Formatters[4] = [](int idx, int16_t v, char* s) { strcpy(s, ""); };
+            voiceMenu.Formatters[5] = [](int idx, int16_t v, char* s) 
             { 
                 if (v == 0) strcpy(s, "Off");
                 else if (v == 1) strcpy(s, "Omni");
                 else sprintf(s, "%d", v-1); 
             };
 
-            voiceMenu.SetLength(11);
+            voiceMenu.SetLength(12);
             voiceMenu.SelectedItem = 0;
             voiceMenu.TopItem = 0;
             voiceMenu.EnableSelection = true;
