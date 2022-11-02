@@ -33,6 +33,7 @@ namespace Cyber
             info.GeneratorId = "GNA-Kick1";
             info.Info = "X0X-esque kick drum synth.";
             info.Version = 1000;
+            info.InsertEffect = false;
             return info;
         }
 

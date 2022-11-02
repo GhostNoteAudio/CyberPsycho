@@ -30,6 +30,7 @@ namespace Cyber
             info.GeneratorId = "GNA-EQShelf";
             info.Info = "High/Low shelving Equaliser";
             info.Version = 1000;
+            info.InsertEffect = true;
             return info;
         }
 

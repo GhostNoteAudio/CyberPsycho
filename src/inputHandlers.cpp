@@ -6,25 +6,21 @@ namespace Cyber
     
     void HandleEncoderDefault(Menu* menu, int tick)
     {
+        auto voice = Voices::GetActiveVoice();
+        if (menu == voice->GetActiveInsert()->GetMenu())
+        {
+            if (tick > 0) voice->ActiveInsert++;
+            if (tick < 0) voice->ActiveInsert--;
+            if (voice->ActiveInsert > 3)
+                voice->ActiveInsert = 3;
+            if (voice->ActiveInsert < 0)
+                voice->ActiveInsert = 0;
+            ActiveMenu = voice->GetActiveInsert()->GetMenu();
+            return;
+        }
+
         if (!menu->EditMode)
         {
-            // Go from generator edit menu to generator selection menu
-            if (menu == Voices::GetActiveGen()->GetMenu())
-            {
-                if (menu->TopItem == 0 && tick == -1)
-                {
-                    generatorSelectMenu.Values[0] = Voices::GetActiveVoice()->GenIndex;
-                    ActiveMenu = &generatorSelectMenu;
-                    return;
-                }
-            }
-            // Go from generator selection menu to generator edit menu
-            if (menu == &generatorSelectMenu && tick == 1)
-            {
-                ActiveMenu = Voices::GetActiveGen()->GetMenu();
-                return;
-            }
-
             if (tick == 1 && !menu->QuadMode)
                 menu->MoveDown();
             if (tick == 1 && menu->QuadMode)
@@ -45,16 +41,64 @@ namespace Cyber
         if (value && !menu->QuadMode)
             menu->EditMode = !menu->EditMode;
 
+        // Go from generator edit menu to generator selection menu
+        if (menu == Voices::GetActiveGen()->GetMenu() && value)
+        {
+            generatorSelectMenu.Values[0] = Voices::GetActiveGen()->GenIndex;
+            generatorSelectMenu.Max[0] = generatorRegistry.Count-1;
+            generatorSelectMenu.Values[1] = 0; // Show inserts only?
+            generatorSelectMenu.Values[2] = -1; // Selected insert effect.
+            ActiveMenu = &generatorSelectMenu;
+            generatorSelectMenu.EditMode = true;
+            return;
+        }
+
+        auto getFxMenuIndex = [](Menu* m)
+        {
+            auto v = Voices::GetActiveVoice();
+            if (v->Inserts[v->ActiveInsert]->GetMenu() == m)
+                return v->ActiveInsert;
+            return -1;
+        };
+
+        int fxIdx = getFxMenuIndex(menu);
+
+        // Go from insert FX edit menu to generator selection menu (Insert only)
+        if (fxIdx != -1 && value)
+        {
+            generatorSelectMenu.Values[0] = Voices::GetActiveVoice()->GetActiveInsert()->GenIndex;
+            generatorSelectMenu.Max[0] = generatorRegistry.Count-1;
+            generatorSelectMenu.Values[1] = 1; // Show inserts only?
+            generatorSelectMenu.Values[2] = fxIdx; // Selected insert effect.
+            ActiveMenu = &generatorSelectMenu;
+            generatorSelectMenu.EditMode = true;
+            return;
+        }
+
         // Assign new generator to active voice if changed
-        if (menu == &generatorSelectMenu && value && !menu->EditMode)
+        if (menu == &generatorSelectMenu && value)
         {
             int selectedGen = menu->Values[0];
             auto voice = Voices::GetActiveVoice();
-            if (voice->GenIndex != selectedGen)
+            int insertFxSlot = menu->Values[2];
+            if (insertFxSlot == -1) // selecting main generator
             {
-                delete voice->Gen;
-                voice->Gen = generatorRegistry.CreateInstance(selectedGen);
-                voice->GenIndex = selectedGen;
+                if (voice->Gen->GenIndex != selectedGen)
+                {
+                    generatorRegistry.DeleteInstance(voice->Gen);
+                    voice->Gen = generatorRegistry.CreateInstance(selectedGen);
+                }
+                ActiveMenu = voice->Gen->GetMenu();
+            }
+            else // Selecting insert FX
+            {
+                auto fxGen = voice->Inserts[insertFxSlot];
+                if (fxGen->GenIndex != selectedGen)
+                {
+                    generatorRegistry.DeleteInstance(fxGen);
+                    voice->Inserts[insertFxSlot] = generatorRegistry.CreateInstance(selectedGen);
+                }
+                ActiveMenu = voice->Inserts[insertFxSlot]->GetMenu();
             }
         }
     }
@@ -99,7 +143,7 @@ namespace Cyber
             }
             else
             {
-                ActiveMenu = Voices::GetActiveVoice()->mmf.GetMenu();
+                ActiveMenu = Voices::GetActiveVoice()->GetActiveInsert()->GetMenu();
             }
         }
         else if (idx == 2 && value)
@@ -111,7 +155,7 @@ namespace Cyber
             }
             else
             {
-                ActiveMenu = Voices::GetActiveVoice()->redux.GetMenu();
+                
             }
         }
         else if (idx == 3 && value)
@@ -123,7 +167,7 @@ namespace Cyber
             }
             else
             {
-                ActiveMenu = Voices::GetActiveVoice()->eqShelf.GetMenu();
+                
             }
         }
     }

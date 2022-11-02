@@ -30,6 +30,7 @@ namespace Cyber
             info.GeneratorId = "GNA-BasicDrive";
             info.Info = "Simple Drive/Distortion effect";
             info.Version = 1000;
+            info.InsertEffect = true;
             return info;
         }
 

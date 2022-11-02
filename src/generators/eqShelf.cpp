@@ -10,10 +10,10 @@ namespace Cyber
 
     EQShelf::EQShelf()
     {
-        menu.Captions[GAINLOW] = "Low Cut";
-        menu.Captions[FCLOW] = "Drive";
-        menu.Captions[FCHIGH] = "Mode";
-        menu.Captions[GAINHIGH] = "Rolloff";
+        menu.Captions[GAINLOW] = "Low Gain";
+        menu.Captions[FCLOW] = "Low Freq";
+        menu.Captions[FCHIGH] = "High Freq";
+        menu.Captions[GAINHIGH] = "High Gain";
 
         menu.Max[GAINLOW] = 1023;
         menu.Max[FCLOW] = 1023;

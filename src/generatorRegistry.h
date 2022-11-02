@@ -22,9 +22,59 @@ namespace Cyber
             Count++;
         }
 
+        inline void DeleteInstance(Generator* gen)
+        {
+            delete gen;
+        }
+
+        inline Generator* CreateInstanceById(const char* genId)
+        {
+            for (int i = 0; i < Count; i++)
+            {
+                if (strcmp(Info[i].GeneratorId, genId) == 0)
+                {
+                    return CreateInstance(i);
+                }
+            }
+            return 0;
+        }
+
         inline Generator* CreateInstance(int idx)
         {
-            return Factories[idx]();
+            auto instance = Factories[idx]();
+            instance->GenIndex = idx;
+            return instance;
+        }
+
+        inline int GetInsertFxCount()
+        {
+            int counter = 0;
+            for (int i = 0; i < Count; i++)
+            {
+                if (Info[i].InsertEffect)
+                    counter++;
+            }
+            return counter;
+        }
+
+        inline int GetNextInsertFxIndex(int startIdx)
+        {
+            for (int i = startIdx+1; i < Count; i++)
+            {
+                if (Info[i].InsertEffect)
+                    return i;
+            }
+            return -1;
+        }
+
+        inline int GetPrevInsertFxIndex(int startIdx)
+        {
+            for (int i = startIdx - 1; i >= 0 ; i--)
+            {
+                if (Info[i].InsertEffect)
+                    return i;
+            }
+            return -1;
         }
     };
 

@@ -30,6 +30,7 @@ namespace Cyber
             info.GeneratorId = "GNA-Redux";
             info.Info = "Bitcrusher and Samplerate reducer";
             info.Version = 1000;
+            info.InsertEffect = true;
             return info;
         }
 

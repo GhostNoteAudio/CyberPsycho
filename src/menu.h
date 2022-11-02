@@ -111,7 +111,6 @@ namespace Cyber
 
             int delta = Ticks[idx] * ticks;
             int newValue = Values[idx] + delta;
-            LogInfof("New value: %d", newValue);
             SetValue(idx, newValue);
         }
 

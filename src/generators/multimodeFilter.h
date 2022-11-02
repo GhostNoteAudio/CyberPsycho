@@ -31,6 +31,7 @@ namespace Cyber
             info.GeneratorId = "GNA-MultimodeFilter";
             info.Info = "Multi-mode filter.";
             info.Version = 1000;
+            info.InsertEffect = true;
             return info;
         }
 

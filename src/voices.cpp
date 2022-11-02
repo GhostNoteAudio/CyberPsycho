@@ -23,19 +23,19 @@ namespace Cyber
 
         args.InputLeft = temp1;
         args.OutputLeft = temp2;
-        mmf.Process(args);
+        Inserts[0]->Process(args);
 
         args.InputLeft = temp2;
         args.OutputLeft = temp1;
-        redux.Process(args);
+        Inserts[1]->Process(args);
 
         args.InputLeft = temp1;
         args.OutputLeft = temp2;
-        drive.Process(args);
+        Inserts[2]->Process(args);
 
         args.InputLeft = temp2;
         args.OutputLeft = fpData->Out[3];
-        eqShelf.Process(args);
+        Inserts[3]->Process(args);
     }
 }
 

@@ -35,6 +35,7 @@ namespace Cyber
             info.GeneratorId = "GNA-Superwave";
             info.Info = "Supersaw oscillator with tunable parameters.";
             info.Version = 1000;
+            info.InsertEffect = false;
             return info;
         }
 

@@ -1,10 +1,16 @@
 #include "Arduino.h"
 #include "cyberpsycho.h"
 #include <SdFat.h>
-#include "generators/kick1.h"
-#include "generators/superwave.h"
 #include "modules/init.h"
 #include "perftest.h"
+
+
+#include "generators/kick1.h"
+#include "generators/superwave.h"
+#include "generators/multimodeFilter.h"
+#include "generators/redux.h"
+#include "generators/basicDrive.h"
+#include "generators/eqShelf.h"
 
 using namespace Cyber;
 
@@ -32,9 +38,14 @@ void RegisterAllGenerators()
 {
     generatorRegistry.Add<Kick1>();
     generatorRegistry.Add<Superwave>();
+    generatorRegistry.Add<MultimodeFilter>();
+    generatorRegistry.Add<Redux>();
+    generatorRegistry.Add<BasicDrive>();
+    generatorRegistry.Add<EQShelf>();
+    generatorRegistry.Add<Bypass>();
 
-    Voices::Voices[0].Gen = generatorRegistry.CreateInstance(1);
-    Voices::Voices[0].GenIndex = 1;
+    Voices::InitVoices();
+    Voices::Voices[0].Gen = generatorRegistry.CreateInstance(0);
 }
 
 void setup()
@@ -70,7 +81,7 @@ void setup()
 
     Serial1.begin(31250); // Midi input
     Serial.begin(9600); // USB Serial
-    //while(!Serial) {}
+    while(!Serial) {}
     Serial.println("Starting...");
 
     Menus::Init();

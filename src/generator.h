@@ -29,6 +29,7 @@ namespace Cyber
     struct GeneratorInfo
     {
         int Version;
+        bool InsertEffect;
         const char* GeneratorId;
         const char* DisplayName;
         const char* DeveloperName;
@@ -37,6 +38,7 @@ namespace Cyber
         GeneratorInfo() 
         {
             Version = 0;
+            InsertEffect = false;
             GeneratorId = "";
             DisplayName = "";
             DeveloperName = "";
@@ -45,12 +47,14 @@ namespace Cyber
 
         GeneratorInfo(
             int version, 
+            bool insertEffect,
             const char* generatorId, 
             const char* displayName, 
             const char* developerName, 
             const char* info) 
         {
             Version = 0;
+            InsertEffect = insertEffect;
             GeneratorId = "";
             DisplayName = "";
             DeveloperName = "";
@@ -61,6 +65,7 @@ namespace Cyber
     class Generator
     {
     public:
+        int GenIndex = 0; // used by the "OS", do not modify
         virtual Menu* GetMenu() = 0;
         virtual void Process(GeneratorArgs args) = 0;
         virtual void ProcessMidi(uint8_t type, uint8_t data0, uint8_t data1) {}

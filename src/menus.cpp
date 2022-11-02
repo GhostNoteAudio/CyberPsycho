@@ -374,6 +374,32 @@ namespace Cyber
                     display->fillTriangle(118, 55, 126, 55, 122, 59, SH110X_WHITE);
                 }
             };
+            generatorSelectMenu.HandleEncoderCallback = [](Menu* menu, int tick)
+            {
+                LogInfo("Bang!");
+                bool fxOnly = menu->Values[1] == 1;
+                int currentId = menu->Values[0];
+
+                if (!fxOnly)
+                    menu->TickValue(menu->SelectedItem, tick);
+                else
+                {
+                    LogInfof("currentId is %d", currentId);
+
+                    int newId = tick > 0 
+                        ? generatorRegistry.GetNextInsertFxIndex(currentId) 
+                        : generatorRegistry.GetPrevInsertFxIndex(currentId);
+                    if (newId == -1)
+                    {
+                        LogInfo("NewId is -1!");
+                    }
+                    else
+                    {
+                        LogInfof("Setting newId to %d", newId);
+                        menu->SetValue(0, newId);
+                    }
+                }
+            };
         }
 
         void Init()
