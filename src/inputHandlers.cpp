@@ -123,7 +123,7 @@ namespace Cyber
             }
             else
             {
-                ActiveMenu = Voices::GetActiveVoice()->drive.GetMenu();
+                ActiveMenu = Voices::GetActiveVoice()->eqShelf.GetMenu();
             }
         }
     }

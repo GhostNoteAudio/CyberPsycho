@@ -5,6 +5,7 @@
 #include "generators/multimodeFilter.h"
 #include "generators/redux.h"
 #include "generators/basicDrive.h"
+#include "generators/eqShelf.h"
 
 namespace Cyber
 {
@@ -14,6 +15,7 @@ namespace Cyber
         MultimodeFilter mmf;
         Redux redux;
         BasicDrive drive;
+        EQShelf eqShelf;
 
         float InGain = 1;
         float OutGain = 1;

@@ -4,14 +4,18 @@
 namespace Cyber
 {
     const int RATE = 0;
-    const int BITCRUSH = 1;
+    const int MIX = 1;
     const int GAIN = 2;
+    const int BITCRUSH = 3;
+    
+    
     
     Redux::Redux()
     {
         menu.Captions[RATE] = "Rate Reduce";
-        menu.Captions[BITCRUSH] = "Bitcrush";
+        menu.Captions[MIX] = "Mix";
         menu.Captions[GAIN] = "Gain";
+        menu.Captions[BITCRUSH] = "Bitcrush";
         
         menu.Min[RATE] = 1;
         menu.Max[RATE] = 1000;
@@ -23,7 +27,7 @@ namespace Cyber
         menu.Values[BITCRUSH] = 1200;
         menu.Values[GAIN] = 50;
 
-        for (int i = 0; i < 3; i++)
+        for (int i = 0; i < 4; i++)
         {
             menu.Formatters[i] = [this](int idx, int16_t value, char* target)
             {
@@ -32,7 +36,7 @@ namespace Cyber
             };
         }
         
-        menu.SetLength(3);
+        menu.SetLength(4);
         menu.SelectedItem = 0;
         menu.TopItem = 0;
         menu.EnableSelection = false;
@@ -44,6 +48,7 @@ namespace Cyber
         if (idx == RATE) return 1 + Utils::Resp3dec(menu.Values[RATE] * 0.001) * 63;
         if (idx == BITCRUSH) return menu.Values[BITCRUSH] * 0.01;
         if (idx == GAIN) return -12 + 24 * menu.Values[GAIN] * 0.01;
+        if (idx == MIX) return menu.Values[MIX] * 0.01;
         return 0;
     }
 
@@ -58,6 +63,7 @@ namespace Cyber
         float rate = GetScaledParameter(RATE);
         float bits = GetScaledParameter(BITCRUSH);
         float gain = Utils::DB2Gainf(GetScaledParameter(GAIN));
+        float mix = GetScaledParameter(MIX);
 
         float levels = powf(2, bits);
         float levelsInv = 1.0f/levels;
@@ -78,6 +84,7 @@ namespace Cyber
                 s = sample;
             }
 
+            s = s * mix + args.InputLeft[i] * (1-mix);
             s *= gain;
 
             // bitcrush

@@ -30,8 +30,12 @@ namespace Cyber
         redux.Process(args);
 
         args.InputLeft = temp1;
-        args.OutputLeft = fpData->Out[3];
+        args.OutputLeft = temp2;
         drive.Process(args);
+
+        args.InputLeft = temp2;
+        args.OutputLeft = fpData->Out[3];
+        eqShelf.Process(args);
     }
 }
 
