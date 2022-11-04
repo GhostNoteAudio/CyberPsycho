@@ -1,4 +1,5 @@
 #include "cyberpsycho.h"
+#include "arm_math.h"
 
 namespace Cyber
 {
@@ -12,12 +13,12 @@ namespace Cyber
         { 
             float opsPerSec = ops / pt.Period() * 1000000;
             const char* multiplier = "";
-            if (opsPerSec > 10000000)
+            if (opsPerSec > 1000000)
             {
                 opsPerSec /= 1000000;
                 multiplier = " M";
             }
-            else if (opsPerSec > 10000)
+            else if (opsPerSec > 1000)
             {
                 opsPerSec /= 1000;
                 multiplier = " K";
@@ -87,6 +88,28 @@ namespace Cyber
         // ---------------------------------------------
         pt.Start();
         sum = 0;
+        for (int i = 0; i < 10000; i++)
+        {
+            sum += arm_sin_f32(i);
+        }
+        summer += sum;
+        pt.Stop();
+        show(10000, "arm_sin_f32__Int");
+
+        // ---------------------------------------------
+        pt.Start();
+        sum = 0;
+        for (int i = 0; i < 10000; i++)
+        {
+            sum += Utils::SinLut(i);
+        }
+        summer += sum;
+        pt.Stop();
+        show(10000, "SinLut");
+
+        // ---------------------------------------------
+        pt.Start();
+        sum = 0;
         for (int i = 0; i < 100000; i++)
         {
             sum += tanhf(i);
@@ -94,6 +117,40 @@ namespace Cyber
         summer += sum;
         pt.Stop();
         show(100000, "TanhfInt");
+
+        // ---------------------------------------------
+        pt.Start();
+        sum = 0;
+        for (int i = 0; i < 1000; i++)
+        {
+            float sum2 = 0;
+            for (int j = 0; j < 128; j++)
+            {
+                sum2 += Utils::Note2hz(j);
+            }
+            
+            sum += 0.0000001 * sum2;
+        }
+        summer += sum;
+        pt.Stop();
+        show(128000, "Note2Hz");
+
+        // ---------------------------------------------
+        pt.Start();
+        sum = 0;
+        for (int i = 0; i < 1000; i++)
+        {
+            float sum2 = 0;
+            for (int j = 0; j < 128; j++)
+            {
+                sum2 += Utils::Note2HzLut(j);
+            }
+            
+            sum += 0.0000001 * sum2;
+        }
+        summer += sum;
+        pt.Stop();
+        show(128000, "Note2HzLut");
 
         LogInfof("-------------- END OF RESULT %d ------------", summer);
         delay(1000);

@@ -9,14 +9,14 @@ Biquad::Biquad()
 	ClearBuffers();
 }
 
-Biquad::Biquad(FilterType filterType, int samplerate)
+Biquad::Biquad(FilterType filterType, float fs)
 {
 	Type = filterType;
-	SetSamplerate(samplerate);
+	SetSamplerate(fs);
 
-	SetGainDb(0.0);
-	Frequency = (float)(samplerate / 4.0);
-	SetQ(0.5);
+	SetGainDb(0.0f);
+	Frequency = (float)(fs * 0.25f);
+	SetQ(0.5f);
 	ClearBuffers();
 }
 
@@ -26,14 +26,15 @@ Biquad::~Biquad()
 }
 
 
-int Biquad::GetSamplerate() 
+float Biquad::GetSamplerate() 
 {
-	return samplerate;
+	return fs;
 }
 
-void Biquad::SetSamplerate(int value)
+void Biquad::SetSamplerate(float fs)
 {
-	samplerate = value; 
+	this->fs = fs; 
+	fsInv = 1.0f / fs;
 	Update();
 }
 
@@ -97,22 +98,23 @@ Vec3<float> Biquad::GetB()
 void Biquad::Update()
 {
 	auto Fc = Frequency;
-	auto Fs = samplerate;
+	//auto Fs = fs;
 
 	auto V = pow10f(abs(gainDB) / 20);
-	auto K = tanf(M_PI * Fc / Fs);
+	//auto K = tanf(M_PI * Fc / Fs);
+	auto K = tanf(M_PI * Fc * fsInv);
 	auto Q = q;
 	double norm = 1.0;
 
 	switch (Type)
 	{
 	case FilterType::LowPass6db:
-		a1 = -expf(-2.0 * M_PI * (Fc / Fs));
+		a1 = -expf(-2.0 * M_PI * (Fc * fsInv));
 		b0 = 1.0 + a1;
 		b1 = b2 = a2 = 0;
 		break;
 	case FilterType::HighPass6db:
-		a1 = -expf(-2.0 * M_PI * (Fc / Fs));
+		a1 = -expf(-2.0 * M_PI * (Fc * fsInv));
 		b0 = a1;
 		b1 = -a1;
 		b2 = a2 = 0;
@@ -214,7 +216,7 @@ void Biquad::Update()
 
 double Biquad::GetResponse(float freq) const
 {
-	double phi = powf((sinf(2 * M_PI * freq / (2.0 * samplerate))), 2);
+	double phi = powf((sinf(2 * M_PI * freq / (2.0 * fs))), 2);
 	double y = ((powf(b0 + b1 + b2, 2.0) - 4.0 * (b0 * b1 + 4.0 * b0 * b2 + b1 * b2) * phi + 16.0 * b0 * b2 * phi * phi) / (powf(1.0 + a1 + a2, 2.0) - 4.0 * (a1 + 4.0 * a2 + a1 * a2) * phi + 16.0 * a2 * phi * phi));
 	// y gives you power gain, not voltage gain, and this a 10 * log_10(g) formula instead of 20 * log_10(g)
 	// by taking the sqrt we get a value that's more suitable for signal processing, i.e. the voltage gain

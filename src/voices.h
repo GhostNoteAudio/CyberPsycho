@@ -4,6 +4,7 @@
 #include "io_buffer.h"
 #include "generators/bypass.h"
 #include "generatorRegistry.h"
+#include "modulators.h"
 
 namespace Cyber
 {
@@ -24,6 +25,7 @@ namespace Cyber
 
         Generator* Gen = nullptr;
         Generator* Inserts[4] = {nullptr};
+        Modulators modulators;
 
         int ActiveInsert = 0;
 

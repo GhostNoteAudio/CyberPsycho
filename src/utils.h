@@ -7,6 +7,23 @@ namespace Cyber
 {
     namespace Utils
     {
+        extern float Note2HzData[1280];
+        extern float SinData[2048];
+
+        inline void Init()
+        {
+            for (int i = 0; i < 1280; i++)
+            {
+                int note = i/10.0;
+                Note2HzData[i] = powf(2, (note-69)/12.0f) * 440.0f;
+            }
+
+            for (int i = 0; i < 2048; i++)
+            {
+                SinData[i] = sin(i/2048.0*2*M_PI);
+            }
+        }
+
         inline float Limit(float val, float min, float max)
         {
             return val < min ? min : val > max ? max : val;
@@ -76,7 +93,6 @@ namespace Cyber
         template<typename T>
         inline void Copy(T* dest, T* source, int len)
         {
-
             memcpy(dest, source, len * sizeof(T));
         }
 
@@ -86,6 +102,15 @@ namespace Cyber
             for (int i = 0; i < len; i++)
             {
                 buffer[i] *= gain;
+            }
+        }
+
+        template<typename T>
+        inline void Multiply(T* dest, T* modulator, int len)
+        {
+            for (int i = 0; i < len; i++)
+            {
+                dest[i] *= modulator[i];
             }
         }
 
@@ -276,11 +301,6 @@ namespace Cyber
             ApplyHamming(buffer, N);
         }
 
-        inline float Note2hz(float note)
-        {
-            return powf(2, (note-69)/12.0f) * 440.0f;
-        }
-
         inline float Sum(float* data, int count)
         {
             float output = 0.0f;
@@ -289,6 +309,49 @@ namespace Cyber
                 output += data[i];
             }
             return output;
+        }
+
+        inline float Note2hz(float note)
+        {
+            const float scaler = 1/12.0;
+            //return powf(2, (note-69)/12.0f) * 440.0f;
+            return powf(2, (note-69)*scaler) * 440.0f;
+        }
+
+        
+
+        inline float Note2HzLut(float note)
+        {
+            if (note > 127.999f)
+                note = 127.999f;
+
+            float n10 = (note * 10);
+            int idxA = (int)n10;
+            int idxB = idxA + 1;
+
+            float rem = n10 - idxA;
+
+            auto a = Note2HzData[idxA];
+            auto b = Note2HzData[idxB];
+            return a * (1-rem) + b * rem;
+        }
+
+        inline float SinLut(float theta)
+        {
+            const float scaler = 1.0 / (2 * M_PI);
+            float thetaScaled = theta * scaler * 2048;
+
+            int idxA = thetaScaled;
+            int idxB = idxA + 1;
+            
+            float rem = thetaScaled - idxA;
+
+            idxA = idxA & 0x7FF;
+            idxB = idxB & 0x7FF;
+
+            auto a = Note2HzData[idxA];
+            auto b = Note2HzData[idxB];
+            return a * (1-rem) + b * rem;
         }
     }
 }

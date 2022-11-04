@@ -47,7 +47,6 @@ namespace Cyber
     void Superwave::Reset(float pitchHz)
     {
         float vspread = GetScaledParameter(VSPREAD);
-        float pitch = 60 + GetScaledParameter(SEMI) + GetScaledParameter(CENT) * 0.01;
 
         for (int i = 0; i < COUNT; i++)
         {
@@ -55,7 +54,7 @@ namespace Cyber
             volumes[i] = volumes[i] * volumes[i];
         }
         
-        biq.Frequency = pitchHz < 0 ? Utils::Note2hz(pitch) : pitchHz;
+        biq.Frequency = pitchHz;
         biq.Update();   
         gainAdjust = 1.0 / Utils::Sum(volumes, 7);
     }
@@ -76,13 +75,20 @@ namespace Cyber
 
     void Superwave::Process(GeneratorArgs args)
     {
-        float pspread = GetScaledParameter(PSPREAD);
-        float pitch = 60 + GetScaledParameter(SEMI) + GetScaledParameter(CENT) * 0.01;
-        float pitchHz = Utils::Note2hz(pitch);
-        Reset(pitchHz);
+        float pspread = 0;
+        float pitch = 0;
+        float pitchHz = 0;
 
         for (int n = 0; n < args.Size; n++)
         {
+            if ((n & 0x7) == 0) // update mod every 8 samples
+            {
+                pspread = GetScaledParameter(PSPREAD);
+                pitch = args.Cv[0] * 12 + GetScaledParameter(SEMI) + GetScaledParameter(CENT) * 0.01;
+                pitchHz = Utils::Note2HzLut(pitch);
+                Reset(pitchHz);
+            }
+
             float output = 0;
             for (int i=0; i<COUNT; i++)
             {

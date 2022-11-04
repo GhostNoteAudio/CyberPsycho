@@ -51,6 +51,7 @@ void RegisterAllGenerators()
 void setup()
 {
     Modules::Init();
+    Utils::Init();
 
     pinMode(PIN_GATE0, INPUT);
     pinMode(PIN_GATE1, INPUT);
@@ -81,7 +82,7 @@ void setup()
 
     Serial1.begin(31250); // Midi input
     Serial.begin(9600); // USB Serial
-    while(!Serial) {}
+    //while(!Serial) {}
     Serial.println("Starting...");
 
     Menus::Init();

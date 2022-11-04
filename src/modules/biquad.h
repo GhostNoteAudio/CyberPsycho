@@ -32,7 +32,8 @@ namespace Modules
 		};
 
 	private:
-		int samplerate;
+		float fs;
+		float fsInv;
 		float gainDB;
 		float q;
 		float a0, a1, a2, b0, b1, b2;
@@ -45,11 +46,11 @@ namespace Modules
 		float Frequency;
 
 		Biquad();
-		Biquad(FilterType filterType, int samplerate);
+		Biquad(FilterType filterType, float fs);
 		~Biquad();
 
-		int GetSamplerate();
-		void SetSamplerate(int samplerate);
+		float GetSamplerate();
+		void SetSamplerate(float fs);
 		float GetGainDb();
 		void SetGainDb(float value);
 		float GetGain();

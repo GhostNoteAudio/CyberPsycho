@@ -15,7 +15,7 @@ namespace Modules
         enum class EnvMode
         {
             AR = 0,
-            //AHR = 1,
+            AHR = 1,
             //ADSR = 2,
             //AHDRS = 3
         };

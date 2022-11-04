@@ -29,10 +29,10 @@ namespace Cyber
             FpBuffer output;
             for (int i = 0; i < buf->Size; i++)
             {
-                output.Cv[0][i] = (float)((int)buf->Cv[0][i] - OffsetCv[0]) * ScaleCv[0] * Inv12Bit * CvRange;
-                output.Cv[1][i] = (float)((int)buf->Cv[1][i] - OffsetCv[1]) * ScaleCv[1] * Inv12Bit * CvRange;
-                output.Cv[2][i] = (float)((int)buf->Cv[2][i] - OffsetCv[2]) * ScaleCv[2] * Inv12Bit * CvRange;
-                output.Cv[3][i] = (float)((int)buf->Cv[3][i] - OffsetCv[3]) * ScaleCv[3] * Inv12Bit * CvRange;
+                output.Cv[0][i] = (float)((int)buf->Cv[0][i] + OffsetCv[0]) * ScaleCv[0] * Inv12Bit * CvRange;
+                output.Cv[1][i] = (float)((int)buf->Cv[1][i] + OffsetCv[1]) * ScaleCv[1] * Inv12Bit * CvRange;
+                output.Cv[2][i] = (float)((int)buf->Cv[2][i] + OffsetCv[2]) * ScaleCv[2] * Inv12Bit * CvRange;
+                output.Cv[3][i] = (float)((int)buf->Cv[3][i] + OffsetCv[3]) * ScaleCv[3] * Inv12Bit * CvRange;
 
                 output.Mod[0][i] = (float)((int)buf->Mod[0][i] - 2048 + OffsetMod[0]) * ScaleMod[0] * Inv12Bit * ModRange;
                 output.Mod[1][i] = (float)((int)buf->Mod[1][i] - 2048 + OffsetMod[1]) * ScaleMod[1] * Inv12Bit * ModRange;

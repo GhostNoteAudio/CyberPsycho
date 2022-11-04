@@ -16,6 +16,8 @@ namespace Cyber
         GeneratorArgs args;
         args.Bpm = 120;
         args.Gate = fpData->Gate[3];
+        args.Cv = fpData->Cv[3];
+        modulators.Process(args);
         
         args.InputLeft = fpData->Mod[3];
         args.OutputLeft = temp1;
@@ -34,8 +36,12 @@ namespace Cyber
         Inserts[2]->Process(args);
 
         args.InputLeft = temp2;
-        args.OutputLeft = fpData->Out[3];
+        args.OutputLeft = temp1;
         Inserts[3]->Process(args);
+
+        Utils::Multiply(temp1, modulators.OutEnv1, args.Size);
+
+        Utils::Copy(fpData->Out[3], temp1, args.Size);
     }
 }
 
