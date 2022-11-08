@@ -3,7 +3,7 @@
 #include <SdFat.h>
 #include "modules/init.h"
 #include "perftest.h"
-
+#include "fast_curves.h"
 
 #include "generators/kick1.h"
 #include "generators/superwave.h"
@@ -11,6 +11,7 @@
 #include "generators/redux.h"
 #include "generators/basicDrive.h"
 #include "generators/eqShelf.h"
+
 
 using namespace Cyber;
 
@@ -52,6 +53,7 @@ void setup()
 {
     Modules::Init();
     Utils::Init();
+    FastCurves::Init();
 
     pinMode(PIN_GATE0, INPUT);
     pinMode(PIN_GATE1, INPUT);

@@ -1,5 +1,6 @@
 #include "cyberpsycho.h"
 #include "arm_math.h"
+#include "fast_curves.h"
 
 namespace Cyber
 {
@@ -151,6 +152,28 @@ namespace Cyber
         summer += sum;
         pt.Stop();
         show(128000, "Note2HzLut");
+
+        // ---------------------------------------------
+        pt.Start();
+        sum = 0;
+        for (int i = 0; i < 10000; i++)
+        {
+            sum += Utils::Resp2dec(i*0.0001);
+        }
+        summer += sum;
+        pt.Stop();
+        show(10000, "Resp2dec");
+
+        // ---------------------------------------------
+        pt.Start();
+        sum = 0;
+        for (int i = 0; i < 10000; i++)
+        {
+            sum += FastCurves::Read(FastCurves::Resp2Dec, i*0.0001);
+        }
+        summer += sum;
+        pt.Stop();
+        show(10000, "FastCurve Resp2dec");
 
         LogInfof("-------------- END OF RESULT %d ------------", summer);
         delay(1000);

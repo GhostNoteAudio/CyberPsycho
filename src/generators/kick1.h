@@ -3,7 +3,7 @@
 #include "generator.h"
 #include "menu.h"
 #include <fonts/font3.h>
-#include "modules/envelope.h"
+#include "modules/percussionEnvelope.h"
 
 namespace Cyber
 {
@@ -14,8 +14,8 @@ namespace Cyber
         float phasor;
         bool currentGate;
 
-        Modules::Envelope ampEnv;
-        Modules::Envelope pitchEnv;
+        Modules::PercussionEnvelope ampEnv;
+        Modules::PercussionEnvelope pitchEnv;
     public:
         Kick1();
         virtual Menu* GetMenu() override;

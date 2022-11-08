@@ -1,12 +1,13 @@
 #pragma once
 #include "logging.h"
+#include "fast_curves.h"
 
 namespace Modules
 {
     class Envelope
     {
     public:
-        enum class CurveMode
+        enum class EnvCurve
         {
             Linear = 0,
             Exp = 1,
@@ -16,35 +17,33 @@ namespace Modules
         {
             AR = 0,
             AHR = 1,
-            //ADSR = 2,
-            //AHDRS = 3
+            ADSR = 2,
+            AHDSR = 3
         };
 
-    private:
-        float ExpMin = 0.001; // -60db
-        float ExpScaler = (1.0/(1.0 - 0.001)); // used to scale output from [0.001, 1] to [0, 1]
+        const int STAGE_ATK = 0;
+        const int STAGE_HOL = 1;
+        const int STAGE_DEC = 2;
+        const int STAGE_SUS = 3;
+        const int STAGE_REL = 4;
 
-        int Stage = 4; // 0=attack, 1=hold, 2=decay, 3=sustain, 4=release
-        int SamplesSinceStage = 1000000000; // how many samples have been processed since entering the current stage
+    private:
+        int Stage = STAGE_REL;
         bool currentGate = false;
         
-        // Linear mode
         float AttackInc;
         float DecayInc;
         float ReleaseInc;
 
-        // Exp mode
-        float AttackMultiplier;
-        float DecayMultiplier;
-        float ReleaseMultiplier;
-
         float Output = 0;
+        int HoldCount = 0;
+        float ReleaseScaler = 1;
 
     public:
         EnvMode Mode = EnvMode::AR;
-        CurveMode AttackMode = CurveMode::Linear;
-        CurveMode DecayMode = CurveMode::Linear;
-        CurveMode ReleaseMode = CurveMode::Linear;
+        EnvCurve AttackCurve = EnvCurve::Linear;
+        EnvCurve DecayCurve = EnvCurve::Linear;
+        EnvCurve ReleaseCurve = EnvCurve::Linear;
         float AttackSamples = 1000;
         float HoldSamples = 0;
         float DecaySamples = 1000;
@@ -53,106 +52,131 @@ namespace Modules
         bool ResetOnTrig = true; // if true, will always reset env output to zero on trigger
         bool OneShot = false; // if true, will latch gate until the end of the release phase is reached. Useful for permission sounds
 
-        int GetCurrentStage()
+        inline int GetCurrentStage()
         {
             return Stage;
         }
 
-        float GetOutput()
+        inline float GetOutput()
         {
-            bool scale = false;
-            if (Stage == 0 && AttackMode == CurveMode::Exp) scale = true;
-            if (Stage == 2 && DecayMode == CurveMode::Exp) scale = true;
-            if (Stage == 4 && ReleaseMode == CurveMode::Exp) scale = true;
-            return scale ? (Output - ExpMin) * ExpScaler : Output;
+            if (Stage == STAGE_ATK)
+                return AttackCurve == EnvCurve::Exp ? Cyber::FastCurves::Read(Cyber::FastCurves::Resp2Dec, Output) : Output;
+            if (Stage == STAGE_HOL)
+                return 1;
+            if (Stage == STAGE_DEC)
+            {
+                float decOut = DecayCurve == EnvCurve::Exp ? Cyber::FastCurves::Read(Cyber::FastCurves::Resp2Dec, Output) : Output;
+                return decOut * (1-SustainLevel) + SustainLevel;
+            }
+            if (Stage == STAGE_SUS)
+                return SustainLevel;
+            if (Stage == STAGE_REL)
+                return ReleaseScaler * (ReleaseCurve == EnvCurve::Exp ? Cyber::FastCurves::Read(Cyber::FastCurves::Resp2Dec, Output) : Output);
+
+            return 0;
         }
 
-        void UpdateParams(float minimumExpDb = -60)
+        inline void UpdateParams()
         {
-            const float div20 = (1.0 / 20.0);
-
-            ExpMin = pow10f(minimumExpDb * div20);
-            ExpScaler = 1.0f/(1.0f - ExpMin);
-            minimumExpDb = -minimumExpDb;
-
             AttackInc = 1.0f / AttackSamples;
             DecayInc = 1.0f / DecaySamples;
             ReleaseInc = 1.0f / ReleaseSamples;
-
-            // calculate the multiplier M, as so:
-            // ExpMin * M^Samples = 1.0  - for attack
-            // or
-            // 1.0 * M^Samples = ExpMin  - for decay and release
-            // AttackMultiplier = pow10f((minimumExpDb/AttackSamples) * div20);
-            // DecayMultiplier = 1.0f / pow10f((minimumExpDb/DecaySamples) * div20);
-            // ReleaseMultiplier = 1.0f / pow10f((minimumExpDb/ReleaseSamples) * div20);
-            AttackMultiplier = pow10f((minimumExpDb*AttackInc) * div20);
-            DecayMultiplier = 1.0f / pow10f((minimumExpDb*DecayInc) * div20);
-            ReleaseMultiplier = 1.0f / pow10f((minimumExpDb*ReleaseInc) * div20);
         }
 
     private:
-        void ProcessAr()
+        inline void ProcessStage()
         {
-            if (Stage == 4) // Release
+            if (Stage == STAGE_ATK)
             {
-                if (ReleaseMode == CurveMode::Linear)
-                {
-                    Output -= ReleaseInc;
-                    if (Output < 0)
-                        Output = 0;
-                }
-                else
-                {
-                    Output *= ReleaseMultiplier;
-                    if (Output < ExpMin)
-                        Output = ExpMin;
-                }
-            }
-
-            if (Stage == 0) // Attack
-            {
-                if (AttackMode == CurveMode::Linear)
-                    Output += AttackInc;
-                else
-                    Output *= AttackMultiplier;
-
+                Output += AttackInc;
                 if (Output >= 1)
                 {
                     Output = 1;
-                    Stage = 4;
+                    if (Mode == EnvMode::AR)
+                    {
+                        ReleaseScaler = 1.0f;
+                        Stage = STAGE_REL;
+                    }
+                    else if (Mode == EnvMode::AHR || Mode == EnvMode::AHDSR)
+                    {
+                        Stage = STAGE_HOL;
+                        HoldCount = 0;
+                    }
+                    else if (Mode == EnvMode::ADSR)
+                    {
+                        Stage = STAGE_DEC;
+                    }
                 }
+            }
+            else if (Stage == STAGE_HOL)
+            {
+                Output = 1;
+                HoldCount++;
+
+                if (HoldCount >= HoldSamples)
+                {
+                    ReleaseScaler = 1.0f;
+                    if (Mode == EnvMode::AHR)
+                        Stage = STAGE_REL;
+                    else if (Mode == EnvMode::AHDSR)
+                        Stage = STAGE_DEC;
+                }
+            }
+            else if (Stage == STAGE_DEC)
+            {
+                Output -= DecayInc;
+                if (Output <= 0)
+                {
+                    Output = 0;
+                    Stage = STAGE_SUS;
+                }
+            }
+            else if (Stage == STAGE_SUS)
+            {
+                Output = SustainLevel;
+            }
+            else if (Stage == STAGE_REL)
+            {
+                Output -= ReleaseInc;
+                if (Output < 0)
+                    Output = 0;
             }
         }
 
+        inline float GetValueForAttackReset()
+        {
+            // When going back to the attack stage, we can't just take the current output value and assign it as the Attack value,
+            // because the stage could be using different curves. This attempts to calculate the right value.
+
+            // Todo: Do properly! Currently only works for linear attack!
+            // Use bisect method, maybe?
+            return GetOutput();
+        }
+
     public:
-        float Process(bool gate)
+        inline float Process(bool gate)
         {
             bool trig = !this->currentGate && gate;
-            int stageOrig = Stage;
 
             if (trig)
             {
-                Stage = 0;
                 if (ResetOnTrig)
-                    Output = AttackMode == CurveMode::Linear ? 0 : ExpMin;
+                    Output = 0;
+                else
+                    Output = GetValueForAttackReset();
+
+                Stage = STAGE_ATK;
             }
 
-            if (!gate && !OneShot)
+            if (!gate && !OneShot && Stage != STAGE_REL)
             {
-                Stage = 4;
+                ReleaseScaler = GetOutput();
+                Output = 1;
+                Stage = STAGE_REL;
             }
 
-            if (Mode == EnvMode::AR || Mode == EnvMode::AR)
-                ProcessAr();
-
+            ProcessStage();
             this->currentGate = gate;
-
-            if (stageOrig == Stage)
-                SamplesSinceStage++;
-            else
-                SamplesSinceStage = 1;
-            
             return GetOutput();
         }
     };

@@ -1,5 +1,6 @@
 #include "kick1.h"
 #include "menu.h"
+#include "arm_math.h"
 
 namespace Cyber
 {
@@ -38,28 +39,20 @@ namespace Cyber
         menu.EnableSelection = false;
         menu.QuadMode = true;
         
-        ampEnv.Mode = Modules::Envelope::EnvMode::AR;
-        ampEnv.AttackMode = Modules::Envelope::CurveMode::Linear;
-        ampEnv.ReleaseMode = Modules::Envelope::CurveMode::Exp;
-        ampEnv.AttackSamples = 0;
-        ampEnv.ReleaseSamples = 20000;
-        ampEnv.OneShot = true;
-        ampEnv.ResetOnTrig = true;
+        ampEnv.DecaySamples = 20000;
+        ampEnv.AttackRate = 1;
+        ampEnv.ValueFloorDb = -60;
         ampEnv.UpdateParams();
 
-        pitchEnv.Mode = Modules::Envelope::EnvMode::AR;
-        pitchEnv.AttackMode = Modules::Envelope::CurveMode::Linear;
-        pitchEnv.ReleaseMode = Modules::Envelope::CurveMode::Exp;
-        pitchEnv.AttackSamples = 0;
-        pitchEnv.ReleaseSamples = 20000;
-        pitchEnv.OneShot = true;
-        pitchEnv.ResetOnTrig = true;
+        pitchEnv.DecaySamples = 20000;
+        pitchEnv.AttackRate = 1;
+        pitchEnv.ValueFloorDb = -60;
         pitchEnv.UpdateParams();
     }
 
     float Kick1::GetScaledParameter(int idx)
     {
-        if (idx == DECAY) return (0.01 + menu.Values[DECAY] * 0.01 *0.99) * SAMPLERATE;
+        if (idx == DECAY) return (0.01 + menu.Values[DECAY] * 0.01 *0.99) * SAMPLERATE * 2;
         if (idx == PDEC) return (0.002 + menu.Values[PDEC] * 0.01 * 0.5) * SAMPLERATE;
         if (idx == PMOD) return menu.Values[PMOD] * 10;
         if (idx == FREQ) return 10 + menu.Values[FREQ] * 2.90;
@@ -85,13 +78,17 @@ namespace Cyber
         float freq = GetScaledParameter(FREQ);
         float boost = GetScaledParameter(BOOST);
         float fold = GetScaledParameter(FOLD);
+        
+        // Todo: These two should change the curve shape of the envelopes
         float pshape = GetScaledParameter(PSHAPE);
         float ashape = GetScaledParameter(ASHAPE);
 
-        ampEnv.ReleaseSamples = adecay;
-        pitchEnv.ReleaseSamples = pdecay;
-        ampEnv.UpdateParams(-ashape);
-        pitchEnv.UpdateParams(-pshape);
+        ampEnv.DecaySamples = adecay;
+        pitchEnv.DecaySamples = pdecay;
+        ampEnv.ValueFloorDb = -ashape;
+        pitchEnv.ValueFloorDb = -pshape;
+        ampEnv.UpdateParams();
+        pitchEnv.UpdateParams();
 
         for (int i = 0; i < args.Size; i++)
         {
@@ -103,10 +100,10 @@ namespace Cyber
             float aenv = ampEnv.Process(g);
             float penv = pitchEnv.Process(g);
             phasor += (pmod * penv + freq) * fsinv;
-            float s = sinf(phasor * 2 * M_PI) * aenv;
+            float s = arm_sin_f32(phasor * 2 * M_PI) * aenv;
 
             if (fold > 0)
-                s = sinf(s * fold);
+                s = arm_sin_f32(s * fold);
             if (boost > 1)
                 s = tanhf(s * boost);
 

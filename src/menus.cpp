@@ -113,26 +113,30 @@ namespace Cyber
             initMenu.RenderCustomDisplayCallback = [](Adafruit_SH1106G* display)
             {
                 display->clearDisplay();
+                YieldAudio();
                 display->setFont(&AtlantisInternational_jen08pt7b);
                 display->setTextSize(2);
                 display->setTextColor(SH110X_WHITE);
                 int w = initMenu.GetStringWidth(display, "Cyberpsycho");
                 int offset = (display->width() - w) / 2;
                 display->setCursor(offset, 22);
-                display->println("Cyberpsycho");
-
+                display->print("Cyberpsycho");
+                YieldAudio();
+                
                 display->setTextSize(1);
                 w = initMenu.GetStringWidth(display, "Ghost Note Audio");
                 offset = (display->width() - w) / 2;
                 display->setCursor(offset, 38);
-                display->println("Ghost Note Audio");
+                display->print("Ghost Note Audio");
+                YieldAudio();
 
                 w = initMenu.GetStringWidth(display, VERSION);
                 offset = (display->width() - w) / 2;
                 display->setCursor(offset - 3, 49);
-                display->println("v");
+                display->print("v");
                 display->setCursor(offset + 3, 49);
-                display->println(VERSION);
+                display->print(VERSION);
+                YieldAudio();
             };
         }
 

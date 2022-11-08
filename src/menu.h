@@ -222,6 +222,7 @@ namespace Cyber
         inline void RenderQuad(Adafruit_SH1106G* display)
         {
             display->clearDisplay();
+            display->setFont(&AtlantisInternational_jen08pt7b);
             display->setTextSize(1);
 
             char val[16];
