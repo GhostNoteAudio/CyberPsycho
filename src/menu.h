@@ -134,7 +134,7 @@ namespace Cyber
 
             if (value < 0) value = 0;
             if (value > 1) value = 1;
-            int16_t v = Min[idx] + value * (Max[idx] - Min[idx]);
+            int16_t v = Min[idx] + value * (Max[idx] - Min[idx] + 0.5f);
             Values[idx] = v;
 
             if (ValueChangedCallback != 0)

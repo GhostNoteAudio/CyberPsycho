@@ -39,7 +39,8 @@ namespace Cyber
         args.OutputLeft = temp1;
         Inserts[3]->Process(args);
 
-        //Utils::Multiply(temp1, modulators.OutEnv1, args.Size);
+        Utils::Multiply(temp1, modulators.OutEnv1, args.Size);
+        Utils::Multiply(temp1, modulators.OutLfo1, args.Size);
 
         Utils::Copy(fpData->Out[3], temp1, args.Size);
     }

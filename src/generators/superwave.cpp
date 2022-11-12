@@ -101,7 +101,7 @@ namespace Cyber
             
             output *= gainAdjust;
             output = biq.Process(output); // high pass to remove aliasing below fundamental
-            output += 0.2 * Modules::Wavetable::SinFast(phasor[3]); // increase fundamental frequency to compensate for high pass
+            output += 0.2 * Modules::Wavetable::Sin(phasor[3]); // increase fundamental frequency to compensate for high pass
 
             args.OutputLeft[n] = output * 0.8;
         }

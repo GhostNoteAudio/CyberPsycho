@@ -155,7 +155,7 @@ namespace Cyber
             }
             else
             {
-                
+                ActiveMenu = Voices::GetActiveVoice()->modulators.GetMenu();
             }
         }
         else if (idx == 3 && value)

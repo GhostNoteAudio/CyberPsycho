@@ -17,11 +17,10 @@ namespace Modules
         for (int i = 0; i < 256; i++)
         {
             RemInv[i] = i / 256.0;
-        }
-        
+        }   
     }
-    
-    float Wavetable::SinFast(uint32_t phasor)
+
+    float Wavetable::Lookup(uint32_t phasor, float* table)
     {
         // p is the primary indexer into the 1024-point wavetable, it's a 10 bit value
         uint32_t p = phasor >> 22;
@@ -29,8 +28,42 @@ namespace Modules
         uint32_t rem = (phasor >> 14) - (p << 8);
         float reminv = RemInv[rem]; // [0...255/256]
 
-        float a = SinTable[p];
-        float b = SinTable[(p + 1) & 0x3FF]; // module 10 bits
+        float a = table[p];
+        float b = table[(p + 1) & 0x3FF]; // module 10 bits
         return a * (1-reminv) + b * reminv;
+    }
+    
+    float Wavetable::Sin(uint32_t phasor)
+    {
+        return Lookup(phasor, SinTable);
+    }
+
+    float Wavetable::Pulse(uint32_t phasor, uint32_t width)
+    {
+        return (phasor < width) ? 1.0f : -1.0f;
+    }
+
+    float Wavetable::Triangle(uint32_t phasor)
+    {
+        const float scaler = 1.0 / 0x3FFFFFFF;
+
+        int32_t quart = 0x3FFFFFFF & phasor;
+        int k = 0;
+        if (phasor < 0x3FFFFFFF)
+            k = quart;
+        else if (phasor < 0x7FFFFFFF)
+            k = 0x3FFFFFFF - quart;
+        else if (phasor < 0xBFFFFFFF)
+            k = -quart;
+        else
+            k = quart - 0x3FFFFFFF;
+        return k * scaler;
+    }
+
+    float Wavetable::Saw(uint32_t phasor)
+    {
+        const float scaler = -1.0 / 0x80000000;
+        int32_t k = (int32_t)phasor;
+        return k * scaler;
     }
 }

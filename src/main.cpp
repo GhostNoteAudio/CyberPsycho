@@ -46,7 +46,7 @@ void RegisterAllGenerators()
     generatorRegistry.Add<Bypass>();
 
     Voices::InitVoices();
-    Voices::Voices[0].Gen = generatorRegistry.CreateInstance(0);
+    Voices::Voices[0].Gen = generatorRegistry.CreateInstanceById("GNA-Superwave");
 }
 
 void setup()
