@@ -13,6 +13,8 @@ namespace Cyber
         const float CvRange = 8;
         const float ModRange = 5;
         
+        FpBuffer output;
+        
         int InputGate[4];
         bool Gate[4];
 
@@ -24,9 +26,8 @@ namespace Cyber
         float ScaleMod[4] = {1,1,1,1};
         int16_t GateSpeed = 64; // 1 = slowest, 255 = instant change, no filtering
 
-        inline FpBuffer ConvertToFp(DataBuffer* buf)
+        inline FpBuffer* ConvertToFp(DataBuffer* buf)
         {
-            FpBuffer output;
             for (int i = 0; i < buf->Size; i++)
             {
                 output.Cv[0][i] = (float)((int)buf->Cv[0][i] + OffsetCv[0]) * ScaleCv[0] * Inv12Bit * CvRange;
@@ -52,7 +53,12 @@ namespace Cyber
                     output.Gate[idx][i] = Gate[idx];
                 }
             }
-            return output;
+
+            Utils::ZeroBuffer(output.Out[0], buf->Size);
+            Utils::ZeroBuffer(output.Out[1], buf->Size);
+            Utils::ZeroBuffer(output.Out[2], buf->Size);
+            Utils::ZeroBuffer(output.Out[3], buf->Size);
+            return &output;
         }
     };
 

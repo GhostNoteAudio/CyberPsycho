@@ -14,7 +14,7 @@ namespace Cyber
         {
             for (int i = 0; i < 1280; i++)
             {
-                int note = i/10.0;
+                double note = i/10.0;
                 Note2HzData[i] = powf(2, (note-69)/12.0f) * 440.0f;
             }
 
@@ -105,8 +105,8 @@ namespace Cyber
             }
         }
 
-        template<typename T>
-        inline void Multiply(T* dest, T* modulator, int len)
+        template<typename T, typename K>
+        inline void Multiply(T* dest, K* modulator, int len)
         {
             for (int i = 0; i < len; i++)
             {

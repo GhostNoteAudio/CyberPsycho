@@ -35,6 +35,7 @@ namespace Modules
         float DecayInc;
         float ReleaseInc;
 
+        int updateCounter = 0;
         float Output = 0;
         int HoldCount = 0;
         float ReleaseScaler = 1;
@@ -156,6 +157,12 @@ namespace Modules
     public:
         inline float Process(bool gate)
         {
+            if (updateCounter >= 16)
+            {
+                UpdateParams();
+                updateCounter = 0;
+            }
+
             bool trig = !this->currentGate && gate;
 
             if (trig)
@@ -177,6 +184,7 @@ namespace Modules
 
             ProcessStage();
             this->currentGate = gate;
+            updateCounter++;
             return GetOutput();
         }
     };

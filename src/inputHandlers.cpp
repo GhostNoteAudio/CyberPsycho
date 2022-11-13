@@ -150,7 +150,7 @@ namespace Cyber
         {
             if (modalState.Shift)
             {
-                ActiveMenu = &voiceMenu;
+                ActiveMenu = Voices::GetActiveVoice()->GetMenu();
                 modalState.Shift = false;
             }
             else

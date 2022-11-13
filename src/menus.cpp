@@ -25,7 +25,6 @@ namespace Cyber
         Menu globalMenu;
         Menu scopeMenu;
         Menu calibrateMenu;
-        Menu voiceMenu;
         Menu pitchTrigMenu;
         Menu generatorSelectMenu;
 
@@ -285,67 +284,6 @@ namespace Cyber
             calibrateMenu.QuadMode = false;
         }
 
-        void BuildVoiceMenu()
-        {
-            voiceMenu.Captions[0] = "In Gain";
-            voiceMenu.Captions[1] = "Out Gain";
-            voiceMenu.Captions[2] = "Pitch Offset";
-            //voiceMenu.Captions[x] = "> Load Preset";
-            //voiceMenu.Captions[x] = "> Save Preset";
-            voiceMenu.Captions[3] = "> Init Voice";
-            voiceMenu.Captions[4] = "> Clear All Mods";
-            voiceMenu.Captions[5] = "Midi Ch";
-            voiceMenu.Captions[6] = "Audio In L";
-            voiceMenu.Captions[7] = "Audio In R";
-            voiceMenu.Captions[8] = "Audio Out L";
-            voiceMenu.Captions[9] = "Audio Out R";
-            voiceMenu.Captions[10] = "CV In";
-            voiceMenu.Captions[11] = "Gate In";
-
-            voiceMenu.Values[6] = 1;
-            voiceMenu.Values[7] = 1;
-            voiceMenu.Values[8] = 1;
-            voiceMenu.Values[9] = 1;
-            voiceMenu.Values[10] = 1;
-            voiceMenu.Values[11] = 1;
-
-            voiceMenu.Max[0] = 24;
-            voiceMenu.Max[1] = 24;
-            voiceMenu.Max[2] = 48;
-            voiceMenu.Max[5] = 17;
-            voiceMenu.Max[6] = 4;
-            voiceMenu.Max[7] = 4;
-            voiceMenu.Max[8] = 4;
-            voiceMenu.Max[9] = 4;
-            voiceMenu.Max[10] = 4;
-            voiceMenu.Max[11] = 4;
-
-            voiceMenu.Min[2] = -48;
-            voiceMenu.Min[6] = 1;
-            voiceMenu.Min[7] = 1;
-            voiceMenu.Min[8] = 1;
-            voiceMenu.Min[9] = 1;
-            voiceMenu.Min[10] = 1;
-            voiceMenu.Min[11] = 1;
-
-            voiceMenu.Formatters[0] = [](int idx, int16_t v, char* s) { sprintf(s, "%ddB", -12+v); };
-            voiceMenu.Formatters[1] = [](int idx, int16_t v, char* s) { sprintf(s, "%ddB", -12+v); };
-            voiceMenu.Formatters[3] = [](int idx, int16_t v, char* s) { strcpy(s, ""); };
-            voiceMenu.Formatters[4] = [](int idx, int16_t v, char* s) { strcpy(s, ""); };
-            voiceMenu.Formatters[5] = [](int idx, int16_t v, char* s) 
-            { 
-                if (v == 0) strcpy(s, "Off");
-                else if (v == 1) strcpy(s, "Omni");
-                else sprintf(s, "%d", v-1); 
-            };
-
-            voiceMenu.SetLength(12);
-            voiceMenu.SelectedItem = 0;
-            voiceMenu.TopItem = 0;
-            voiceMenu.EnableSelection = true;
-            voiceMenu.QuadMode = false;
-        }
-
         void BuildPitchTrigMenu()
         {
             pitchTrigMenu.SetLength(0);
@@ -412,7 +350,6 @@ namespace Cyber
             BuildGlobalMenu();
             BuildScopeMenu();
             BuildCalibrateMenu();
-            BuildVoiceMenu();
             BuildPitchTrigMenu();
             BuildGeneratorSelectMenu();
         }

@@ -5,29 +5,36 @@
 #include "generators/bypass.h"
 #include "generatorRegistry.h"
 #include "modulators.h"
+#include "menu.h"
 
 namespace Cyber
 {
     class Voice
     {
+        Menu menu;
+        
     public:
         float InGain = 1;
         float OutGain = 1;
-        uint8_t MidiChannel = 0;
-        uint8_t AudioInLeft = 0;
-        uint8_t AudioInRight = 0;
-        uint8_t AudioOutLeft = 0;
-        uint8_t AudioOutRight = 0;
-        uint8_t CvIn = 0;
-        uint8_t GateIn = 0;
+        int8_t PitchOffset = 0;
+        int8_t MidiChannel = 0;
+        int8_t AudioInLeft = 0;
+        int8_t AudioInRight = 0;
+        int8_t AudioOutLeft = 0;
+        int8_t AudioOutRight = 0;
+        int8_t CvIn = 0;
+        int8_t GateIn = 0;
+        int8_t AmpControl = 0;
         bool StereoInput = false;
         bool StereoOutput = false;
-
+        
         Generator* Gen = nullptr;
         Generator* Inserts[4] = {nullptr};
         Modulators modulators;
 
         int ActiveInsert = 0;
+
+        void InitMenu();
 
         inline void Init()
         {
@@ -35,12 +42,13 @@ namespace Cyber
                 Inserts[i] = generatorRegistry.CreateInstanceById("Bypass");
 
             Gen = generatorRegistry.CreateInstanceById("Bypass");
+            InitMenu();
         }
 
+        inline Menu* GetMenu() { return &menu; }
         inline Generator* GetActiveInsert() { return Inserts[ActiveInsert]; }
-
-        void Process(FpBuffer* fpData);
         
+        void Process(FpBuffer* fpData);
     };
 
     namespace Voices

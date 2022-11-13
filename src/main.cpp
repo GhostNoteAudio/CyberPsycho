@@ -17,10 +17,14 @@ using namespace Cyber;
 
 void HandleAudioFunction(DataBuffer* data)
 {
+    LogInfof("cv: %d", data->Cv[0][0]);
     Cyber::Scope::ProcessScope(data);
     auto fpData = inProcessor.ConvertToFp(data);
-    Voices::GetActiveVoice()->Process(&fpData);
-    Utils::To12Bit(data->Out[3], fpData.Out[3], data->Size);
+    Voices::GetActiveVoice()->Process(fpData);
+    Utils::To12Bit(data->Out[0], fpData->Out[0], data->Size);
+    //Utils::To12Bit(data->Out[1], fpData->Out[1], data->Size);
+    //Utils::To12Bit(data->Out[2], fpData->Out[2], data->Size);
+    //Utils::To12Bit(data->Out[3], fpData->Out[3], data->Size);
 }
 
 SdFat sd;
@@ -55,6 +59,14 @@ void setup()
     Utils::Init();
     FastCurves::Init();
 
+    // Midi input
+    // Note that Tx1 Send is actually PIN_GATE0, but we never send serial data, only use RX
+    Serial1.begin(31250); 
+
+    // USB Serial. Read baudrate is much, much higher
+    Serial.begin(9600);
+    //while(!Serial) {}
+
     pinMode(PIN_GATE0, INPUT);
     pinMode(PIN_GATE1, INPUT);
     pinMode(PIN_GATE2, INPUT);
@@ -82,9 +94,6 @@ void setup()
     pinMode(PIN_BTN_IN, INPUT);
     pinMode(PIN_POT_IN, INPUT);
 
-    Serial1.begin(31250); // Midi input
-    Serial.begin(9600); // USB Serial
-    //while(!Serial) {}
     Serial.println("Starting...");
 
     Menus::Init();

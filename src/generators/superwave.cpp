@@ -1,6 +1,7 @@
 #include "superwave.h"
 #include "menu.h"
 #include "modules/wavetable.h"
+#include "logging.h"
 
 namespace Cyber
 {
