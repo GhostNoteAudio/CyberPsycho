@@ -17,8 +17,8 @@ namespace Cyber
     Superwave::Superwave() : biq(Modules::Biquad::FilterType::HighPass, SAMPLERATE)
     {
         menu.Captions[SEMI] = "Semi";
-        menu.Captions[PSPREAD] = "Pitch Sprd";
-        menu.Captions[VSPREAD] = "Vol Sprd";
+        menu.Captions[PSPREAD] = "Spread";
+        menu.Captions[VSPREAD] = "Mix";
         menu.Captions[CENT] = "Cent";
 
         menu.Min[SEMI] = -36;

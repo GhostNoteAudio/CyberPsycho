@@ -1,9 +1,12 @@
 #pragma once
+#include <functional>
 #include "constants.h"
 #include "modules/envelope.h"
 #include "modules/lfo.h"
 #include "stdint.h"
 #include "generator.h"
+#include "menu.h"
+#include "mod_source_dest.h"
 
 namespace Cyber
 {
@@ -20,8 +23,13 @@ namespace Cyber
         float OutEnv2[BUFFER_SIZE];
         float OutLfo1[BUFFER_SIZE];
         float OutLfo2[BUFFER_SIZE];
+        float Params[13];
+        float Modulation[13];
 
-        Modulators()
+        std::function<float*(ModDest, uint8_t)> GetModulationFast;
+        std::function<float(ModDest, uint8_t)> GetModulationSlow;
+
+        inline Modulators()
         {
             env1.Mode = Modules::Envelope::EnvMode::ADSR;
             env1.ReleaseCurve = Modules::Envelope::EnvCurve::Exp;
@@ -39,7 +47,23 @@ namespace Cyber
             InitMenu();
         }
 
-        void InitMenu()
+        inline const char* GetModLabel(ModDest dest, uint8_t slot)
+        {
+            if (dest == ModDest::Env1 || dest == ModDest::Env2)
+            {
+                if (slot == 0) return "Attack";
+                if (slot == 1) return "Decay";
+                if (slot == 2) return "Sustain";
+                if (slot == 3) return "Release";
+            }
+            else if (dest == ModDest::Lfo1 || dest == ModDest::Lfo2)
+            {
+                if (slot == 0) return "Frequency";
+            }
+            return "-";
+        }
+
+        inline void InitMenu()
         {
             menu.Captions[0] = "Attack";
             menu.Captions[1] = "Decay";
@@ -171,30 +195,20 @@ namespace Cyber
 
             menu.ValueChangedCallback = [this](int idx, int16_t val)
             {
-                if (idx == 0) env1.AttackSamples = Utils::Resp3dec(val / 1023.0f) * 20 * SAMPLERATE;
-                if (idx == 1) env1.DecaySamples = Utils::Resp3dec(val / 1023.0f) * 20 * SAMPLERATE;
-                if (idx == 2) env1.SustainLevel = val / 1023.0f;
-                if (idx == 3) env1.ReleaseSamples = Utils::Resp3dec(val / 1023.0f) * 20 * SAMPLERATE;
+                if (idx <= 8 || idx == 12 ) Params[idx] = val / 1023.0f;
 
-                if (idx == 4) env2.AttackSamples = Utils::Resp3dec(val / 1023.0f) * 20 * SAMPLERATE;
-                if (idx == 5) env2.DecaySamples = Utils::Resp3dec(val / 1023.0f) * 20 * SAMPLERATE;
-                if (idx == 6) env2.SustainLevel = val / 1023.0f;
-                if (idx == 7) env2.ReleaseSamples = Utils::Resp3dec(val / 1023.0f) * 20 * SAMPLERATE;
+                else if (idx == 9) lfo1.Waveshape = (Modules::Lfo::Shape)val;
+                else if (idx == 10) lfo1.Retrigger = !(val == 0);
+                else if (idx == 11) lfo1.Unipolar = val == 1;
 
-                if (idx == 8) lfo1.Frequency = Utils::Resp4dec(val / 1023.0f) * 200;
-                if (idx == 9) lfo1.Waveshape = (Modules::Lfo::Shape)val;
-                if (idx == 10) lfo1.Retrigger = !(val == 0);
-                if (idx == 11) lfo1.Unipolar = val == 1;
+                else if (idx == 13) lfo2.Waveshape = (Modules::Lfo::Shape)val;
+                else if (idx == 14) lfo2.Retrigger = !(val == 0);
+                else if (idx == 15) lfo2.Unipolar = val == 1;
 
-                if (idx == 12) lfo2.Frequency = Utils::Resp4dec(val / 1023.0f) * 200;
-                if (idx == 13) lfo2.Waveshape = (Modules::Lfo::Shape)val;
-                if (idx == 14) lfo2.Retrigger = !(val == 0);
-                if (idx == 15) lfo2.Unipolar = val == 1;
-
-                if (idx == 16) env1.AttackCurve = (val == 0) ? Modules::Envelope::EnvCurve::Linear : Modules::Envelope::EnvCurve::Exp;
-                if (idx == 17) env2.AttackCurve = (val == 0) ? Modules::Envelope::EnvCurve::Linear : Modules::Envelope::EnvCurve::Exp;
-                if (idx == 18) env1.ReleaseCurve = env1.DecayCurve = (val == 0) ? Modules::Envelope::EnvCurve::Linear : Modules::Envelope::EnvCurve::Exp;
-                if (idx == 19) env2.ReleaseCurve = env2.DecayCurve = (val == 0) ? Modules::Envelope::EnvCurve::Linear : Modules::Envelope::EnvCurve::Exp;
+                else if (idx == 16) env1.AttackCurve = (val == 0) ? Modules::Envelope::EnvCurve::Linear : Modules::Envelope::EnvCurve::Exp;
+                else if (idx == 17) env2.AttackCurve = (val == 0) ? Modules::Envelope::EnvCurve::Linear : Modules::Envelope::EnvCurve::Exp;
+                else if (idx == 18) env1.ReleaseCurve = env1.DecayCurve = (val == 0) ? Modules::Envelope::EnvCurve::Linear : Modules::Envelope::EnvCurve::Exp;
+                else if (idx == 19) env2.ReleaseCurve = env2.DecayCurve = (val == 0) ? Modules::Envelope::EnvCurve::Linear : Modules::Envelope::EnvCurve::Exp;
             };
             
             menu.SetLength(20);
@@ -206,15 +220,45 @@ namespace Cyber
 
         Menu* GetMenu() { return &menu; }
 
-        void Process(GeneratorArgs args)
+        inline void UpdateParams()
         {
+            env1.AttackSamples = Utils::Resp3dec(Utils::Clamp(Params[0] + Modulation[0])) * 20 * SAMPLERATE;
+            env1.DecaySamples = Utils::Resp3dec(Utils::Clamp(Params[1] + Modulation[1])) * 20 * SAMPLERATE;
+            env1.SustainLevel = Utils::Clamp(Params[2] + Modulation[2]);
+            env1.ReleaseSamples = Utils::Resp3dec(Utils::Clamp(Params[3] + Modulation[3])) * 20 * SAMPLERATE;
+            
+            env2.AttackSamples = Utils::Resp3dec(Utils::Clamp(Params[4] + Modulation[4])) * 20 * SAMPLERATE;
+            env2.DecaySamples = Utils::Resp3dec(Utils::Clamp(Params[5] + Modulation[5])) * 20 * SAMPLERATE;
+            env2.SustainLevel = Utils::Clamp(Params[6] + Modulation[6]);
+            env2.ReleaseSamples = Utils::Resp3dec(Utils::Clamp(Params[7] + Modulation[7])) * 20 * SAMPLERATE;
+            
+            lfo1.Frequency = Utils::Resp4dec(Utils::Clamp(Params[8] + Modulation[8])) * 200;
+            lfo2.Frequency = Utils::Resp4dec(Utils::Clamp(Params[12] + Modulation[12])) * 200;
+        }
+
+        inline void Process(GeneratorArgs args)
+        {
+            Modulation[0] = GetModulationSlow(ModDest::Env1, 0);
+            Modulation[1] = GetModulationSlow(ModDest::Env1, 1);
+            Modulation[2] = GetModulationSlow(ModDest::Env1, 2);
+            Modulation[3] = GetModulationSlow(ModDest::Env1, 3);
+
+            Modulation[4] = GetModulationSlow(ModDest::Env2, 0);
+            Modulation[5] = GetModulationSlow(ModDest::Env2, 1);
+            Modulation[6] = GetModulationSlow(ModDest::Env2, 2);
+            Modulation[7] = GetModulationSlow(ModDest::Env2, 3);
+
+            Modulation[8] = GetModulationSlow(ModDest::Lfo1, 0);
+            Modulation[12] = GetModulationSlow(ModDest::Lfo2, 0);
+            UpdateParams();
+
             for (int i = 0; i < args.Size; i++)
             {
                 bool g = args.Gate[i];
                 OutEnv1[i] = env1.Process(g);
                 OutEnv2[i] = env2.Process(g);
-                OutLfo1[i] = 1+lfo1.Process(g);
-                OutLfo2[i] = 1+lfo2.Process(g);
+                OutLfo1[i] = lfo1.Process(g);
+                OutLfo2[i] = lfo2.Process(g);
             }
         }
     };

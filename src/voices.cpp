@@ -31,36 +31,51 @@ namespace Cyber
         else
             Utils::Copy(cv, fpData->Cv[CvIn], BUFFER_SIZE);
 
+        matrix.modulators = &modulators;
+        matrix.fpData = fpData;
+
         GeneratorArgs args;
         args.Bpm = 120;
         args.Gate = gate;
         args.Cv = cv;
+        modulators.GetModulationFast = [this](ModDest dest, uint8_t slot) { return matrix.GetModulationFast(dest, slot); };
+        modulators.GetModulationSlow = [this](ModDest dest, uint8_t slot) { return matrix.GetModulationSlow(dest, slot); };
         modulators.Process(args);
         
+        args.GetModulationFast = [this](uint8_t slot) { return matrix.GetModulationFast(Cyber::ModDest::Generator, slot); };
+        args.GetModulationSlow = [this](uint8_t slot) { return matrix.GetModulationSlow(Cyber::ModDest::Generator, slot); };
         args.InputLeft = AudioInLeft == -1 ? emptyBuf : fpData->Mod[AudioInLeft];
         args.InputRight = AudioInRight == -1 ? emptyBuf : fpData->Mod[AudioInRight];
         args.OutputLeft = temp1L;
         args.OutputRight = temp1R;
         Gen->Process(args);
 
+        args.GetModulationFast = [this](uint8_t slot) { return matrix.GetModulationFast(Cyber::ModDest::Insert1, slot); };
+        args.GetModulationSlow = [this](uint8_t slot) { return matrix.GetModulationSlow(Cyber::ModDest::Insert1, slot); };
         args.InputLeft = temp1L;
         args.InputRight = temp1R;
         args.OutputLeft = temp2L;
         args.OutputRight = temp2R;
         Inserts[0]->Process(args);
 
+        args.GetModulationFast = [this](uint8_t slot) { return matrix.GetModulationFast(Cyber::ModDest::Insert2, slot); };
+        args.GetModulationSlow = [this](uint8_t slot) { return matrix.GetModulationSlow(Cyber::ModDest::Insert2, slot); };
         args.InputLeft = temp2L;
         args.InputRight = temp2R;
         args.OutputLeft = temp1L;
         args.OutputRight = temp1R;
         Inserts[1]->Process(args);
 
+        args.GetModulationFast = [this](uint8_t slot) { return matrix.GetModulationFast(Cyber::ModDest::Insert3, slot); };
+        args.GetModulationSlow = [this](uint8_t slot) { return matrix.GetModulationSlow(Cyber::ModDest::Insert3, slot); };
         args.InputLeft = temp1L;
         args.InputRight = temp1R;
         args.OutputLeft = temp2L;
         args.OutputRight = temp2R;
         Inserts[2]->Process(args);
 
+        args.GetModulationFast = [this](uint8_t slot) { return matrix.GetModulationFast(Cyber::ModDest::Insert4, slot); };
+        args.GetModulationSlow = [this](uint8_t slot) { return matrix.GetModulationSlow(Cyber::ModDest::Insert4, slot); };
         args.InputLeft = temp2L;
         args.InputRight = temp2R;
         args.OutputLeft = temp1L;

@@ -23,13 +23,17 @@ namespace Cyber
         float* Cv;
         bool* Gate;
         
-        std::function<float*(int)> GetModulation;
+        std::function<float(uint8_t)> GetModulationSlow;
+        std::function<float*(uint8_t)> GetModulationFast;
     };
 
     struct GeneratorInfo
     {
         int Version;
         bool InsertEffect;
+        bool StereoInSupport;
+        bool StereoOutSupport;
+        int ModSlotCount;
         const char* GeneratorId;
         const char* DisplayName;
         const char* DeveloperName;

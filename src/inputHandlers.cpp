@@ -167,7 +167,7 @@ namespace Cyber
             }
             else
             {
-                
+                ActiveMenu = Voices::GetActiveVoice()->matrix.GetMenu();
             }
         }
     }

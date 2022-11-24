@@ -51,6 +51,7 @@ namespace Cyber
                     if (InputGate[idx] < GateThresLow) Gate[idx] = false;
                     if (InputGate[idx] > GateThresHigh) Gate[idx] = true;
                     output.Gate[idx][i] = Gate[idx];
+                    output.GateFloat[idx][i] = Gate[idx] ? 1.0f : 0.0f;
                 }
             }
 

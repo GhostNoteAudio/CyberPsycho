@@ -17,7 +17,6 @@ using namespace Cyber;
 
 void HandleAudioFunction(DataBuffer* data)
 {
-    LogInfof("cv: %d", data->Cv[0][0]);
     Cyber::Scope::ProcessScope(data);
     auto fpData = inProcessor.ConvertToFp(data);
     Voices::GetActiveVoice()->Process(fpData);

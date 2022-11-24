@@ -29,6 +29,11 @@ namespace Cyber
             return val < min ? min : val > max ? max : val;
         }
 
+        inline float Clamp(float val)
+        {
+            return val < 0 ? 0 : val > 1 ? 1 : val;
+        }
+
         inline float Randf()
         {
             const float scaler = 1.0 / (((uint32_t)RAND_MAX)+1);

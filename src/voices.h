@@ -6,6 +6,7 @@
 #include "generatorRegistry.h"
 #include "modulators.h"
 #include "menu.h"
+#include "mod_matrix.h"
 
 namespace Cyber
 {
@@ -31,6 +32,7 @@ namespace Cyber
         Generator* Gen = nullptr;
         Generator* Inserts[4] = {nullptr};
         Modulators modulators;
+        ModMatrix matrix;
 
         int ActiveInsert = 0;
 
@@ -45,6 +47,13 @@ namespace Cyber
             InitMenu();
         }
 
+        inline const char* GetModLabel(int slot)
+        {
+            if (slot == 0) return "Pitch";
+            if (slot == 1) return "Amplitude";
+            return "-";
+        }
+        
         inline Menu* GetMenu() { return &menu; }
         inline Generator* GetActiveInsert() { return Inserts[ActiveInsert]; }
         

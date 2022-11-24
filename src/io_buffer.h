@@ -19,6 +19,7 @@ namespace Cyber
     {
         const int Size = T;
         bool Gate[4][T] = {{0}};
+        float GateFloat[4][T] = {{0}};
         float Cv[4][T] = {{0}};
         float Mod[4][T] = {{0}};
         float Out[4][T] = {{0}};
