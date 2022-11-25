@@ -30,7 +30,8 @@ namespace Cyber
 
         menu.Formatters[0] = [](int idx, int16_t val, char* dest) 
         {
-                 if (val == (int)ModSource::Mod1) strcpy(dest, "Mod 1");
+                 if (val == (int)ModSource::Off) strcpy(dest, "Off");
+            else if (val == (int)ModSource::Mod1) strcpy(dest, "Mod 1");
             else if (val == (int)ModSource::Mod2) strcpy(dest, "Mod 2");
             else if (val == (int)ModSource::Mod3) strcpy(dest, "Mod 3");
             else if (val == (int)ModSource::Mod4) strcpy(dest, "Mod 4");

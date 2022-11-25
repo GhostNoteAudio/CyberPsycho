@@ -12,23 +12,7 @@ namespace Cyber
         Menu menu;
 
     public:
-        inline Bypass()
-        {
-            menu.CustomOnlyMode = true;
-            menu.RenderCustomDisplayCallback = [](Adafruit_SH1106G* display)
-            {
-                display->clearDisplay();
-                display->setCursor(16, 32);
-                display->setTextSize(2);
-                display->print("Bypassed");
-            };
-
-            menu.SetLength(0);
-            menu.SelectedItem = 0;
-            menu.TopItem = 0;
-            menu.EnableSelection = false;
-            menu.QuadMode = true;
-        }
+        Bypass();
 
         inline virtual Menu* GetMenu() override { return &menu; }
         inline virtual void Process(GeneratorArgs args) override 

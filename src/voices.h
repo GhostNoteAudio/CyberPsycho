@@ -50,10 +50,11 @@ namespace Cyber
         inline const char* GetModLabel(int slot)
         {
             if (slot == 0) return "Pitch";
-            if (slot == 1) return "Amplitude";
+            if (slot == 1) return "Gain In";
+            if (slot == 2) return "Gain Out";
             return "-";
         }
-        
+
         inline Menu* GetMenu() { return &menu; }
         inline Generator* GetActiveInsert() { return Inserts[ActiveInsert]; }
         

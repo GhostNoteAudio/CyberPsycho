@@ -41,6 +41,8 @@ namespace Cyber
         modulators.GetModulationFast = [this](ModDest dest, uint8_t slot) { return matrix.GetModulationFast(dest, slot); };
         modulators.GetModulationSlow = [this](ModDest dest, uint8_t slot) { return matrix.GetModulationSlow(dest, slot); };
         modulators.Process(args);
+
+        Utils::Mix(args.Cv, matrix.GetModulationFast(ModDest::Voice, 0), 1.0f, BUFFER_SIZE);
         
         args.GetModulationFast = [this](uint8_t slot) { return matrix.GetModulationFast(Cyber::ModDest::Generator, slot); };
         args.GetModulationSlow = [this](uint8_t slot) { return matrix.GetModulationSlow(Cyber::ModDest::Generator, slot); };
@@ -48,6 +50,8 @@ namespace Cyber
         args.InputRight = AudioInRight == -1 ? emptyBuf : fpData->Mod[AudioInRight];
         args.OutputLeft = temp1L;
         args.OutputRight = temp1R;
+        Utils::Multiply1(args.InputLeft, matrix.GetModulationFast(ModDest::Voice, 1), BUFFER_SIZE);
+        Utils::Multiply1(args.InputRight, matrix.GetModulationFast(ModDest::Voice, 1), BUFFER_SIZE);
         Gen->Process(args);
 
         args.GetModulationFast = [this](uint8_t slot) { return matrix.GetModulationFast(Cyber::ModDest::Insert1, slot); };
@@ -92,7 +96,9 @@ namespace Cyber
             Utils::Multiply(temp1L, modulators.OutEnv1, args.Size);
             Utils::Multiply(temp1R, modulators.OutEnv1, args.Size);
         }
-        //Utils::Multiply(temp1, modulators.OutLfo1, args.Size);
+        
+        Utils::Multiply1(temp1L, matrix.GetModulationFast(ModDest::Voice, 2), BUFFER_SIZE);
+        Utils::Multiply1(temp1R, matrix.GetModulationFast(ModDest::Voice, 2), BUFFER_SIZE);
 
         if (AudioOutLeft != -1)
             Utils::Mix(fpData->Out[AudioOutLeft], temp1L, OutGain, args.Size);

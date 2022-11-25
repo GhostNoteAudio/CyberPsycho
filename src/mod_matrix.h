@@ -27,6 +27,7 @@ namespace Cyber
 
         ModRouting Routes[ModRouteCount];
         float OutputBuffer[BUFFER_SIZE];
+        float OutputValue;
     public:
         void InitMenu();
         inline ModMatrix() { InitMenu(); }
@@ -36,6 +37,7 @@ namespace Cyber
         {
             switch (source)
             {
+                case ModSource::Off: return fpData->Mod[0]; // hack
                 case ModSource::Mod1: return fpData->Mod[0];
                 case ModSource::Mod2: return fpData->Mod[1];
                 case ModSource::Mod3: return fpData->Mod[2];
@@ -56,10 +58,10 @@ namespace Cyber
             return nullptr;
         }
 
-        inline float AddRouteSlow(int idx)
+        inline void AddRouteSlow(int idx)
         {
             auto buf = GetSourceBuffer(Routes[idx].Source);
-            return buf[0];
+            OutputValue += buf[0] * Routes[idx].Amount;
         }
 
         inline void AddRouteFast(int idx)
@@ -77,14 +79,14 @@ namespace Cyber
 
         inline float GetModulationSlow(ModDest dest, uint8_t slot)
         {
-            float output = 0.0f;
+            OutputValue = 0.0f;
             for (int i = 0; i < ModRouteCount; i++)
             {
                 if (Routes[i].Dest == dest && Routes[i].Slot == slot)
-                    output += AddRouteSlow(i);
+                    AddRouteSlow(i);
             }
             
-            return output;
+            return OutputValue;
         }
 
         inline float* GetModulationFast(ModDest dest, uint8_t slot)

@@ -4,7 +4,9 @@ namespace Cyber
 {
     enum class ModSource
     {
-        Mod1 = 0,
+        Off = 0,
+        
+        Mod1,
         Mod2,
         Mod3,
         Mod4,
