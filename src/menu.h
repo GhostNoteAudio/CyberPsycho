@@ -1,13 +1,10 @@
 #pragma once
 
 #include <functional>
-#include <Adafruit_GFX.h>
-#include <Adafruit_SH110X.h>
+#include <U8g2lib.h>
 #include "audio_yield.h"
-#include <fonts/font.h>
-#include <fonts/font2.h>
-#include <fonts/font3.h>
 #include "controls.h"
+#include "fonts.h"
 
 namespace Cyber
 {
@@ -31,7 +28,7 @@ namespace Cyber
         int16_t Ticks[32] = {0};
         std::function<void(int, int16_t, char*)> Formatters[32];
         std::function<void(int, int16_t)> ValueChangedCallback = 0;
-        std::function<void(Adafruit_SH1106G*)> RenderCustomDisplayCallback = 0;
+        std::function<void(U8G2*)> RenderCustomDisplayCallback = 0;
         
         //Todo: Implement these, build "default" implementations that work for most menus, like switch handling which should almost always be the same
         std::function<void(Menu*, int)> HandleEncoderCallback = HandleEncoderDefault;
@@ -151,15 +148,12 @@ namespace Cyber
             Length = len;
         }
 
-        inline int GetStringWidth(Adafruit_SH1106G* display, const char* str)
+        inline int GetStringWidth(U8G2* display, const char* str)
         {
-            int16_t x, y;
-            uint16_t w, h;
-            display->getTextBounds(str, 0, 0, &x, &y, &w, &h);
-            return w;
+            return display->getStrWidth(str);
         }
         
-        inline void Render(Adafruit_SH1106G* display)
+        inline void Render(U8G2* display)
         {
             if (!CustomOnlyMode)
             {
@@ -173,11 +167,10 @@ namespace Cyber
                 RenderCustomDisplayCallback(display);
         }
 
-        inline void RenderSerial(Adafruit_SH1106G* display)
+        inline void RenderSerial(U8G2* display)
         {
             display->clearDisplay();
-            display->setFont(&AtlantisInternational_jen08pt7b);
-            display->setTextSize(1);
+            display->setFont(DEFAULT_FONT); 
                 
             char val[16];
 
@@ -192,35 +185,38 @@ namespace Cyber
 
                 if (isSelected)
                 {
-                    display->fillRect(0, 16 * i, display->width(), 16, SH110X_WHITE);
-                    display->setTextColor(SH110X_BLACK);
+                    display->setDrawColor(1);
+                    display->drawBox(0, 16 * i, display->getWidth(), 16);
+                    display->setDrawColor(0);
                 }
                 else
                 {
-                    display->setTextColor(SH110X_WHITE);
+                    display->setDrawColor(1);
                 }
 
                 YieldAudio();
-                display->setCursor(2, 10 + 16 * i);
+                display->setCursor(2, 11 + 16 * i);
                 display->println(Captions[item]);
 
                 YieldAudio();
                 Formatters[item](item, Values[item], val);
                 int w = GetStringWidth(display, val);
-                int x = display->width() - w - 2;
-                int y = 10 + 16 * i;
+                int x = display->getWidth() - w - 2;
+                int y = 11 + 16 * i;
                 display->setCursor(x, y);
                 if (isSelected && EditMode)
-                    display->fillTriangle(x-8, y+1, x-8, y-7, x-4, y-3, SH110X_BLACK);
+                {
+                    display->setDrawColor(0);
+                    display->drawTriangle(x-8, y+1, x-8, y-7, x-4, y-3);
+                }
                 display->println(val);
             }
         }
 
-        inline void RenderQuad(Adafruit_SH1106G* display)
+        inline void RenderQuad(U8G2* display)
         {
             display->clearDisplay();
-            display->setFont(&AtlantisInternational_jen08pt7b);
-            display->setTextSize(1);
+            display->setFont(DEFAULT_FONT);
 
             char val[16];
 
@@ -244,25 +240,26 @@ namespace Cyber
 
                 if (isSelected)
                 {
-                    display->fillRect(x * 64, 2 * 16 * y, display->width() / 2, 32, SH110X_WHITE);
-                    display->setTextColor(SH110X_BLACK);
+                    display->setDrawColor(1);
+                    display->drawBox(x * 64, 2 * 16 * y, display->getWidth() / 2, 32);
+                    display->setDrawColor(0);
                 }
                 else
                 {
-                    display->setTextColor(SH110X_WHITE);
+                    display->setDrawColor(1);
                 }
 
                 YieldAudio();
 
                 int w = GetStringWidth(display, Captions[item]);
-                int xPos = x == 0 ? 2 : display->width() - 2 - w;
-                display->setCursor(xPos, 10 + 32 * y);
+                int xPos = x == 0 ? 2 : display->getWidth() - 2 - w;
+                display->setCursor(xPos, 11 + 32 * y);
                 display->println(Captions[item]);
 
                 YieldAudio();
                 Formatters[item](item, Values[item], val);
                 w = GetStringWidth(display, val);
-                xPos = x == 0 ? 2 : display->width() - 2 - w;
+                xPos = x == 0 ? 2 : display->getWidth() - 2 - w;
                 display->setCursor(xPos, 10 + 16 * (2*y+1));
                 display->println(val);
             }

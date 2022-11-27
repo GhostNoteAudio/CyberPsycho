@@ -1,0 +1,70 @@
+{
+  "version": "2",
+  "target": "vsCode",
+  "buildSystem": "makefile",
+  "debugSupport": "none",
+  "configurations": [
+    {
+      "name": "default",
+      "guid": "cde2ba9f-1652-4ae3-91a7-02f2e090f941",
+      "setupType": "expert",
+      "coreBase": "C:\\Dev\\Arduino\\hardware\\teensy\\avr",
+      "compilerBase": "C:\\Dev\\Arduino\\hardware\\tools\\arm",
+      "makefileExtension": null,
+      "coreStrategy": "link",
+      "stdLib": "newlib",
+      "sharedLibraries": [
+        "Adafruit_GFX_Library",
+        "Adafruit_SSD1306",
+        "Adafruit_BusIO",
+        "Base64",
+        "teensy4_i2c",
+        "Adafruit_SH110X",
+        "U8g2"
+      ],
+      "projectLibraries": [
+        "ADC",
+        "SD",
+        "SdFat",
+        "SPI",
+        "TsyDMASPI"
+      ],
+      "board": {
+        "name": "Teensy 4.0",
+        "options": {
+          "USB Type": "Serial",
+          "CPU Speed": "600 MHz",
+          "Optimize": "Faster",
+          "Keyboard Layout": "US English"
+        }
+      }
+    },
+    {
+      "name": "Testdummy",
+      "guid": "3a57ea25-9421-4e46-b436-9fe3e1694846",
+      "setupType": "quick",
+      "coreBase": "C:\\Dev\\Arduino\\hardware\\teensy\\avr",
+      "compilerBase": "C:\\Dev\\Arduino\\hardware\\tools\\arm",
+      "makefileExtension": null,
+      "coreStrategy": "copy",
+      "stdLib": "newlib",
+      "sharedLibraries": [],
+      "projectLibraries": [
+        "ADC",
+        "SD",
+        "SdFat",
+        "SPI",
+        "TsyDMASPI"
+      ],
+      "board": {
+        "name": "Teensy 4.1",
+        "options": {
+          "USB Type": "Serial",
+          "CPU Speed": "600 MHz",
+          "Optimize": "Faster",
+          "Keyboard Layout": "US English"
+        }
+      }
+    }
+  ]
+}

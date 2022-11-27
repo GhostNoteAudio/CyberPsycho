@@ -2,7 +2,6 @@
 
 #include "generator.h"
 #include "menu.h"
-#include <fonts/font3.h>
 #include "modules/percussionEnvelope.h"
 
 namespace Cyber
@@ -37,13 +36,12 @@ namespace Cyber
             return info;
         }
 
-        inline static void SplashScreen(Adafruit_SH1106G* display)
+        inline static void SplashScreen(U8G2* display)
         {
             display->clearDisplay();
-            display->setTextColor(SH110X_WHITE);
-            display->setFont(&AtlantisInternational_jen08pt7b);
-            display->setTextSize(2);
-            display->setCursor(10, 32);
+            display->setDrawColor(1);
+            display->setFont(BIG_FONT);
+            display->setCursor(4, 36);
             display->print("Kick 1");
         }
     };

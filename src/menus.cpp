@@ -1,7 +1,4 @@
 #include "menus.h"
-#include <fonts/font.h>
-#include <fonts/font2.h>
-#include <fonts/font3.h>
 #include "utils.h"
 #include "logging.h"
 #include "input_processor.h"
@@ -32,43 +29,48 @@ namespace Cyber
         {
             scopeMenu.SetLength(4);
             scopeMenu.CustomOnlyMode = true;
-            scopeMenu.RenderCustomDisplayCallback = [](Adafruit_SH1106G* display)
+            scopeMenu.RenderCustomDisplayCallback = [](U8G2* display)
             {
                 display->clearDisplay();
-                float h = display->height();
-                
-                for (int x = 0; x < display->width(); x++)
+                float h = display->getHeight();
+                display->setDrawColor(1);
+
+                for (int x = 0; x < display->getWidth(); x++)
                 {
                     if (x % 16 == 0)
                         YieldAudio();
                     uint8_t y = Scope::data[x] >> 6; // 12 bit to 6 bit (0-63)
-                    display->drawPixel(x, (h-1) - y, SH110X_WHITE);
+                    display->drawPixel(x, (h-1) - y);
                 }
 
-                display->setFont(&AtlantisInternational_jen08pt7b);
-                display->setTextSize(1);
-                display->setTextColor(SH110X_BLACK);
-                display->setCursor(65, 62);
+                display->setFont(DEFAULT_FONT);
+                display->setCursor(65, 63);
                 char readout[16];
                 auto readoutVal = scopeMenu.Values[3];
                 YieldAudio();
 
                 if (readoutVal == 1)
                 {
-                    display->fillRect(64, 55, 60, 9, SH110X_WHITE);
-                    sprintf(readout, "Min: %d", Utils::Min(Scope::data, 128));
+                    display->setDrawColor(1);
+                    display->drawBox(64, 55, 60, 9);
+                    display->setDrawColor(0);
+                    sprintf(readout, "Min:%d", Utils::Min(Scope::data, 128));
                     display->println(readout);
                 }
                 else if (readoutVal == 2)
                 {
-                    display->fillRect(64, 55, 60, 9, SH110X_WHITE);
-                    sprintf(readout, "Max: %d", Utils::Max(Scope::data, 128));
+                    display->setDrawColor(1);
+                    display->drawBox(64, 55, 60, 9);
+                    display->setDrawColor(0);
+                    sprintf(readout, "Max:%d", Utils::Max(Scope::data, 128));
                     display->println(readout);
                 }
                 else if (readoutVal == 3)
                 {
-                    display->fillRect(64, 55, 60, 9, SH110X_WHITE);
-                    sprintf(readout, "Mean: %d", (int)Utils::Mean(Scope::data, 128));
+                    display->setDrawColor(1);
+                    display->drawBox(64, 55, 60, 9);
+                    display->setDrawColor(0);
+                    sprintf(readout, "Mean:%d", (int)Utils::Mean(Scope::data, 128));
                     display->println(readout);
                 }
                 YieldAudio();
@@ -76,14 +78,16 @@ namespace Cyber
                 bool shouldDisplayChange = (millis() - lastChangeMillis) < 2000;
                 if (shouldDisplayChange)
                 {
-                    display->fillRect(0, 55, 60, 9, SH110X_WHITE);
-                    display->setCursor(1, 62);
+                    display->setDrawColor(1);
+                    display->drawBox(0, 55, 60, 9);
+                    display->setCursor(1, 63);
                     char readout[16];
                     int dsEffective = (1<<Scope::downsampling);
+                    display->setDrawColor(0);
 
-                    if (lastChangeIdx == 0) sprintf(readout, "Channel: %d", Scope::channel);
-                    if (lastChangeIdx == 1) sprintf(readout, "Divide: %d", dsEffective);
-                    if (lastChangeIdx == 2) sprintf(readout, "Freq: %d", Scope::triggerFreq);
+                    if (lastChangeIdx == 0) sprintf(readout, "Channel:%d", Scope::channel);
+                    if (lastChangeIdx == 1) sprintf(readout, "Divide:%d", dsEffective);
+                    if (lastChangeIdx == 2) sprintf(readout, "Freq:%d", Scope::triggerFreq);
                     display->println(readout);
                 }
             };
@@ -109,28 +113,26 @@ namespace Cyber
         void BuildInitMenu()
         {
             initMenu.CustomOnlyMode = true;
-            initMenu.RenderCustomDisplayCallback = [](Adafruit_SH1106G* display)
+            initMenu.RenderCustomDisplayCallback = [](U8G2* display)
             {
                 display->clearDisplay();
                 YieldAudio();
-                display->setFont(&AtlantisInternational_jen08pt7b);
-                display->setTextSize(2);
-                display->setTextColor(SH110X_WHITE);
+                display->setFont(DEFAULT_FONT);
+                display->setDrawColor(1);
                 int w = initMenu.GetStringWidth(display, "Cyberpsycho");
-                int offset = (display->width() - w) / 2;
+                int offset = (display->getWidth() - w) / 2;
                 display->setCursor(offset, 22);
                 display->print("Cyberpsycho");
                 YieldAudio();
                 
-                display->setTextSize(1);
                 w = initMenu.GetStringWidth(display, "Ghost Note Audio");
-                offset = (display->width() - w) / 2;
+                offset = (display->getWidth() - w) / 2;
                 display->setCursor(offset, 38);
                 display->print("Ghost Note Audio");
                 YieldAudio();
 
                 w = initMenu.GetStringWidth(display, VERSION);
-                offset = (display->width() - w) / 2;
+                offset = (display->getWidth() - w) / 2;
                 display->setCursor(offset - 3, 49);
                 display->print("v");
                 display->setCursor(offset + 3, 49);
@@ -288,12 +290,11 @@ namespace Cyber
         {
             pitchTrigMenu.SetLength(0);
             pitchTrigMenu.CustomOnlyMode = true;
-            pitchTrigMenu.RenderCustomDisplayCallback = [](Adafruit_SH1106G* display)
+            pitchTrigMenu.RenderCustomDisplayCallback = [](U8G2* display)
             {
                 display->clearDisplay();
-                display->setFont(&AtlantisInternational_jen08pt7b);
-                display->setTextSize(1);
-                display->setTextColor(SH110X_WHITE);
+                display->setFont(DEFAULT_FONT);
+                display->setDrawColor(1);
                 display->setCursor(30, 30);
                 display->println("Coming Soon");
             };
@@ -303,7 +304,7 @@ namespace Cyber
         {
             generatorSelectMenu.SetLength(1);
             generatorSelectMenu.CustomOnlyMode = true;
-            generatorSelectMenu.RenderCustomDisplayCallback = [](Adafruit_SH1106G* display)
+            generatorSelectMenu.RenderCustomDisplayCallback = [](U8G2* display)
             {
                 YieldAudio();
                 int selectedGen = generatorSelectMenu.Values[0];
@@ -312,8 +313,9 @@ namespace Cyber
                 YieldAudio();
                 if (generatorSelectMenu.EditMode)
                 {
-                    display->fillTriangle(118, 8, 126, 8, 122, 4, SH110X_WHITE);
-                    display->fillTriangle(118, 55, 126, 55, 122, 59, SH110X_WHITE);
+                    display->setDrawColor(1);
+                    display->drawTriangle(118, 8, 126, 8, 122, 4);
+                    display->drawTriangle(118, 55, 126, 55, 122, 59);
                 }
             };
             generatorSelectMenu.HandleEncoderCallback = [](Menu* menu, int tick)

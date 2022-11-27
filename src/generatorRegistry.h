@@ -1,5 +1,5 @@
 #pragma once
-#include <Adafruit_SH110X.h>
+#include <U8g2lib.h>
 #include "generator.h"
 
 namespace Cyber
@@ -11,14 +11,14 @@ namespace Cyber
         int Count;
         std::function<Generator*(void)> Factories[T];
         GeneratorInfo Info[T];
-        std::function<void(Adafruit_SH1106G*)> SplashScreenBuilders[T];
+        std::function<void(U8G2*)> SplashScreenBuilders[T];
 
         template<class TGen>
         inline void Add()
         {
             Factories[Count] = []{return new TGen();};
             Info[Count] = TGen::GetInfo();
-            SplashScreenBuilders[Count] = [](Adafruit_SH1106G* display){TGen::SplashScreen(display);};
+            SplashScreenBuilders[Count] = [](U8G2* display){TGen::SplashScreen(display);};
             Count++;
         }
 

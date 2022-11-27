@@ -16,7 +16,7 @@ namespace Cyber
         menu.EnableSelection = false;
         menu.SetLength(4);
 
-        menu.RenderCustomDisplayCallback = [this](Adafruit_SH1106G* display)
+        menu.RenderCustomDisplayCallback = [this](U8G2* display)
         {
             int offset = (this->activeRoute+1) < 10 ? 0 : 3;
 

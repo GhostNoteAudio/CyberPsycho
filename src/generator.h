@@ -1,8 +1,9 @@
 #pragma once
 #include "io_buffer.h"
-#include "Adafruit_GFX.h"
+#include <U8g2lib.h>
 #include <stdint.h>
 #include <functional>
+#include "fonts.h"
 
 namespace Cyber
 {
@@ -78,6 +79,6 @@ namespace Cyber
 
         // Your class also needs to implement these two static functions
         //static GeneratorInfo GetInfo();
-        //static void SplashScreen(Adafruit_SH1106G* display);
+        //static void SplashScreen(U8G2* display);
     };
 }

@@ -6,14 +6,16 @@ namespace Cyber
     Bypass::Bypass()
     {
         menu.CustomOnlyMode = true;
-        menu.RenderCustomDisplayCallback = [](Adafruit_SH1106G* display)
+        menu.RenderCustomDisplayCallback = [](U8G2* display)
         {
             display->clearDisplay();
-            display->setCursor(16, 28);
-            display->setTextSize(2);
+            display->setDrawColor(1);
+            display->setFont(BIG_FONT);
+            int w = display->getStrWidth("Bypassed");
+            display->setCursor(display->getWidth()/2 - w/2, 26);
             display->print("Bypassed");
 
-            display->setCursor(58, 52);
+            display->setCursor(60, 50);
             display->print(Voices::GetActiveVoice()->ActiveInsert+1);
         };
 

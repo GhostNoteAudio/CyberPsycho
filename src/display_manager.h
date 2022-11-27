@@ -1,16 +1,15 @@
 #pragma once
 
 #include <i2c_driver_wire.h>
-#include <Adafruit_GFX.h>
 #include <Adafruit_SH110X.h>
-
+#include <U8g2lib.h>
 #include "logging.h"
 #include "menus.h"
+#include "fonts.h"
 
 namespace Cyber
 {
     extern I2CMaster& i2cMaster;
-
     const int ChunkSize = 16;
 
     class DisplayManager
@@ -19,16 +18,26 @@ namespace Cyber
         const int SCREEN_HEIGHT = 64;
         const int OLED_RESET = -1;
         const int SCREEN_ADDRESS = 0x3C;
-        Adafruit_SH1106G display;
+        Adafruit_SH1106G display; // For sending
+        U8G2_SH1106_128X64_NONAME_F_2ND_HW_I2C display2; // For drawing
 
     public:
-        inline DisplayManager() : display(SCREEN_WIDTH, SCREEN_HEIGHT, &Wire, OLED_RESET, 1000000, 1000000)
+        inline DisplayManager() : 
+            display(SCREEN_WIDTH, SCREEN_HEIGHT, &Wire, OLED_RESET, 1000000, 1000000), 
+            display2(U8G2_R0, U8X8_PIN_NONE)
         {
             Menus::ActiveMenu = 0;
         }
 
         inline void Init()
         {
+            if (!display2.begin()) 
+            {
+                Serial.println(F("Display2 allocation failed"));
+            }
+            display2.setFont(DEFAULT_FONT);
+            display2.setCursor(0, 10);
+            
             if (!display.begin(SCREEN_ADDRESS)) 
             {
                 Serial.println(F("Display allocation failed"));
@@ -45,9 +54,9 @@ namespace Cyber
             display.clearDisplay();
         }
 
-        inline Adafruit_SH1106G* GetDisplay()
+        inline U8G2* GetDisplay()
         {
-            return &display;
+            return &display2;
         }
 
         // Method breaks down data transfer to the display into small chunks, and schedules transmissions
@@ -62,7 +71,8 @@ namespace Cyber
             uint8_t DC_BYTE = 0x40;
             uint8_t pageCount = ((SCREEN_HEIGHT + 7) / 8);
             uint8_t bytesPerPage = SCREEN_WIDTH;
-            auto buffer = display.getBuffer();
+            //uint8_t* buffer = &testbuf[0];//display.getBufferPtr();
+            uint8_t* buffer = display2.getBufferPtr();
             
             // page 0, byte 0; reset the ptr to start of buffer;
             if (p == 0 && pageBytesRemaining == bytesPerPage)
