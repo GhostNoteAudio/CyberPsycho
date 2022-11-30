@@ -20,3 +20,6 @@ lib/ADC*
 lib/SD*
 lib/SPI*
 lib/Wire*
+lib/Adafruit*
+lib/Base64*
+lib/U8g2*

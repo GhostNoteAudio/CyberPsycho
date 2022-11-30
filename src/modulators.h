@@ -51,14 +51,11 @@ namespace Cyber
         {
             if (dest == ModDest::Env1 || dest == ModDest::Env2)
             {
-                if (slot == 0) return "Attack";
-                if (slot == 1) return "Decay";
-                if (slot == 2) return "Sustain";
-                if (slot == 3) return "Release";
+                if (slot <= 3) return menu.Captions[slot];
             }
             else if (dest == ModDest::Lfo1 || dest == ModDest::Lfo2)
             {
-                if (slot == 0) return "Frequency";
+                if (slot <= 3) return menu.Captions[8+slot];
             }
             return "-";
         }

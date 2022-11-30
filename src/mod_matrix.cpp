@@ -22,9 +22,9 @@ namespace Cyber
 
             display->setCursor(56-offset, 10);
             display->print("[");
-            display->setCursor(62-offset, 10);
+            display->setCursor(63-offset, 10);
             display->print(this->activeRoute+1);
-            display->setCursor(71+offset, 10);
+            display->setCursor(70+offset, 10);
             display->print("]");
         };
 
