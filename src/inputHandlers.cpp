@@ -45,9 +45,9 @@ namespace Cyber
         if (menu == Voices::GetActiveGen()->GetMenu() && value)
         {
             generatorSelectMenu.Values[0] = Voices::GetActiveGen()->GenIndex;
-            generatorSelectMenu.Max[0] = generatorRegistry.Count-1;
             generatorSelectMenu.Values[1] = 0; // Show inserts only?
             generatorSelectMenu.Values[2] = -1; // Selected insert effect.
+            generatorSelectMenu.Values[3] = generatorRegistry.Count;
             ActiveMenu = &generatorSelectMenu;
             generatorSelectMenu.EditMode = true;
             return;
@@ -66,10 +66,10 @@ namespace Cyber
         // Go from insert FX edit menu to generator selection menu (Insert only)
         if (fxIdx != -1 && value)
         {
-            generatorSelectMenu.Values[0] = Voices::GetActiveVoice()->GetActiveInsert()->GenIndex;
-            generatorSelectMenu.Max[0] = generatorRegistry.Count-1;
+            generatorSelectMenu.Values[0] = Voices::GetActiveVoice()->GetActiveInsert()->GenIndex;;
             generatorSelectMenu.Values[1] = 1; // Show inserts only?
-            generatorSelectMenu.Values[2] = fxIdx; // Selected insert effect.
+            generatorSelectMenu.Values[2] = fxIdx; // Selected insert effect slot
+            generatorSelectMenu.Values[3] = generatorRegistry.Count;
             ActiveMenu = &generatorSelectMenu;
             generatorSelectMenu.EditMode = true;
             return;
@@ -80,8 +80,8 @@ namespace Cyber
         {
             int selectedGen = menu->Values[0];
             auto voice = Voices::GetActiveVoice();
-            int insertFxSlot = menu->Values[2];
-            if (insertFxSlot == -1) // selecting main generator
+            int selectedFxSlot = menu->Values[2];
+            if (selectedFxSlot == -1) // selecting main generator
             {
                 if (voice->Gen->GenIndex != selectedGen)
                 {
@@ -92,13 +92,13 @@ namespace Cyber
             }
             else // Selecting insert FX
             {
-                auto fxGen = voice->Inserts[insertFxSlot];
+                auto fxGen = voice->Inserts[selectedFxSlot];
                 if (fxGen->GenIndex != selectedGen)
                 {
                     generatorRegistry.DeleteInstance(fxGen);
-                    voice->Inserts[insertFxSlot] = generatorRegistry.CreateInstance(selectedGen);
+                    voice->Inserts[selectedFxSlot] = generatorRegistry.CreateInstance(selectedGen);
                 }
-                ActiveMenu = voice->Inserts[insertFxSlot]->GetMenu();
+                ActiveMenu = voice->Inserts[selectedFxSlot]->GetMenu();
             }
         }
     }
@@ -107,7 +107,7 @@ namespace Cyber
     {
         if (menu->QuadMode)
         {
-            menu->SetValueF(menu->TopItem + idx, value);
+            menu->SetValue(menu->TopItem + idx, value);
         }
     }
 

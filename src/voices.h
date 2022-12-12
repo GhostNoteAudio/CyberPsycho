@@ -36,6 +36,11 @@ namespace Cyber
 
         int ActiveInsert = 0;
 
+        inline Voice() : matrix(this)
+        {
+
+        }
+
         void InitMenu();
 
         inline void Init()

@@ -15,23 +15,23 @@ namespace Cyber
         menu.Captions[FCHIGH] = "High Freq";
         menu.Captions[GAINHIGH] = "High Gain";
 
-        menu.Max[GAINLOW] = 1023;
-        menu.Max[FCLOW] = 1023;
-        menu.Max[FCHIGH] = 1023;
-        menu.Max[GAINHIGH] = 1023;
+        menu.Steps[GAINLOW] = 1024;
+        menu.Steps[FCLOW] = 1024;
+        menu.Steps[FCHIGH] = 1024;
+        menu.Steps[GAINHIGH] = 1024;
 
-        menu.Values[GAINLOW] = 512;
-        menu.Values[FCLOW] = 512;
-        menu.Values[FCHIGH] = 512;
-        menu.Values[GAINHIGH] = 512;
+        menu.Values[GAINLOW] = 0.5f;
+        menu.Values[FCLOW] = 0.5f;
+        menu.Values[FCHIGH] = 0.5f;
+        menu.Values[GAINHIGH] = 0.5f;
         
-        menu.Formatters[GAINLOW] = [this](int idx, int16_t value, char* target)
+        menu.Formatters[GAINLOW] = [this](int idx, float value, char* target)
         {
             float val = GetScaledParameter(idx);
             sprintf(target, "%.1fdB", val);
         };
 
-        menu.Formatters[FCLOW] = [this](int idx, int16_t value, char* target)
+        menu.Formatters[FCLOW] = [this](int idx, float value, char* target)
         {
             float val = GetScaledParameter(idx);
             sprintf(target, "%.0fHz", val);
@@ -63,10 +63,10 @@ namespace Cyber
 
     float EQShelf::GetScaledParameter(int idx)
     {
-        if (idx == GAINLOW) return -12 + menu.Values[GAINLOW] * 9.77517e-4 * 24;
-        if (idx == GAINHIGH) return -12 + menu.Values[GAINHIGH] * 9.77517e-4 * 24;
-        if (idx == FCLOW) return 20 +  Utils::Resp3dec(menu.Values[FCLOW] * 9.77517e-4) * 1980;
-        if (idx == FCHIGH) return 1000 + Utils::Resp3dec(menu.Values[FCHIGH] * 9.77517e-4) * 17000;
+        if (idx == GAINLOW) return -12 + menu.Values[GAINLOW] * 24;
+        if (idx == GAINHIGH) return -12 + menu.Values[GAINHIGH] * 24;
+        if (idx == FCLOW) return 20 +  Utils::Resp3dec(menu.Values[FCLOW]) * 1980;
+        if (idx == FCHIGH) return 1000 + Utils::Resp3dec(menu.Values[FCHIGH]) * 17000;
         return 0;
     }
 

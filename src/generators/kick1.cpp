@@ -22,16 +22,24 @@ namespace Cyber
         menu.Captions[4] = "Boost";
         menu.Captions[5] = "Fold";
         menu.Captions[6] = "Pitch Crv";
-        menu.Captions[7] = "Aamp Crv";
+        menu.Captions[7] = "Amp Crv";
 
-        menu.Values[0] = 20;
-        menu.Values[1] = 20;
-        menu.Values[2] = 20;
-        menu.Values[3] = 3;
-        menu.Values[4] = 2;
-        menu.Values[5] = 0;
-        menu.Values[6] = 50;
-        menu.Values[7] = 50;
+        menu.Values[0] = 0.2f;
+        menu.Values[1] = 0.2f;
+        menu.Values[2] = 0.2f;
+        menu.Values[3] = 0.3f;
+        menu.Values[4] = 0.2f;
+        menu.Values[5] = 0.0f;
+        menu.Values[6] = 0.5f;
+        menu.Values[7] = 0.5f;
+
+        menu.Formatters[2] = [this](int idx, float value, char* target)
+        {
+            float freq = GetScaledParameter(idx);
+            sprintf(target, "%.0f Hz", freq);
+        };
+
+        menu.Formatters[3] = menu.Formatters[2];
 
         menu.SetLength(8);
         menu.SelectedItem = 0;
@@ -52,14 +60,14 @@ namespace Cyber
 
     float Kick1::GetScaledParameter(int idx)
     {
-        if (idx == DECAY) return (0.01 + menu.Values[DECAY] * 0.01 *0.99) * SAMPLERATE * 2;
-        if (idx == PDEC) return (0.002 + menu.Values[PDEC] * 0.01 * 0.5) * SAMPLERATE;
-        if (idx == PMOD) return menu.Values[PMOD] * 10;
-        if (idx == FREQ) return 10 + menu.Values[FREQ] * 2.90;
-        if (idx == BOOST) return 1 + menu.Values[BOOST] * 0.2;
-        if (idx == FOLD) return menu.Values[FOLD] * 0.1;
-        if (idx == PSHAPE) return 10 + menu.Values[PSHAPE] * 0.5;
-        if (idx == ASHAPE) return 10 + menu.Values[ASHAPE] * 0.5;
+        if (idx == DECAY) return (0.01 + menu.Values[DECAY] * 0.99) * SAMPLERATE * 2;
+        if (idx == PDEC) return (0.002 + menu.Values[PDEC] * 0.5) * SAMPLERATE;
+        if (idx == PMOD) return menu.Values[PMOD] * 1000;
+        if (idx == FREQ) return 10 + menu.Values[FREQ] * 290;
+        if (idx == BOOST) return 1 + menu.Values[BOOST] * 20;
+        if (idx == FOLD) return menu.Values[FOLD] * 10;
+        if (idx == PSHAPE) return 10 + menu.Values[PSHAPE] * 50;
+        if (idx == ASHAPE) return 10 + menu.Values[ASHAPE] * 50;
         return 0;
     }
 

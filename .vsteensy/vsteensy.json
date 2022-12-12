@@ -19,6 +19,7 @@
       "projectLibraries": [
         "Adafruit_BusIO-1.14.1",
         "Adafruit_GFX_Library-1.11.3",
+        "Adafruit_SH110X-2.1.8",
         "Adafruit_SSD1306-2.5.7",
         "ADC",
         "Base64-1.0.0",
@@ -26,8 +27,7 @@
         "SdFat",
         "SPI",
         "TsyDMASPI",
-        "U8g2-2.33.15",
-        "Adafruit_SH110X-2.1.8.zip"
+        "U8g2-2.33.15"
       ],
       "board": {
         "name": "Teensy 4.0",

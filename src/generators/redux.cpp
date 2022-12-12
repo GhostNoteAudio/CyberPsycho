@@ -8,8 +8,6 @@ namespace Cyber
     const int GAIN = 2;
     const int BITCRUSH = 3;
     
-    
-    
     Redux::Redux()
     {
         menu.Captions[RATE] = "Rate Reduce";
@@ -17,19 +15,13 @@ namespace Cyber
         menu.Captions[GAIN] = "Gain";
         menu.Captions[BITCRUSH] = "Bitcrush";
         
-        menu.Min[RATE] = 1;
-        menu.Max[RATE] = 1000;
-
-        menu.Min[BITCRUSH] = 100;
-        menu.Max[BITCRUSH] = 1200;
-
         menu.Values[RATE] = 1;
         menu.Values[BITCRUSH] = 1200;
         menu.Values[GAIN] = 50;
 
         for (int i = 0; i < 4; i++)
         {
-            menu.Formatters[i] = [this](int idx, int16_t value, char* target)
+            menu.Formatters[i] = [this](int idx, float value, char* target)
             {
                 float val = GetScaledParameter(idx);
                 sprintf(target, "%.1f", val);
@@ -45,10 +37,10 @@ namespace Cyber
 
     float Redux::GetScaledParameter(int idx)
     {
-        if (idx == RATE) return 1 + Utils::Resp3dec(menu.Values[RATE] * 0.001) * 63;
-        if (idx == BITCRUSH) return menu.Values[BITCRUSH] * 0.01;
-        if (idx == GAIN) return -12 + 24 * menu.Values[GAIN] * 0.01;
-        if (idx == MIX) return menu.Values[MIX] * 0.01;
+        if (idx == RATE) return 1 + Utils::Resp3dec(menu.Values[RATE]) * 63;
+        if (idx == BITCRUSH) return 1.0f + menu.Values[BITCRUSH] * 11.0f;
+        if (idx == GAIN) return -12 + 24 * menu.Values[GAIN];
+        if (idx == MIX) return menu.Values[MIX];
         return 0;
     }
 

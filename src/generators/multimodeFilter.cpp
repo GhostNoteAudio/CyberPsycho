@@ -15,17 +15,18 @@ namespace Cyber
         menu.Captions[DRIVE] = "Drive";
         menu.Captions[MODE] = "Mode";
 
-        menu.Max[CUTOFF] = 1023;
-        menu.Max[RESONANCE] = 1023;
-        menu.Max[MODE] = 6;
+        menu.Steps[CUTOFF] = 1024;
+        menu.Steps[RESONANCE] = 1024;
+        menu.Steps[MODE] = 7;
 
-        menu.Values[CUTOFF] = 800;
-        menu.Values[RESONANCE] = 100;
+        menu.Values[CUTOFF] = 0.8f;
+        menu.Values[RESONANCE] = 0.1f;
         menu.Values[DRIVE] = 0;
         menu.Values[MODE] = 0;
 
-        menu.Formatters[MODE] = [](int idx, int16_t val, char* target)
+        menu.Formatters[MODE] = [this](int idx, float value, char* target)
         {
+            auto val = menu.GetScaledValue(idx);
             if (val == 0) strcpy(target, "Bypassed");
             else if (val == 1) strcpy(target, "Lp Ladder 4P");
             else if (val == 2) strcpy(target, "Lp Ladder 2P");
@@ -60,16 +61,16 @@ namespace Cyber
 
     float MultimodeFilter::GetScaledParameter(int idx)
     {
-        if (idx == CUTOFF) return menu.Values[CUTOFF] * 9.77517e-4f;
-        if (idx == RESONANCE) return menu.Values[RESONANCE] * 9.77517e-4f;
-        if (idx == DRIVE) return menu.Values[DRIVE] * 0.01;
-        if (idx == MODE) return menu.Values[MODE];
+        if (idx == CUTOFF) return menu.Values[CUTOFF];
+        if (idx == RESONANCE) return menu.Values[RESONANCE];
+        if (idx == DRIVE) return menu.Values[DRIVE];
+        if (idx == MODE) return menu.GetScaledValue(MODE);
         return 0;
     }
 
     void MultimodeFilter::Process(GeneratorArgs args)
     {
-        int mode = menu.Values[MODE];
+        int mode = menu.GetScaledValue(MODE);
         float cutoff = GetScaledParameter(CUTOFF);
         float res = GetScaledParameter(RESONANCE);
         float drive = GetScaledParameter(DRIVE);

@@ -124,50 +124,50 @@ namespace Cyber
         menu.Captions[13] = "CV In";
         menu.Captions[14] = "Gate In";
 
-        menu.Values[9] = 1;
-        menu.Values[10] = 1;
-        menu.Values[11] = 1;
-        menu.Values[12] = 1;
-        menu.Values[13] = 1;
-        menu.Values[14] = 1;
+        menu.Values[9] = 0.3;
+        menu.Values[10] = 0.3;
+        menu.Values[11] = 0.3;
+        menu.Values[12] = 0.3;
+        menu.Values[13] = 0.3;
+        menu.Values[14] = 0.3;
 
-        menu.Max[0] = 48;
-        menu.Max[1] = 48;
-        menu.Max[2] = 36;
-        menu.Max[3] = 2;
-        menu.Max[8] = 17;
-        menu.Max[9] = 4;
-        menu.Max[10] = 4;
-        menu.Max[11] = 4;
-        menu.Max[12] = 4;
-        menu.Max[13] = 4;
-        menu.Max[14] = 4;
+        menu.Steps[2] = 36*2+1;
+        menu.Steps[3] = 3;
+        menu.Steps[8] = 16+2;
+        menu.Steps[9] = 5;
+        menu.Steps[10] = 5;
+        menu.Steps[11] = 5;
+        menu.Steps[12] = 5;
+        menu.Steps[13] = 5;
+        menu.Steps[14] = 5;
 
-        menu.Min[2] = -36;
 
-        auto inChannelFormatter = [](int idx, int16_t val, char* dest)
+        auto inChannelFormatter = [this](int idx, float val, char* dest)
         {
-            if (val == 0) strcpy(dest, "Off");
-            else sprintf(dest, "%d", val);
+            auto sv = menu.GetScaledValue(idx);
+            if (sv == 0) strcpy(dest, "Off");
+            else sprintf(dest, "%d", sv);
         };
 
-        menu.Formatters[0] = [](int idx, int16_t v, char* s) { sprintf(s, "%.1fdB", -12+v*0.5f); };
-        menu.Formatters[1] = [](int idx, int16_t v, char* s) { sprintf(s, "%.1fdB", -12+v*0.5f); };
-        menu.Formatters[3] = [](int idx, int16_t v, char* s) 
+        menu.Formatters[0] = [this](int idx, float v, char* s) { sprintf(s, "%.1fdB", -12+v*24.f); };
+        menu.Formatters[1] = [this](int idx, float v, char* s) { sprintf(s, "%.1fdB", -12+v*24.f); };
+        menu.Formatters[3] = [this](int idx, float v, char* s) 
         { 
-            if (v == 0) strcpy(s, "Off");
-            else if (v == 1) strcpy(s, "Gate");
-            else if (v == 2) strcpy(s, "Env 1");
+            auto sv = menu.GetScaledValue(idx);
+            if (sv == 0) strcpy(s, "Off");
+            else if (sv == 1) strcpy(s, "Gate");
+            else if (sv == 2) strcpy(s, "Env 1");
         };
-        menu.Formatters[4] = [](int idx, int16_t v, char* s) { strcpy(s, ""); };
-        menu.Formatters[5] = [](int idx, int16_t v, char* s) { strcpy(s, ""); };
-        menu.Formatters[6] = [](int idx, int16_t v, char* s) { strcpy(s, ""); };
-        menu.Formatters[7] = [](int idx, int16_t v, char* s) { strcpy(s, ""); };
-        menu.Formatters[8] = [](int idx, int16_t v, char* s) 
+        menu.Formatters[4] = [](int idx, float v, char* s) { strcpy(s, ""); };
+        menu.Formatters[5] = [](int idx, float v, char* s) { strcpy(s, ""); };
+        menu.Formatters[6] = [](int idx, float v, char* s) { strcpy(s, ""); };
+        menu.Formatters[7] = [](int idx, float v, char* s) { strcpy(s, ""); };
+        menu.Formatters[8] = [this](int idx, float v, char* s) 
         { 
-            if (v == 0) strcpy(s, "Off");
-            else if (v == 1) strcpy(s, "Omni");
-            else sprintf(s, "%d", v-1); 
+            auto sv = menu.GetScaledValue(idx);
+            if (sv == 0) strcpy(s, "Off");
+            else if (sv == 1) strcpy(s, "Omni");
+            else sprintf(s, "%d", sv-1); 
         };
         menu.Formatters[9] = inChannelFormatter;
         menu.Formatters[10] = inChannelFormatter;
@@ -176,10 +176,10 @@ namespace Cyber
         menu.Formatters[13] = inChannelFormatter;
         menu.Formatters[14] = inChannelFormatter;
 
-        menu.ValueChangedCallback = [this](int idx, int16_t val)
+        menu.ValueChangedCallback = [this](int idx, float val)
         {
-            if (idx == 0) InGain = Utils::DB2Gainf(-12.0f + val * 0.5f);
-            if (idx == 1) OutGain = Utils::DB2Gainf(-12.0f + val * 0.5f);
+            if (idx == 0) InGain = Utils::DB2Gainf(-12.0f + val * 24.f);
+            if (idx == 1) OutGain = Utils::DB2Gainf(-12.0f + val * 24.f);
             if (idx == 2) PitchOffset = val;
             if (idx == 3) AmpControl = val;
             if (idx == 8) MidiChannel = val - 2; // -2 = Off, -1 = Omni, 0-15 = channel

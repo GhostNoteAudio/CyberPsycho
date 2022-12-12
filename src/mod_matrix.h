@@ -30,7 +30,11 @@ namespace Cyber
         float OutputValue;
     public:
         void InitMenu();
-        inline ModMatrix() { InitMenu(); }
+        inline ModMatrix(Voice* parentVoice) 
+        {
+            this->voice = parentVoice;
+            InitMenu(); 
+        }
 
     private:
         inline float* GetSourceBuffer(ModSource source)

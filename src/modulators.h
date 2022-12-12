@@ -23,7 +23,7 @@ namespace Cyber
         float OutEnv2[BUFFER_SIZE];
         float OutLfo1[BUFFER_SIZE];
         float OutLfo2[BUFFER_SIZE];
-        float Params[13];
+        //float Params[13];
         float Modulation[13];
 
         std::function<float*(ModDest, uint8_t)> GetModulationFast;
@@ -87,60 +87,38 @@ namespace Cyber
             menu.Captions[18] = "Env1 Rel";
             menu.Captions[19] = "Env2 Rel";
 
-            menu.Max[0] = 1023;
-            menu.Max[1] = 1023;
-            menu.Max[2] = 1023;
-            menu.Max[3] = 1023;
+            menu.Steps[9] = 5;
+            menu.Steps[10] = 2;
+            menu.Steps[11] = 2;
 
-            menu.Max[4] = 1023;
-            menu.Max[5] = 1023;
-            menu.Max[6] = 1023;
-            menu.Max[7] = 1023;
+            menu.Steps[13] = 5;
+            menu.Steps[14] = 2;
+            menu.Steps[15] = 2;
 
-            menu.Max[8] = 1023;
-            menu.Max[9] = 4;
-            menu.Max[10] = 1;
-            menu.Max[11] = 1;
+            menu.Steps[16] = 2;
+            menu.Steps[17] = 2;
+            menu.Steps[18] = 2;
+            menu.Steps[19] = 2;
 
-            menu.Max[12] = 1023;
-            menu.Max[13] = 4;
-            menu.Max[14] = 1;
-            menu.Max[15] = 1;
+            menu.Values[0] = 0.2;
+            menu.Values[1] = 0.2;
+            menu.Values[2] = 0.9;
+            menu.Values[3] = 0.3;
 
-            menu.Max[16] = 1;
-            menu.Max[17] = 1;
-            menu.Max[18] = 1;
-            menu.Max[19] = 1;
+            menu.Values[4] = 0.2;
+            menu.Values[5] = 0.2;
+            menu.Values[6] = 0.9;
+            menu.Values[7] = 0.3;
 
-            menu.Values[0] = 50;
-            menu.Values[1] = 200;
-            menu.Values[2] = 900;
-            menu.Values[3] = 300;
+            menu.Values[8] = 0.05;
+            menu.Values[12] = 0.05;
 
-            menu.Values[4] = 50;
-            menu.Values[5] = 200;
-            menu.Values[6] = 900;
-            menu.Values[7] = 300;
-
-            menu.Values[8] = 50;
-            menu.Values[9] = 0;
-            menu.Values[10] = 0;
-            menu.Values[11] = 0;
-
-            menu.Values[12] = 50;
-            menu.Values[13] = 0;
-            menu.Values[14] = 0;
-            menu.Values[15] = 0;
-
-            menu.Values[16] = 0;
-            menu.Values[17] = 0;
             menu.Values[18] = 1;
             menu.Values[19] = 1;
 
-            auto formatLin = [this](int idx, int16_t val, char* dest){ sprintf(dest, "%.0f%%", 100.0f * val / (float)menu.Max[idx]); };
-            auto formatEnvTime = [this](int idx, int16_t val, char* dest)
+            auto formatEnvTime = [this](int idx, float val, char* dest)
             {
-                float sec = Utils::Resp3dec(val / 1023.0f) * 20;
+                float sec = Utils::Resp3dec(val) * 20;
                 if (sec <= 1)
                     sprintf(dest, "%.3fs", sec);
                 else if (sec <= 10)
@@ -148,9 +126,9 @@ namespace Cyber
                 else
                     sprintf(dest, "%.1fs", sec);
             };
-            auto formatFreq = [this](int idx, int16_t val, char* dest)
+            auto formatFreq = [this](int idx, float val, char* dest)
             { 
-                float f = Utils::Resp4dec(val / 1023.0f) * 200;
+                float f = Utils::Resp4dec(val) * 200;
                 if (f < 1)
                     sprintf(dest, "%.3fHz", f);
                 else if (f < 10)
@@ -160,19 +138,17 @@ namespace Cyber
                 else
                     sprintf(dest, "%.0fHz", f);
             };
-            auto formatOnOff = [this](int idx, int16_t val, char* dest){ val == 0 ? strcpy(dest, "Off") : strcpy(dest, "On"); };
-            auto formatPolarity = [this](int idx, int16_t val, char* dest){ val == 0 ? strcpy(dest, "Bipolar") : strcpy(dest, "Unipolar"); };
-            auto formatShape = [this](int idx, int16_t val, char* dest){ strcpy(dest, Modules::Lfo::GetShapeName(val)); };
-            auto formatEnvShape = [this](int idx, int16_t val, char* dest){ val == 0 ? strcpy(dest, "Lin") : strcpy(dest, "Exp"); };
+            auto formatOnOff = [this](int idx, float val, char* dest){ menu.GetScaledValue(idx) == 0 ? strcpy(dest, "Off") : strcpy(dest, "On"); };
+            auto formatPolarity = [this](int idx, float val, char* dest){ menu.GetScaledValue(idx) == 0 ? strcpy(dest, "Bipolar") : strcpy(dest, "Unipolar"); };
+            auto formatShape = [this](int idx, float val, char* dest){ strcpy(dest, Modules::Lfo::GetShapeName(menu.GetScaledValue(idx))); };
+            auto formatEnvShape = [this](int idx, float val, char* dest){ menu.GetScaledValue(idx) == 0 ? strcpy(dest, "Lin") : strcpy(dest, "Exp"); };
 
             menu.Formatters[0] = formatEnvTime;
             menu.Formatters[1] = formatEnvTime;
-            menu.Formatters[2] = formatLin;
             menu.Formatters[3] = formatEnvTime;
 
             menu.Formatters[4] = formatEnvTime;
             menu.Formatters[5] = formatEnvTime;
-            menu.Formatters[6] = formatLin;
             menu.Formatters[7] = formatEnvTime;
 
             menu.Formatters[8] = formatFreq;
@@ -190,22 +166,24 @@ namespace Cyber
             menu.Formatters[18] = formatEnvShape;
             menu.Formatters[19] = formatEnvShape;
 
-            menu.ValueChangedCallback = [this](int idx, int16_t val)
+            menu.ValueChangedCallback = [this](int idx, float val)
             {
-                if (idx <= 8 || idx == 12 ) Params[idx] = val / 1023.0f;
+                auto sv = menu.GetScaledValue(idx);
 
-                else if (idx == 9) lfo1.Waveshape = (Modules::Lfo::Shape)val;
-                else if (idx == 10) lfo1.Retrigger = !(val == 0);
-                else if (idx == 11) lfo1.Unipolar = val == 1;
+                //if (idx <= 8 || idx == 12 ) Params[idx] = val;
 
-                else if (idx == 13) lfo2.Waveshape = (Modules::Lfo::Shape)val;
-                else if (idx == 14) lfo2.Retrigger = !(val == 0);
-                else if (idx == 15) lfo2.Unipolar = val == 1;
+                     if (idx == 9) lfo1.Waveshape = (Modules::Lfo::Shape)sv;
+                else if (idx == 10) lfo1.Retrigger = !(sv == 0);
+                else if (idx == 11) lfo1.Unipolar = sv == 1;
 
-                else if (idx == 16) env1.AttackCurve = (val == 0) ? Modules::Envelope::EnvCurve::Linear : Modules::Envelope::EnvCurve::Exp;
-                else if (idx == 17) env2.AttackCurve = (val == 0) ? Modules::Envelope::EnvCurve::Linear : Modules::Envelope::EnvCurve::Exp;
-                else if (idx == 18) env1.ReleaseCurve = env1.DecayCurve = (val == 0) ? Modules::Envelope::EnvCurve::Linear : Modules::Envelope::EnvCurve::Exp;
-                else if (idx == 19) env2.ReleaseCurve = env2.DecayCurve = (val == 0) ? Modules::Envelope::EnvCurve::Linear : Modules::Envelope::EnvCurve::Exp;
+                else if (idx == 13) lfo2.Waveshape = (Modules::Lfo::Shape)sv;
+                else if (idx == 14) lfo2.Retrigger = !(sv == 0);
+                else if (idx == 15) lfo2.Unipolar = sv == 1;
+
+                else if (idx == 16) env1.AttackCurve = (sv == 0) ? Modules::Envelope::EnvCurve::Linear : Modules::Envelope::EnvCurve::Exp;
+                else if (idx == 17) env2.AttackCurve = (sv == 0) ? Modules::Envelope::EnvCurve::Linear : Modules::Envelope::EnvCurve::Exp;
+                else if (idx == 18) env1.ReleaseCurve = env1.DecayCurve = (sv == 0) ? Modules::Envelope::EnvCurve::Linear : Modules::Envelope::EnvCurve::Exp;
+                else if (idx == 19) env2.ReleaseCurve = env2.DecayCurve = (sv == 0) ? Modules::Envelope::EnvCurve::Linear : Modules::Envelope::EnvCurve::Exp;
             };
             
             menu.SetLength(20);
@@ -219,18 +197,18 @@ namespace Cyber
 
         inline void UpdateParams()
         {
-            env1.AttackSamples = Utils::Resp3dec(Utils::Clamp(Params[0] + Modulation[0])) * 20 * SAMPLERATE;
-            env1.DecaySamples = Utils::Resp3dec(Utils::Clamp(Params[1] + Modulation[1])) * 20 * SAMPLERATE;
-            env1.SustainLevel = Utils::Clamp(Params[2] + Modulation[2]);
-            env1.ReleaseSamples = Utils::Resp3dec(Utils::Clamp(Params[3] + Modulation[3])) * 20 * SAMPLERATE;
+            env1.AttackSamples = Utils::Resp3dec(Utils::Clamp(menu.Values[0] + Modulation[0])) * 20 * SAMPLERATE;
+            env1.DecaySamples = Utils::Resp3dec(Utils::Clamp(menu.Values[1] + Modulation[1])) * 20 * SAMPLERATE;
+            env1.SustainLevel = Utils::Clamp(menu.Values[2] + Modulation[2]);
+            env1.ReleaseSamples = Utils::Resp3dec(Utils::Clamp(menu.Values[3] + Modulation[3])) * 20 * SAMPLERATE;
             
-            env2.AttackSamples = Utils::Resp3dec(Utils::Clamp(Params[4] + Modulation[4])) * 20 * SAMPLERATE;
-            env2.DecaySamples = Utils::Resp3dec(Utils::Clamp(Params[5] + Modulation[5])) * 20 * SAMPLERATE;
-            env2.SustainLevel = Utils::Clamp(Params[6] + Modulation[6]);
-            env2.ReleaseSamples = Utils::Resp3dec(Utils::Clamp(Params[7] + Modulation[7])) * 20 * SAMPLERATE;
+            env2.AttackSamples = Utils::Resp3dec(Utils::Clamp(menu.Values[4] + Modulation[4])) * 20 * SAMPLERATE;
+            env2.DecaySamples = Utils::Resp3dec(Utils::Clamp(menu.Values[5] + Modulation[5])) * 20 * SAMPLERATE;
+            env2.SustainLevel = Utils::Clamp(menu.Values[6] + Modulation[6]);
+            env2.ReleaseSamples = Utils::Resp3dec(Utils::Clamp(menu.Values[7] + Modulation[7])) * 20 * SAMPLERATE;
             
-            lfo1.Frequency = Utils::Resp4dec(Utils::Clamp(Params[8] + Modulation[8])) * 200;
-            lfo2.Frequency = Utils::Resp4dec(Utils::Clamp(Params[12] + Modulation[12])) * 200;
+            lfo1.Frequency = Utils::Resp4dec(Utils::Clamp(menu.Values[8] + Modulation[8])) * 200;
+            lfo2.Frequency = Utils::Resp4dec(Utils::Clamp(menu.Values[12] + Modulation[12])) * 200;
         }
 
         inline void Process(GeneratorArgs args)

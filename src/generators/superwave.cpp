@@ -22,14 +22,14 @@ namespace Cyber
         menu.Captions[CENT] = "Cent";
 
         menu.Min[SEMI] = -36;
-        menu.Max[SEMI] = 36;
         menu.Min[CENT] = -50;
-        menu.Max[CENT] = 50;
+        menu.Steps[SEMI] = 73;
+        menu.Steps[CENT] = 101;
 
-        menu.Values[SEMI] = 0;
-        menu.Values[PSPREAD] = 50;
-        menu.Values[VSPREAD] = 50;
-        menu.Values[CENT] = 0;
+        menu.Values[SEMI] = 0.5f;
+        menu.Values[PSPREAD] = 0.5f;
+        menu.Values[VSPREAD] = 0.5f;
+        menu.Values[CENT] = 0.5f;
 
         menu.SetLength(4);
         menu.SelectedItem = 0;
@@ -62,10 +62,10 @@ namespace Cyber
 
     float Superwave::GetScaledParameter(int idx)
     {
-        if (idx == SEMI) return menu.Values[SEMI];
-        if (idx == CENT) return menu.Values[CENT];
-        if (idx == PSPREAD) return menu.Values[PSPREAD] * 0.01;
-        if (idx == VSPREAD) return menu.Values[VSPREAD] * 0.01;
+        if (idx == SEMI) return menu.GetScaledValue(SEMI);
+        if (idx == CENT) return menu.GetScaledValue(CENT);
+        if (idx == PSPREAD) return menu.Values[PSPREAD];
+        if (idx == VSPREAD) return menu.Values[VSPREAD];
         return 0;
     }
 

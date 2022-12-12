@@ -24,6 +24,11 @@ namespace Cyber
             }
         }
 
+        inline int ScaleSteps(float val, uint16_t steps)
+        {
+            return (int)(val * ((float)steps-0.0001f));
+        }
+
         inline float Limit(float val, float min, float max)
         {
             return val < min ? min : val > max ? max : val;

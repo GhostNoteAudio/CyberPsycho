@@ -168,18 +168,18 @@ namespace Cyber
             const char* gateFilters[4] = {"Off", "Mild", "Normal", "High"};
             int gateFilterValues[4] = {255, 128, 64, 16};
 
-            globalMenu.Max[0] = 2;
-            globalMenu.Max[1] = 11;
-            globalMenu.Max[2] = 300;
-            globalMenu.Max[3] = 3;
+            globalMenu.Steps[0] = 3;
+            globalMenu.Steps[1] = 12;
+            globalMenu.Steps[2] = 280;
+            globalMenu.Steps[3] = 4;
 
             globalMenu.Min[2] = 20;
 
-            globalMenu.Formatters[0] = [clockSources](int idx, int16_t v, char* s) { strcpy(s, clockSources[v]); };
-            globalMenu.Formatters[1] = [clockScaleLut](int idx, int16_t v, char* s) { sprintf(s, "%d", clockScaleLut[v]); };
-            globalMenu.Formatters[3] = [gateFilters](int idx, int16_t v, char* s) { strcpy(s, gateFilters[v]); };
+            globalMenu.Formatters[0] = [clockSources](int idx, float v, char* s) { strcpy(s, clockSources[globalMenu.GetScaledValue(idx)]); };
+            globalMenu.Formatters[1] = [clockScaleLut](int idx, float v, char* s) { sprintf(s, "%d", clockScaleLut[globalMenu.GetScaledValue(idx)]); };
+            globalMenu.Formatters[3] = [gateFilters](int idx, float v, char* s) { strcpy(s, gateFilters[globalMenu.GetScaledValue(idx)]); };
             for (int i=4; i<=8; i++)
-                globalMenu.Formatters[i] = [](int idx, int16_t v, char* s) { strcpy(s, ""); };
+                globalMenu.Formatters[i] = [](int idx, float v, char* s) { strcpy(s, ""); };
 
             globalMenu.SetLength(9);
             globalMenu.SelectedItem = 0;
@@ -232,14 +232,14 @@ namespace Cyber
             calibrateMenu.Min[6] = -256;
             calibrateMenu.Min[7] = -256;
 
-            calibrateMenu.Max[0] = 256;
-            calibrateMenu.Max[1] = 256;
-            calibrateMenu.Max[2] = 256;
-            calibrateMenu.Max[3] = 256;
-            calibrateMenu.Max[4] = 256;
-            calibrateMenu.Max[5] = 256;
-            calibrateMenu.Max[6] = 256;
-            calibrateMenu.Max[7] = 256;
+            calibrateMenu.Steps[0] = 513;
+            calibrateMenu.Steps[1] = 513;
+            calibrateMenu.Steps[2] = 513;
+            calibrateMenu.Steps[3] = 513;
+            calibrateMenu.Steps[4] = 513;
+            calibrateMenu.Steps[5] = 513;
+            calibrateMenu.Steps[6] = 513;
+            calibrateMenu.Steps[7] = 513;
 
             calibrateMenu.Min[8] = 800;
             calibrateMenu.Min[9] = 800;
@@ -250,33 +250,42 @@ namespace Cyber
             calibrateMenu.Min[14] = 800;
             calibrateMenu.Min[15] = 800;
 
-            calibrateMenu.Max[8] = 1200;
-            calibrateMenu.Max[9] = 1200;
-            calibrateMenu.Max[10] = 1200;
-            calibrateMenu.Max[11] = 1200;
-            calibrateMenu.Max[12] = 1200;
-            calibrateMenu.Max[13] = 1200;
-            calibrateMenu.Max[14] = 1200;
-            calibrateMenu.Max[15] = 1200;
+            calibrateMenu.Steps[8] = 401;
+            calibrateMenu.Steps[9] = 401;
+            calibrateMenu.Steps[10] = 401;
+            calibrateMenu.Steps[11] = 401;
+            calibrateMenu.Steps[12] = 401;
+            calibrateMenu.Steps[13] = 401;
+            calibrateMenu.Steps[14] = 401;
+            calibrateMenu.Steps[15] = 401;
 
-            calibrateMenu.Values[8] = 1000;
-            calibrateMenu.Values[9] = 1000;
-            calibrateMenu.Values[10] = 1000;
-            calibrateMenu.Values[11] = 1000;
-            calibrateMenu.Values[12] = 1000;
-            calibrateMenu.Values[13] = 1000;
-            calibrateMenu.Values[14] = 1000;
-            calibrateMenu.Values[15] = 1000;
+            calibrateMenu.Values[0] = 0.5f;
+            calibrateMenu.Values[1] = 0.5f;
+            calibrateMenu.Values[2] = 0.5f;
+            calibrateMenu.Values[3] = 0.5f;
+            calibrateMenu.Values[4] = 0.5f;
+            calibrateMenu.Values[5] = 0.5f;
+            calibrateMenu.Values[6] = 0.5f;
+            calibrateMenu.Values[7] = 0.5f;
+            calibrateMenu.Values[8] = 0.5f;
+            calibrateMenu.Values[9] = 0.5f;
+            calibrateMenu.Values[10] = 0.5f;
+            calibrateMenu.Values[11] = 0.5f;
+            calibrateMenu.Values[12] = 0.5f;
+            calibrateMenu.Values[13] = 0.5f;
+            calibrateMenu.Values[14] = 0.5f;
+            calibrateMenu.Values[15] = 0.5f;
 
             for (int i = 8; i < 16; i++)
-                calibrateMenu.Formatters[i] = [](int idx, int16_t v, char* s) { sprintf(s, "%.3f", v*0.001); };
+                calibrateMenu.Formatters[i] = [](int idx, float v, char* s) { sprintf(s, "%.3f", calibrateMenu.GetScaledValue(idx)*0.001); };
 
             calibrateMenu.ValueChangedCallback = [](int idx, float v)
             {
-                if (idx < 4) inProcessor.OffsetCv[idx] = v;
-                else if (idx < 8) inProcessor.OffsetMod[idx-4] = v;
-                else if (idx < 12) inProcessor.ScaleCv[idx-8] = v*0.001;
-                else if (idx < 16) inProcessor.ScaleMod[idx-12] = v*0.001;
+                auto sv = calibrateMenu.GetScaledValue(idx);
+                if (idx < 4) inProcessor.OffsetCv[idx] = sv;
+                else if (idx < 8) inProcessor.OffsetMod[idx-4] = sv;
+                else if (idx < 12) inProcessor.ScaleCv[idx-8] = sv*0.001;
+                else if (idx < 16) inProcessor.ScaleMod[idx-12] = sv*0.001;
             };
 
             calibrateMenu.SetLength(16);
@@ -321,11 +330,19 @@ namespace Cyber
             generatorSelectMenu.HandleEncoderCallback = [](Menu* menu, int tick)
             {
                 LogInfo("Bang!");
-                bool fxOnly = menu->Values[1] == 1;
+                // abusing the menu system to pass extra parameters
                 int currentId = menu->Values[0];
-
+                bool fxOnly = menu->Values[1] == 1;
+                int maxCount = menu->Values[3];
+                
                 if (!fxOnly)
-                    menu->TickValue(menu->SelectedItem, tick);
+                {
+                    int newId = currentId + tick;
+                    
+                    if (newId < 0) newId = 0;
+                    if (newId >= maxCount) newId = maxCount - 1;
+                    menu->SetValue(0, newId);
+                }
                 else
                 {
                     LogInfof("currentId is %d", currentId);

@@ -21,32 +21,35 @@ namespace Cyber
         menu.Captions[MODE] = "Mode";
         menu.Captions[ROLLOFF] = "Rolloff";
 
-        menu.Max[MODE] = 4;
+        menu.Steps[MODE] = 5;
         
-        menu.Formatters[LOWCUT] = [this](int idx, int16_t value, char* target)
+        menu.Formatters[LOWCUT] = [this](int idx, float value, char* target)
         {
             float val = GetScaledParameter(idx);
             const char* str = idx == LOWCUT ? "Hz" : "";
             sprintf(target, "%.1f%s", val, str);
         };
 
-        menu.Formatters[DRIVE] = [this](int idx, int16_t value, char* target)
+        menu.Formatters[DRIVE] = [this](int idx, float value, char* target)
         {
-            sprintf(target, "%d%%", value);
+            auto sv = menu.GetScaledValue(idx);
+            sprintf(target, "%d%%", sv);
         };
 
-        menu.Formatters[MODE] = [this](int idx, int16_t value, char* target)
+        menu.Formatters[MODE] = [this](int idx, float value, char* target)
         {
-            if (value == MODE_BYPASS) strcpy(target, "Bypass");
-            else if (value == MODE_TANH) strcpy(target, "Tanh");
-            else if (value == MODE_ASSYM) strcpy(target, "Assym");
-            else if (value == MODE_CLIP) strcpy(target, "Clip");
-            else if (value == MODE_FOLD) strcpy(target, "Fold");
+            auto sv = menu.GetScaledValue(idx);
+            if (sv == MODE_BYPASS) strcpy(target, "Bypass");
+            else if (sv == MODE_TANH) strcpy(target, "Tanh");
+            else if (sv == MODE_ASSYM) strcpy(target, "Assym");
+            else if (sv == MODE_CLIP) strcpy(target, "Clip");
+            else if (sv == MODE_FOLD) strcpy(target, "Fold");
         };
 
-        menu.Formatters[ROLLOFF] = [this](int idx, int16_t value, char* target)
+        menu.Formatters[ROLLOFF] = [this](int idx, float value, char* target)
         {
-            sprintf(target, "%d%%", value);
+            auto sv = menu.GetScaledValue(idx);
+            sprintf(target, "%d%%", sv);
         };
         
         menu.SetLength(4);
@@ -70,10 +73,10 @@ namespace Cyber
 
     float BasicDrive::GetScaledParameter(int idx)
     {
-        if (idx == LOWCUT) return 10 + Utils::Resp3dec(menu.Values[LOWCUT] * 0.01) * 1990;
-        if (idx == DRIVE) return Utils::Resp3dec(menu.Values[DRIVE] * 0.01);
-        if (idx == MODE) return menu.Values[MODE];
-        if (idx == ROLLOFF) return menu.Values[ROLLOFF] * 0.01;
+        if (idx == LOWCUT) return 10 + Utils::Resp3dec(menu.Values[LOWCUT]) * 1990;
+        if (idx == DRIVE) return Utils::Resp3dec(menu.Values[DRIVE]);
+        if (idx == MODE) return menu.GetScaledValue(MODE);
+        if (idx == ROLLOFF) return menu.Values[ROLLOFF];
         return 0;
     }
 
@@ -86,7 +89,7 @@ namespace Cyber
     {
         float lowcutFreq = GetScaledParameter(LOWCUT);
         float drive = 1 + GetScaledParameter(DRIVE) * 20;
-        int mode = menu.Values[MODE];
+        int mode = menu.GetScaledValue(MODE);
         float rolloff = 100 + GetScaledParameter(ROLLOFF)*19900;
 
         biquadHp.Frequency = lowcutFreq;
