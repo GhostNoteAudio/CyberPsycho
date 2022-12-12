@@ -15,23 +15,18 @@ namespace Cyber
         menu.Captions[FCHIGH] = "High Freq";
         menu.Captions[GAINHIGH] = "High Gain";
 
-        menu.Steps[GAINLOW] = 1024;
-        menu.Steps[FCLOW] = 1024;
-        menu.Steps[FCHIGH] = 1024;
-        menu.Steps[GAINHIGH] = 1024;
-
         menu.Values[GAINLOW] = 0.5f;
         menu.Values[FCLOW] = 0.5f;
         menu.Values[FCHIGH] = 0.5f;
         menu.Values[GAINHIGH] = 0.5f;
         
-        menu.Formatters[GAINLOW] = [this](int idx, float value, char* target)
+        menu.Formatters[GAINLOW] = [this](int idx, float value, int sv, char* target)
         {
             float val = GetScaledParameter(idx);
             sprintf(target, "%.1fdB", val);
         };
 
-        menu.Formatters[FCLOW] = [this](int idx, float value, char* target)
+        menu.Formatters[FCLOW] = [this](int idx, float value, int sv, char* target)
         {
             float val = GetScaledParameter(idx);
             sprintf(target, "%.0fHz", val);

@@ -23,8 +23,8 @@ namespace Cyber
 
         menu.Min[SEMI] = -36;
         menu.Min[CENT] = -50;
-        menu.Steps[SEMI] = 73;
-        menu.Steps[CENT] = 101;
+        menu.Steps[SEMI] = 72;
+        menu.Steps[CENT] = 100;
 
         menu.Values[SEMI] = 0.5f;
         menu.Values[PSPREAD] = 0.5f;

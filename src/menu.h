@@ -25,8 +25,8 @@ namespace Cyber
         float Values[32] = {0};
         int16_t Min[32] = {0};
         uint16_t Steps[32] = {0};
-        std::function<void(int, float, char*)> Formatters[32];
-        std::function<void(int, float)> ValueChangedCallback = 0;
+        std::function<void(int, float, int, char*)> Formatters[32];
+        std::function<void(int, float, int)> ValueChangedCallback = 0;
         std::function<void(U8G2*)> RenderCustomDisplayCallback = 0;
         
         //Todo: Implement these, build "default" implementations that work for most menus, like switch handling which should almost always be the same
@@ -46,10 +46,10 @@ namespace Cyber
         {
             for (int i = 0; i < MaxLength; i++)
             {
-                Formatters[i] = [this](int idx, float v, char* dest) 
+                Formatters[i] = [this](int idx, float v, int sv, char* dest) 
                 {
                     Steps[idx] > 0 
-                        ? sprintf(dest, "%d", GetScaledValue(idx)) 
+                        ? sprintf(dest, "%d", sv) 
                         : sprintf(dest, "%.1f", v*100.0f); 
                 };
             }
@@ -58,7 +58,7 @@ namespace Cyber
         inline int GetScaledValue(int idx)
         {
             return Steps[idx] > 0 
-                ? Min[idx] + Values[idx] * (Steps[idx] - 0.0001f)
+                ? Min[idx] + (int)(Values[idx] * Steps[idx] * 1.000001f)
                 : Min[idx] + Values[idx];
         }
 
@@ -114,13 +114,16 @@ namespace Cyber
 
         inline void SetValue(int idx, float value)
         {
+            if (value < 0) value = 0;
+            if (value > 1) value = 1;
+
             if (idx >= Length || idx < 0)
                 return;
 
             Values[idx] = value;
 
             if (ValueChangedCallback != 0)
-                ValueChangedCallback(idx, value);
+                ValueChangedCallback(idx, value, GetScaledValue(idx));
         }
 
         inline int GetLength()
@@ -187,7 +190,7 @@ namespace Cyber
                 display->println(Captions[item]);
 
                 YieldAudio();
-                Formatters[item](item, Values[item], val);
+                Formatters[item](item, Values[item], GetScaledValue(item), val);
                 int w = GetStringWidth(display, val);
                 int x = display->getWidth() - w - 2;
                 int y = 11 + 16 * i;
@@ -245,7 +248,7 @@ namespace Cyber
                 display->println(Captions[item]);
 
                 YieldAudio();
-                Formatters[item](item, Values[item], val);
+                Formatters[item](item, Values[item], GetScaledValue(item), val);
                 w = GetStringWidth(display, val);
                 xPos = x == 0 ? 2 : display->getWidth() - 2 - w;
                 display->setCursor(xPos, 10 + 16 * (2*y+1));

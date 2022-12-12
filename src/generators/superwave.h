@@ -32,6 +32,7 @@ namespace Cyber
             info.DeveloperName = "Ghost Note Audio";
             info.DisplayName = "Superwave";
             info.GeneratorId = "GNA-Superwave";
+            info.StereoOutSupport = true;
             info.Info = "Supersaw oscillator with tunable parameters.";
             info.Version = 1000;
             info.InsertEffect = false;

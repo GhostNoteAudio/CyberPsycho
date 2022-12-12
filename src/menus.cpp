@@ -28,6 +28,7 @@ namespace Cyber
         void BuildScopeMenu()
         {
             scopeMenu.SetLength(4);
+            scopeMenu.Steps[3] = 4;
             scopeMenu.CustomOnlyMode = true;
             scopeMenu.RenderCustomDisplayCallback = [](U8G2* display)
             {
@@ -46,7 +47,7 @@ namespace Cyber
                 display->setFont(DEFAULT_FONT);
                 display->setCursor(65, 63);
                 char readout[16];
-                auto readoutVal = scopeMenu.Values[3];
+                auto readoutVal = scopeMenu.GetScaledValue(3);
                 YieldAudio();
 
                 if (readoutVal == 1)
@@ -100,7 +101,7 @@ namespace Cyber
                 if (idx == 2)
                     Scope::triggerFreq = 1024 + (int)(value * 4096);
                 if (idx == 3)
-                    menu->SetValue(idx, (int)(value*3.999));
+                    menu->SetValue(idx, value);
 
                 if (idx < 3)
                 {
@@ -155,7 +156,7 @@ namespace Cyber
 
             globalMenu.Values[0] = 0;
             globalMenu.Values[1] = 0;
-            globalMenu.Values[2] = 120;
+            globalMenu.Values[2] = 0.45;
             globalMenu.Values[3] = 0;
             globalMenu.Values[4] = 0;
             globalMenu.Values[5] = 0;
@@ -168,18 +169,18 @@ namespace Cyber
             const char* gateFilters[4] = {"Off", "Mild", "Normal", "High"};
             int gateFilterValues[4] = {255, 128, 64, 16};
 
-            globalMenu.Steps[0] = 3;
-            globalMenu.Steps[1] = 12;
-            globalMenu.Steps[2] = 280;
-            globalMenu.Steps[3] = 4;
+            globalMenu.Steps[0] = 2;
+            globalMenu.Steps[1] = 11;
+            globalMenu.Steps[2] = 279;
+            globalMenu.Steps[3] = 3;
 
             globalMenu.Min[2] = 20;
 
-            globalMenu.Formatters[0] = [clockSources](int idx, float v, char* s) { strcpy(s, clockSources[globalMenu.GetScaledValue(idx)]); };
-            globalMenu.Formatters[1] = [clockScaleLut](int idx, float v, char* s) { sprintf(s, "%d", clockScaleLut[globalMenu.GetScaledValue(idx)]); };
-            globalMenu.Formatters[3] = [gateFilters](int idx, float v, char* s) { strcpy(s, gateFilters[globalMenu.GetScaledValue(idx)]); };
+            globalMenu.Formatters[0] = [clockSources](int idx, float v, int sv, char* s) { strcpy(s, clockSources[sv]); };
+            globalMenu.Formatters[1] = [clockScaleLut](int idx, float v, int sv, char* s) { sprintf(s, "%d", clockScaleLut[sv]); };
+            globalMenu.Formatters[3] = [gateFilters](int idx, float v, int sv, char* s) { strcpy(s, gateFilters[sv]); };
             for (int i=4; i<=8; i++)
-                globalMenu.Formatters[i] = [](int idx, float v, char* s) { strcpy(s, ""); };
+                globalMenu.Formatters[i] = [](int idx, float v, int sv, char* s) { strcpy(s, ""); };
 
             globalMenu.SetLength(9);
             globalMenu.SelectedItem = 0;
@@ -187,10 +188,10 @@ namespace Cyber
             globalMenu.EnableSelection = true;
             globalMenu.QuadMode = false;
 
-            globalMenu.ValueChangedCallback = [gateFilterValues](int idx, int16_t value)
+            globalMenu.ValueChangedCallback = [gateFilterValues](int idx, float value, int sv)
             {
                 if (idx == 3)
-                    inProcessor.GateSpeed = gateFilterValues[value];
+                    inProcessor.GateSpeed = gateFilterValues[sv];
             };
 
             globalMenu.HandleEncoderSwitchCallback = [](Menu* menu, bool value)
@@ -232,14 +233,14 @@ namespace Cyber
             calibrateMenu.Min[6] = -256;
             calibrateMenu.Min[7] = -256;
 
-            calibrateMenu.Steps[0] = 513;
-            calibrateMenu.Steps[1] = 513;
-            calibrateMenu.Steps[2] = 513;
-            calibrateMenu.Steps[3] = 513;
-            calibrateMenu.Steps[4] = 513;
-            calibrateMenu.Steps[5] = 513;
-            calibrateMenu.Steps[6] = 513;
-            calibrateMenu.Steps[7] = 513;
+            calibrateMenu.Steps[0] = 512;
+            calibrateMenu.Steps[1] = 512;
+            calibrateMenu.Steps[2] = 512;
+            calibrateMenu.Steps[3] = 512;
+            calibrateMenu.Steps[4] = 512;
+            calibrateMenu.Steps[5] = 512;
+            calibrateMenu.Steps[6] = 512;
+            calibrateMenu.Steps[7] = 512;
 
             calibrateMenu.Min[8] = 800;
             calibrateMenu.Min[9] = 800;
@@ -250,14 +251,14 @@ namespace Cyber
             calibrateMenu.Min[14] = 800;
             calibrateMenu.Min[15] = 800;
 
-            calibrateMenu.Steps[8] = 401;
-            calibrateMenu.Steps[9] = 401;
-            calibrateMenu.Steps[10] = 401;
-            calibrateMenu.Steps[11] = 401;
-            calibrateMenu.Steps[12] = 401;
-            calibrateMenu.Steps[13] = 401;
-            calibrateMenu.Steps[14] = 401;
-            calibrateMenu.Steps[15] = 401;
+            calibrateMenu.Steps[8] = 400;
+            calibrateMenu.Steps[9] = 400;
+            calibrateMenu.Steps[10] = 400;
+            calibrateMenu.Steps[11] = 400;
+            calibrateMenu.Steps[12] = 400;
+            calibrateMenu.Steps[13] = 400;
+            calibrateMenu.Steps[14] = 400;
+            calibrateMenu.Steps[15] = 400;
 
             calibrateMenu.Values[0] = 0.5f;
             calibrateMenu.Values[1] = 0.5f;
@@ -277,11 +278,10 @@ namespace Cyber
             calibrateMenu.Values[15] = 0.5f;
 
             for (int i = 8; i < 16; i++)
-                calibrateMenu.Formatters[i] = [](int idx, float v, char* s) { sprintf(s, "%.3f", calibrateMenu.GetScaledValue(idx)*0.001); };
+                calibrateMenu.Formatters[i] = [](int idx, float v, int sv, char* s) { sprintf(s, "%.3f", sv*0.001); };
 
-            calibrateMenu.ValueChangedCallback = [](int idx, float v)
+            calibrateMenu.ValueChangedCallback = [](int idx, float v, int sv)
             {
-                auto sv = calibrateMenu.GetScaledValue(idx);
                 if (idx < 4) inProcessor.OffsetCv[idx] = sv;
                 else if (idx < 8) inProcessor.OffsetMod[idx-4] = sv;
                 else if (idx < 12) inProcessor.ScaleCv[idx-8] = sv*0.001;
@@ -341,7 +341,7 @@ namespace Cyber
                     
                     if (newId < 0) newId = 0;
                     if (newId >= maxCount) newId = maxCount - 1;
-                    menu->SetValue(0, newId);
+                    menu->Values[0] = newId;
                 }
                 else
                 {
@@ -357,7 +357,7 @@ namespace Cyber
                     else
                     {
                         LogInfof("Setting newId to %d", newId);
-                        menu->SetValue(0, newId);
+                        menu->Values[0] = newId;
                     }
                 }
             };

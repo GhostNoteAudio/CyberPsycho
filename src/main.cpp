@@ -123,7 +123,7 @@ void loop()
 
     YieldAudio();
     
-    if (execPrint.Go())
+    if (false && execPrint.Go())
     {
         if (audio.BufferUnderrun)
         {

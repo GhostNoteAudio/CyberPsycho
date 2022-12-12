@@ -23,33 +23,20 @@ namespace Cyber
 
         menu.Steps[MODE] = 5;
         
-        menu.Formatters[LOWCUT] = [this](int idx, float value, char* target)
+        menu.Formatters[LOWCUT] = [this](int idx, float value, int sv, char* target)
         {
             float val = GetScaledParameter(idx);
             const char* str = idx == LOWCUT ? "Hz" : "";
             sprintf(target, "%.1f%s", val, str);
         };
 
-        menu.Formatters[DRIVE] = [this](int idx, float value, char* target)
+        menu.Formatters[MODE] = [this](int idx, float value, int sv, char* target)
         {
-            auto sv = menu.GetScaledValue(idx);
-            sprintf(target, "%d%%", sv);
-        };
-
-        menu.Formatters[MODE] = [this](int idx, float value, char* target)
-        {
-            auto sv = menu.GetScaledValue(idx);
             if (sv == MODE_BYPASS) strcpy(target, "Bypass");
             else if (sv == MODE_TANH) strcpy(target, "Tanh");
             else if (sv == MODE_ASSYM) strcpy(target, "Assym");
             else if (sv == MODE_CLIP) strcpy(target, "Clip");
             else if (sv == MODE_FOLD) strcpy(target, "Fold");
-        };
-
-        menu.Formatters[ROLLOFF] = [this](int idx, float value, char* target)
-        {
-            auto sv = menu.GetScaledValue(idx);
-            sprintf(target, "%d%%", sv);
         };
         
         menu.SetLength(4);
@@ -76,7 +63,7 @@ namespace Cyber
         if (idx == LOWCUT) return 10 + Utils::Resp3dec(menu.Values[LOWCUT]) * 1990;
         if (idx == DRIVE) return Utils::Resp3dec(menu.Values[DRIVE]);
         if (idx == MODE) return menu.GetScaledValue(MODE);
-        if (idx == ROLLOFF) return menu.Values[ROLLOFF];
+        if (idx == ROLLOFF) return 100 + Utils::Resp3dec(menu.Values[ROLLOFF]) * 19900;
         return 0;
     }
 
@@ -90,7 +77,7 @@ namespace Cyber
         float lowcutFreq = GetScaledParameter(LOWCUT);
         float drive = 1 + GetScaledParameter(DRIVE) * 20;
         int mode = menu.GetScaledValue(MODE);
-        float rolloff = 100 + GetScaledParameter(ROLLOFF)*19900;
+        float rolloff = GetScaledParameter(ROLLOFF);
 
         biquadHp.Frequency = lowcutFreq;
         biquadHp.Update();

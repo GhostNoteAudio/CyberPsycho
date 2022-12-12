@@ -28,10 +28,8 @@ namespace Cyber
             display->print("]");
         };
 
-        menu.Formatters[0] = [this](int idx, float val, char* dest) 
+        menu.Formatters[0] = [this](int idx, float val, int sv, char* dest) 
         {
-            int sv = menu.GetScaledValue(idx);
-
                  if (sv == (int)ModSource::Off) strcpy(dest, "Off");
             else if (sv == (int)ModSource::Mod1) strcpy(dest, "Mod 1");
             else if (sv == (int)ModSource::Mod2) strcpy(dest, "Mod 2");
@@ -51,10 +49,8 @@ namespace Cyber
             else if (sv == (int)ModSource::Lfo2) strcpy(dest, "Lfo 2");
         };
 
-        menu.Formatters[1] = [this](int idx, float val, char* dest) 
+        menu.Formatters[1] = [this](int idx, float val, int sv, char* dest) 
         {
-            int sv = menu.GetScaledValue(idx);
-
                  if (sv == (int)ModDest::Voice) strcpy(dest, "Voice");
             else if (sv == (int)ModDest::Generator) strcpy(dest, "Generator");
             else if (sv == (int)ModDest::Insert1) strcpy(dest, "Insert 1");
@@ -68,9 +64,8 @@ namespace Cyber
             else if (sv == (int)ModDest::ModMatrix) strcpy(dest, "Matrix");
         };
 
-        menu.Formatters[2] = [this](int idx, float val, char* dest) 
+        menu.Formatters[2] = [this](int idx, float val, int sv, char* dest) 
         {
-            int sv = menu.GetScaledValue(idx);
             if (this->Routes[activeRoute].Dest == ModDest::Voice)
                 strcpy(dest, voice->GetModLabel(sv));
             else if (this->Routes[activeRoute].Dest == ModDest::ModMatrix)
@@ -112,7 +107,7 @@ namespace Cyber
                 sprintf(dest, "%d", sv);
         };
 
-        menu.Formatters[3] = [](int idx, float val, char* dest) { sprintf(dest, "%.0f%%", (val-0.5) * 200.0f); };
+        menu.Formatters[3] = [](int idx, float val, int sv, char* dest) { sprintf(dest, "%.0f%%", (val-0.5) * 200.0f); };
 
         menu.Steps[0] = 16;
         menu.Steps[1] = 11;
@@ -135,24 +130,20 @@ namespace Cyber
             menu->Values[0] = (int)this->Routes[activeRoute].Source;
             menu->Values[1] = (int)this->Routes[activeRoute].Dest;
             menu->Values[2] = this->Routes[activeRoute].Slot;
-            menu->Values[3] = this->Routes[activeRoute].AmountRaw;
+            menu->Values[3] = this->Routes[activeRoute].Amount;
         };
 
-        menu.HandlePotCallback = [this](Menu* menu, int idx, float value)
+        menu.HandlePotCallback = [](Menu* menu, int idx, float value)
         {
             menu->SetValue(idx, value);
         };
 
-        menu.ValueChangedCallback = [this](int idx, int16_t val)
+        menu.ValueChangedCallback = [this](int idx, float val, int sv)
         {
-            if (idx == 0) this->Routes[activeRoute].Source = (ModSource)val;
-            if (idx == 1) this->Routes[activeRoute].Dest = (ModDest)val;
-            if (idx == 2) this->Routes[activeRoute].Slot = val;
-            if (idx == 3)
-            {
-                this->Routes[activeRoute].AmountRaw = val;
-                this->Routes[activeRoute].Amount = val / 1023.0f;
-            }
+            if (idx == 0) this->Routes[activeRoute].Source = (ModSource)sv;
+            if (idx == 1) this->Routes[activeRoute].Dest = (ModDest)sv;
+            if (idx == 2) this->Routes[activeRoute].Slot = sv;
+            if (idx == 3) this->Routes[activeRoute].Amount = val;
         };
     }
 }

@@ -33,7 +33,7 @@ namespace Cyber
         menu.Values[6] = 0.5f;
         menu.Values[7] = 0.5f;
 
-        menu.Formatters[2] = [this](int idx, float value, char* target)
+        menu.Formatters[2] = [this](int idx, float value, int sv, char* target)
         {
             float freq = GetScaledParameter(idx);
             sprintf(target, "%.0f Hz", freq);

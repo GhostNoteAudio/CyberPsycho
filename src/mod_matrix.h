@@ -15,7 +15,6 @@ namespace Cyber
         ModDest Dest;
         uint8_t Slot;
         float Amount;
-        int16_t AmountRaw;
     };
 
     const int ModRouteCount = 16;

@@ -15,8 +15,6 @@ namespace Cyber
         menu.Captions[DRIVE] = "Drive";
         menu.Captions[MODE] = "Mode";
 
-        menu.Steps[CUTOFF] = 1024;
-        menu.Steps[RESONANCE] = 1024;
         menu.Steps[MODE] = 7;
 
         menu.Values[CUTOFF] = 0.8f;
@@ -24,9 +22,9 @@ namespace Cyber
         menu.Values[DRIVE] = 0;
         menu.Values[MODE] = 0;
 
-        menu.Formatters[MODE] = [this](int idx, float value, char* target)
+        menu.Formatters[MODE] = [this](int idx, float value, int sv, char* target)
         {
-            auto val = menu.GetScaledValue(idx);
+            auto val = sv;
             if (val == 0) strcpy(target, "Bypassed");
             else if (val == 1) strcpy(target, "Lp Ladder 4P");
             else if (val == 2) strcpy(target, "Lp Ladder 2P");

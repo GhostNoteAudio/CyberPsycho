@@ -116,7 +116,7 @@ namespace Cyber
             menu.Values[18] = 1;
             menu.Values[19] = 1;
 
-            auto formatEnvTime = [this](int idx, float val, char* dest)
+            auto formatEnvTime = [this](int idx, float val, int sv, char* dest)
             {
                 float sec = Utils::Resp3dec(val) * 20;
                 if (sec <= 1)
@@ -126,7 +126,7 @@ namespace Cyber
                 else
                     sprintf(dest, "%.1fs", sec);
             };
-            auto formatFreq = [this](int idx, float val, char* dest)
+            auto formatFreq = [this](int idx, float val, int sv, char* dest)
             { 
                 float f = Utils::Resp4dec(val) * 200;
                 if (f < 1)
@@ -138,10 +138,10 @@ namespace Cyber
                 else
                     sprintf(dest, "%.0fHz", f);
             };
-            auto formatOnOff = [this](int idx, float val, char* dest){ menu.GetScaledValue(idx) == 0 ? strcpy(dest, "Off") : strcpy(dest, "On"); };
-            auto formatPolarity = [this](int idx, float val, char* dest){ menu.GetScaledValue(idx) == 0 ? strcpy(dest, "Bipolar") : strcpy(dest, "Unipolar"); };
-            auto formatShape = [this](int idx, float val, char* dest){ strcpy(dest, Modules::Lfo::GetShapeName(menu.GetScaledValue(idx))); };
-            auto formatEnvShape = [this](int idx, float val, char* dest){ menu.GetScaledValue(idx) == 0 ? strcpy(dest, "Lin") : strcpy(dest, "Exp"); };
+            auto formatOnOff = [this](int idx, float val, int sv, char* dest){ sv == 0 ? strcpy(dest, "Off") : strcpy(dest, "On"); };
+            auto formatPolarity = [this](int idx, float val, int sv, char* dest){ sv == 0 ? strcpy(dest, "Bipolar") : strcpy(dest, "Unipolar"); };
+            auto formatShape = [this](int idx, float val, int sv, char* dest){ strcpy(dest, Modules::Lfo::GetShapeName(sv)); };
+            auto formatEnvShape = [this](int idx, float val, int sv, char* dest){ sv == 0 ? strcpy(dest, "Lin") : strcpy(dest, "Exp"); };
 
             menu.Formatters[0] = formatEnvTime;
             menu.Formatters[1] = formatEnvTime;
@@ -166,10 +166,8 @@ namespace Cyber
             menu.Formatters[18] = formatEnvShape;
             menu.Formatters[19] = formatEnvShape;
 
-            menu.ValueChangedCallback = [this](int idx, float val)
+            menu.ValueChangedCallback = [this](int idx, float val, int sv)
             {
-                auto sv = menu.GetScaledValue(idx);
-
                 //if (idx <= 8 || idx == 12 ) Params[idx] = val;
 
                      if (idx == 9) lfo1.Waveshape = (Modules::Lfo::Shape)sv;
