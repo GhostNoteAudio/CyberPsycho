@@ -215,7 +215,7 @@ namespace Cyber
             {
                 YieldAudio();
                 
-                int item;
+                int item = 999;
                 if (k == 0) item = TopItem + 0;
                 if (k == 1) item = TopItem + 3;
                 if (k == 2) item = TopItem + 1;

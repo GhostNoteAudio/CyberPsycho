@@ -8,7 +8,6 @@
 #include <deque>
 #include "Constants.h"
 
-
 ARDUINO_TEENSY_DMA_SPI_NAMESPACE_BEGIN
 
 class MasterBase
@@ -76,6 +75,10 @@ protected:
 
 public:
 
+    // Set your possible chip select pins here, up to 4 are supported
+    // Any pins defined here will be set to inactive at the start of a transaction
+    uint8_t csPins[4] = {255, 255, 255, 255};
+
     virtual ~MasterBase() {}
 
     bool begin(SPIClass& spic, const SPISettings& setting, const bool active_low)
@@ -125,7 +128,7 @@ public:
             t.size = size;
             t.cs_pin = cs_pin;
             transactions.emplace_back(t);
-            //beginTransaction();
+            beginTransaction();
         }
 
         return true;
@@ -169,60 +172,57 @@ public:
         return spi;
     }
 
-//protected:
+protected:
 
     void beginTransaction()
     {
-        ATOMIC_BLOCK(ATOMIC_RESTORESTATE)
+        if (transactions.empty() || b_in_transaction) return;
+
+        b_in_transaction = true;
+        spi_transaction_t& trans = transactions.front();
+
+        if (trans.rx_buffer)
+            dmarx()->destinationBuffer(trans.rx_buffer, trans.size);
+        else
         {
-            if (transactions.empty() || b_in_transaction) return;
-
-            b_in_transaction = true;
-            spi_transaction_t& trans = transactions.front();
-
-            if (trans.rx_buffer)
-                dmarx()->destinationBuffer(trans.rx_buffer, trans.size);
-            else
-            {
-                dmarx()->destination(dummy);
-                dmarx()->transferCount(trans.size);
-            }
-
-            if (trans.tx_buffer)
-                dmatx()->sourceBuffer(trans.tx_buffer, trans.size);
-            else
-            {
-                dmatx()->source(dummy);
-                dmatx()->transferCount(trans.size);
-            }
-
-            initTransaction();
-
-            spi->beginTransaction(spi_setting);
-            current_cs_pin = trans.cs_pin;
-            digitalWrite(current_cs_pin, !b_active_low);
-            //Serial.print("Begin CS ");
-            //Serial.println(current_cs_pin);
-
-            dmarx()->enable();
-            dmatx()->enable();
+            dmarx()->destination(dummy);
+            dmarx()->transferCount(trans.size);
         }
+
+        if (trans.tx_buffer)
+            dmatx()->sourceBuffer(trans.tx_buffer, trans.size);
+        else
+        {
+            dmatx()->source(dummy);
+            dmatx()->transferCount(trans.size);
+        }
+
+        initTransaction();
+
+        spi->beginTransaction(spi_setting);
+        current_cs_pin = trans.cs_pin;
+
+        // Set all CS pins to not active
+        if (csPins[0] != 255) digitalWriteFast(csPins[0], b_active_low);
+        if (csPins[1] != 255) digitalWriteFast(csPins[1], b_active_low);
+        if (csPins[2] != 255) digitalWriteFast(csPins[2], b_active_low);
+        if (csPins[3] != 255) digitalWriteFast(csPins[3], b_active_low);
+        // set the current cs pin to active
+        digitalWriteFast(current_cs_pin, !b_active_low);
+        
+        dmarx()->enable();
+        dmatx()->enable();
     }
 
     void endTransaction()
     {
-        ATOMIC_BLOCK(ATOMIC_RESTORESTATE)
-        {
-            digitalWrite(current_cs_pin, b_active_low);
-            //Serial.print("End CS ");
-            //Serial.println(current_cs_pin);
+        digitalWriteFast(current_cs_pin, b_active_low);
 
-            current_cs_pin = 255;
-            spi->endTransaction();
-            transactions.pop_front();
-            b_in_transaction = false;
-            clearTransaction();
-        }
+        current_cs_pin = 255;
+        spi->endTransaction();
+        transactions.pop_front();
+        b_in_transaction = false;
+        clearTransaction();
     }
 
     virtual bool initDmaTx() = 0;

@@ -26,7 +26,12 @@ namespace Cyber
         digitalWrite(PIN_CS_DAC0, HIGH);
         digitalWrite(PIN_CS_DAC1, HIGH);
         digitalWrite(PIN_CS_ADC, HIGH);
+        digitalWrite(PIN_CS_SD, HIGH);
         digitalWrite(PIN_LATCH_DAC, HIGH);
+        TsyDMASPI0.csPins[0] = PIN_CS_DAC0;
+        TsyDMASPI0.csPins[1] = PIN_CS_DAC1;
+        TsyDMASPI0.csPins[2] = PIN_CS_ADC;
+        TsyDMASPI0.csPins[3] = PIN_CS_SD;
         TsyDMASPI0.begin(SPISettings(24000000, MSBFIRST, SPI_MODE0));
         PrepAdcBuffer();
     }
@@ -47,15 +52,7 @@ namespace Cyber
     {
         //LogInfo("Queueing adc sampling");
         PrepAdcBuffer();
-        memset(AdcRxBuf, 0, 16);
         TsyDMASPI0.queue(AdcTxBuf, AdcRxBuf, 16, PIN_CS_ADC);
-        // TsyDMASPI0.queue(&AdcTxBuf[2], &AdcRxBuf[2], 2, PIN_CS_ADC);
-        // TsyDMASPI0.queue(&AdcTxBuf[4], &AdcRxBuf[4], 2, PIN_CS_ADC);
-        // TsyDMASPI0.queue(&AdcTxBuf[6], &AdcRxBuf[6], 2, PIN_CS_ADC);
-        // TsyDMASPI0.queue(&AdcTxBuf[8], &AdcRxBuf[8], 2, PIN_CS_ADC);
-        // TsyDMASPI0.queue(&AdcTxBuf[10], &AdcRxBuf[10], 2, PIN_CS_ADC);
-        // TsyDMASPI0.queue(&AdcTxBuf[12], &AdcRxBuf[12], 2, PIN_CS_ADC);
-        // TsyDMASPI0.queue(&AdcTxBuf[14], &AdcRxBuf[14], 2, PIN_CS_ADC);
     }
 
     void AudioIo::ProcessAdcValues()
@@ -121,8 +118,6 @@ namespace Cyber
             return;
         }
 
-        // wait for value from previous iteration to be complete. Hopefully should never block
-        TsyDMASPI0.yield();
         // Emit the DAC values that were previously sent to the output
         LatchDac();
         // Process the newly received ADC values
@@ -143,8 +138,8 @@ namespace Cyber
         
         SetDac(0, BufTransmitting->Out[0][bufferIdx]);
         SetDac(1, BufTransmitting->Out[1][bufferIdx]);
-        //SetDac(2, BufTransmitting->Out[2][bufferIdx]);
-        //SetDac(3, BufTransmitting->Out[3][bufferIdx]);
+        SetDac(2, BufTransmitting->Out[2][bufferIdx]);
+        SetDac(3, BufTransmitting->Out[3][bufferIdx]);
         SampleAdc();
 
         bufferIdx++;
@@ -164,7 +159,6 @@ namespace Cyber
         }
 
         GetPerfIo()->Stop();
-        TsyDMASPI0.beginTransaction();
         //LogInfo("------ Process audio END -------");
     }
 

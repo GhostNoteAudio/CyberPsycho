@@ -2,7 +2,7 @@
 
 namespace Cyber
 {
-    const int SAMPLERATE = 44100;
+    const int SAMPLERATE = 48000;
     const int BUFFER_SIZE = 32;
     #define VERSION "0.1.0"
 }

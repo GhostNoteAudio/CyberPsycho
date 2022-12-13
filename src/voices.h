@@ -20,13 +20,13 @@ namespace Cyber
         int8_t PitchOffset = 0;
         int8_t MidiChannel = 0;
         int8_t AudioInLeft = 0;
-        int8_t AudioInRight = 0;
+        int8_t AudioInRight = 1;
         int8_t AudioOutLeft = 0;
-        int8_t AudioOutRight = 0;
+        int8_t AudioOutRight = 1;
         int8_t CvIn = 0;
         int8_t GateIn = 0;
         int8_t AmpControl = 0;
-        bool StereoProcessing = false;
+        bool StereoProcessing = true;
         
         Generator* Gen = nullptr;
         Generator* Inserts[4] = {nullptr};

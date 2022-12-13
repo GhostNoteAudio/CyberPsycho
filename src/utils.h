@@ -368,8 +368,8 @@ namespace Cyber
             idxA = idxA & 0x7FF;
             idxB = idxB & 0x7FF;
 
-            auto a = Note2HzData[idxA];
-            auto b = Note2HzData[idxB];
+            auto a = SinData[idxA];
+            auto b = SinData[idxB];
             return a * (1-rem) + b * rem;
         }
     }

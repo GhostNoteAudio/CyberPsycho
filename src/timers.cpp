@@ -13,7 +13,8 @@ namespace Cyber
     float GetCpuLoad()
     {
         float ioLoad = perfIo.PeriodAvg() / MaxTimeInterruptMicros;
-        float processYieldLoad = (perfAudio.PeriodAvg() + perfYield.PeriodDecay()) / MaxTimeAudioProcessingMicros;
+        //float processYieldLoad = (perfAudio.PeriodAvg() + perfYield.PeriodDecay()) / MaxTimeAudioProcessingMicros;
+        float processYieldLoad = perfAudio.PeriodAvg() / MaxTimeAudioProcessingMicros;
         float totalLoad = ioLoad + processYieldLoad;
         return totalLoad;
     }
