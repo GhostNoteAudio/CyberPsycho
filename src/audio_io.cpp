@@ -22,44 +22,49 @@ namespace Cyber
     }
 
     void AudioIo::Init()
-    {        
-        pinMode(PIN_CS_DAC0, OUTPUT);
-        pinMode(PIN_CS_DAC1, OUTPUT);
-        pinMode(PIN_CS_ADC, OUTPUT);
-        pinMode(PIN_LATCH_DAC, OUTPUT);
+    {
         digitalWrite(PIN_CS_DAC0, HIGH);
         digitalWrite(PIN_CS_DAC1, HIGH);
         digitalWrite(PIN_CS_ADC, HIGH);
         digitalWrite(PIN_LATCH_DAC, HIGH);
-        TsyDMASPI0.begin(SPISettings(20000000, MSBFIRST, SPI_MODE0));
+        TsyDMASPI0.begin(SPISettings(24000000, MSBFIRST, SPI_MODE0));
         PrepAdcBuffer();
     }
 
     void AudioIo::PrepAdcBuffer()
     {
-        // NOTICE! Something weird happens during encoding. The output value seems to be shifted by 2 bytes.
-        // So message 1 contains the value for reading 0, 2 for 1.... 7 for 6 and 0 for 7.
-        // This is a workaround, we actually just read ADC0 twice, and then it's pretty simple to decode.
-        // Not sure if this is an undocumented behaviour of the chip or if I've messed something up in code.
-        for (int i = 0; i < 9; i++)
+        // during each cycle, we send the channel adddress for the NEXT conversion.
+        // This does mean channel 0 lags by one sample compared to the others, but shouldn't be an issue
+        // to prevent lag, could send a "primer" message and set the next read channel to 0, but that requires 2 extra bytes transmitted
+        for (int i = 0; i < 8; i++)
         {
-            AdcTxBuf[2*i+0] = (i << 3) & 0b00111000;
+            AdcTxBuf[2*i+0] = ((i+1) << 3) & 0b00111000;
             AdcTxBuf[2*i+1] = 0;
         }
     }
 
     void AudioIo::SampleAdc()
     {
-        TsyDMASPI0.queue(AdcTxBuf, AdcRxBuf, 18, PIN_CS_ADC);
+        //LogInfo("Queueing adc sampling");
+        PrepAdcBuffer();
+        memset(AdcRxBuf, 0, 16);
+        TsyDMASPI0.queue(AdcTxBuf, AdcRxBuf, 16, PIN_CS_ADC);
+        // TsyDMASPI0.queue(&AdcTxBuf[2], &AdcRxBuf[2], 2, PIN_CS_ADC);
+        // TsyDMASPI0.queue(&AdcTxBuf[4], &AdcRxBuf[4], 2, PIN_CS_ADC);
+        // TsyDMASPI0.queue(&AdcTxBuf[6], &AdcRxBuf[6], 2, PIN_CS_ADC);
+        // TsyDMASPI0.queue(&AdcTxBuf[8], &AdcRxBuf[8], 2, PIN_CS_ADC);
+        // TsyDMASPI0.queue(&AdcTxBuf[10], &AdcRxBuf[10], 2, PIN_CS_ADC);
+        // TsyDMASPI0.queue(&AdcTxBuf[12], &AdcRxBuf[12], 2, PIN_CS_ADC);
+        // TsyDMASPI0.queue(&AdcTxBuf[14], &AdcRxBuf[14], 2, PIN_CS_ADC);
     }
 
     void AudioIo::ProcessAdcValues()
     {
         for (int i = 0; i < 8; i++)
         {
-            // Offset by 2 bytes, because we discard first 2 values and read the 17th and 18th bytes. See comment above
-            uint8_t byte0 = AdcRxBuf[2*i+2]; 
-            uint8_t byte1 = AdcRxBuf[2*i+3];
+            uint8_t byte0 = AdcRxBuf[2*i+0]; 
+            uint8_t byte1 = AdcRxBuf[2*i+1];
+            //LogInfof("Adc %d: %d %d", i, byte0, byte1);
             AdcValues[i] = ((byte0 & 0x0F) << 8) | byte1;
         }
     }
@@ -96,6 +101,7 @@ namespace Cyber
         BufferUnderrun = false;
         bufferIdx = 0;
         ioLoop.begin(InvokeProcessAudio, 1000000.0/SAMPLERATE);
+        //ioLoop.begin(InvokeProcessAudio, 1000000);
     }
 
     void AudioIo::StopProcessing()
@@ -105,6 +111,8 @@ namespace Cyber
 
     void AudioIo::ProcessAudioX()
     {
+        
+        //LogInfo("------ Process audio begin -------");
         GetPerfIo()->Start();
         
         if (TsyDMASPI0.remained() > 0)
@@ -133,15 +141,16 @@ namespace Cyber
         BufTransmitting->Gate[2][bufferIdx] = digitalReadFast(PIN_GATE2);
         BufTransmitting->Gate[3][bufferIdx] = digitalReadFast(PIN_GATE3);
         
-        SampleAdc();
         SetDac(0, BufTransmitting->Out[0][bufferIdx]);
         SetDac(1, BufTransmitting->Out[1][bufferIdx]);
-        SetDac(2, BufTransmitting->Out[2][bufferIdx]);
-        SetDac(3, BufTransmitting->Out[3][bufferIdx]);
+        //SetDac(2, BufTransmitting->Out[2][bufferIdx]);
+        //SetDac(3, BufTransmitting->Out[3][bufferIdx]);
+        SampleAdc();
 
         bufferIdx++;
         if (bufferIdx == BUFFER_SIZE)
         {
+            //LogInfof("Switching buffers at size %d", bufferIdx);
             if (!CallbackComplete)
             {
                 BufferUnderrun = true;
@@ -155,6 +164,8 @@ namespace Cyber
         }
 
         GetPerfIo()->Stop();
+        TsyDMASPI0.beginTransaction();
+        //LogInfo("------ Process audio END -------");
     }
 
     bool AudioIo::Available()

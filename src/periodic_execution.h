@@ -8,6 +8,8 @@ namespace Cyber
         int period = 1000;
         int lastTs = 0;
     public:
+        bool active = true;
+
         PeriodicExecution(int millis)
         {
             period = millis;
@@ -29,7 +31,7 @@ namespace Cyber
             if (m - lastTs >= period)
             {
                 lastTs = m;
-                return true;
+                return active;
             }
             return false;
         }

@@ -3,6 +3,26 @@
 
 namespace Cyber
 {
+    enum MenuItems
+    {
+        _InGain = 0,
+        _OutGain,
+        _StereoProcessing,
+        _PitchOffset,
+        _AmpControl,
+        _LoadPreset,
+        _SavePreset,
+        _InitVoice,
+        _ClearAllMods,
+        _MidiCh,
+        _AudioInL,
+        _AudioInR,
+        _AudioOutL,
+        _AudioOutR,
+        _CVIn,
+        _GateIn,
+    };
+
     namespace Voices
     {
         Voice Voices[4];
@@ -39,6 +59,7 @@ namespace Cyber
         args.Bpm = 120;
         args.Gate = gate;
         args.Cv = cv;
+        args.Stereo = StereoProcessing;
         modulators.GetModulationFast = [this](ModDest dest, uint8_t slot) { return matrix.GetModulationFast(dest, slot); };
         modulators.GetModulationSlow = [this](ModDest dest, uint8_t slot) { return matrix.GetModulationSlow(dest, slot); };
         modulators.Process(args);
@@ -109,88 +130,103 @@ namespace Cyber
 
     void Voice::InitMenu()
     {
-        menu.Captions[0] = "In Gain";
-        menu.Captions[1] = "Out Gain";
-        menu.Captions[2] = "Pitch Offset";
-        menu.Captions[3] = "Amp Control";
-        menu.Captions[4] = "> Load Preset";
-        menu.Captions[5] = "> Save Preset";
-        menu.Captions[6] = "> Init Voice";
-        menu.Captions[7] = "> Clear All Mods";
-        menu.Captions[8] = "Midi Ch";
-        menu.Captions[9] = "Audio In L";
-        menu.Captions[10] = "Audio In R";
-        menu.Captions[11] = "Audio Out L";
-        menu.Captions[12] = "Audio Out R";
-        menu.Captions[13] = "CV In";
-        menu.Captions[14] = "Gate In";
+        menu.Captions[_InGain] = "In Gain";
+        menu.Captions[_OutGain] = "Out Gain";
+        menu.Captions[_StereoProcessing] = "Stereo";
+        menu.Captions[_PitchOffset] = "Pitch Offset";
+        menu.Captions[_AmpControl] = "Amp Control";
+        menu.Captions[_LoadPreset] = "> Load Preset";
+        menu.Captions[_SavePreset] = "> Save Preset";
+        menu.Captions[_InitVoice] = "> Init Voice";
+        menu.Captions[_ClearAllMods] = "> Clear All Mods";
+        menu.Captions[_MidiCh] = "Midi Ch";
+        menu.Captions[_AudioInL] = "Audio In L";
+        menu.Captions[_AudioInR] = "Audio In R";
+        menu.Captions[_AudioOutL] = "Audio Out L";
+        menu.Captions[_AudioOutR] = "Audio Out R";
+        menu.Captions[_CVIn] = "CV In";
+        menu.Captions[_GateIn] = "Gate In";
 
-        menu.Values[9] = 0.3;
-        menu.Values[10] = 0.3;
-        menu.Values[11] = 0.3;
-        menu.Values[12] = 0.3;
-        menu.Values[13] = 0.3;
-        menu.Values[14] = 0.3;
+        menu.Values[_AudioInL] = 0.3;
+        menu.Values[_AudioInR] = 0.3;
+        menu.Values[_StereoProcessing] = 0.0;
+        menu.Values[_AudioOutL] = 0.3;
+        menu.Values[_AudioOutR] = 0.3;
+        menu.Values[_CVIn] = 0.3;
+        menu.Values[_GateIn] = 0.3;
 
-        menu.Min[2] = -36;
+        menu.Min[_PitchOffset] = -36;
 
-        menu.Steps[0] = 24;
-        menu.Steps[1] = 24;
-        menu.Steps[2] = 36*2;
-        menu.Steps[3] = 2;
-        menu.Steps[8] = 16+1;
-        menu.Steps[9] = 4;
-        menu.Steps[10] = 4;
-        menu.Steps[11] = 4;
-        menu.Steps[12] = 4;
-        menu.Steps[13] = 4;
-        menu.Steps[14] = 4;
+        menu.Steps[_InGain] = 24;
+        menu.Steps[_OutGain] = 24;
+        menu.Steps[_StereoProcessing] = 1;
+        menu.Steps[_PitchOffset] = 36*2;
+        menu.Steps[_AmpControl] = 2;
+        menu.Steps[_MidiCh] = 16+1;
+        menu.Steps[_AudioInL] = 4;
+        menu.Steps[_AudioInR] = 4;
+        menu.Steps[_AudioOutL] = 4;
+        menu.Steps[_AudioOutR] = 4;
+        menu.Steps[_CVIn] = 4;
+        menu.Steps[_GateIn] = 4;
 
 
         auto inChannelFormatter = [this](int idx, float val, int sv, char* dest)
         {
-            if (sv == 0) strcpy(dest, "Off");
-            else sprintf(dest, "%d", sv);
+            if (sv == 0)
+            {
+                strcpy(dest, "Off");
+                return;
+            }
+
+            if (idx == _AudioInR && !StereoProcessing)
+                strcpy(dest, "--");
+            else if (idx == _AudioOutR && !StereoProcessing)
+                strcpy(dest, "--");
+            else 
+                sprintf(dest, "%d", sv);
         };
 
-        menu.Formatters[0] = [this](int idx, float v, int sv, char* s) { sprintf(s, "%.1fdB", -12.f + sv); };
-        menu.Formatters[1] = [this](int idx, float v, int sv, char* s) { sprintf(s, "%.1fdB", -12.f + sv); };
-        menu.Formatters[3] = [this](int idx, float v, int sv, char* s) 
+        menu.Formatters[_InGain] = [this](int idx, float v, int sv, char* s) { sprintf(s, "%.1fdB", -12.f + sv); };
+        menu.Formatters[_OutGain] = [this](int idx, float v, int sv, char* s) { sprintf(s, "%.1fdB", -12.f + sv); };
+        menu.Formatters[_StereoProcessing] = [this](int idx, float v, int sv, char* s) { strcpy(s, sv == 1 ? "Active" : "Disabled"); };
+        menu.Formatters[_AmpControl] = [this](int idx, float v, int sv, char* s) 
         { 
             if (sv == 0) strcpy(s, "Off");
             else if (sv == 1) strcpy(s, "Gate");
             else if (sv == 2) strcpy(s, "Env 1");
         };
-        menu.Formatters[4] = [](int idx, float v, int sv, char* s) { strcpy(s, ""); };
-        menu.Formatters[5] = [](int idx, float v, int sv, char* s) { strcpy(s, ""); };
-        menu.Formatters[6] = [](int idx, float v, int sv, char* s) { strcpy(s, ""); };
-        menu.Formatters[7] = [](int idx, float v, int sv, char* s) { strcpy(s, ""); };
-        menu.Formatters[8] = [this](int idx, float v, int sv, char* s) 
+        menu.Formatters[_LoadPreset] = [](int idx, float v, int sv, char* s) { strcpy(s, ""); };
+        menu.Formatters[_SavePreset] = [](int idx, float v, int sv, char* s) { strcpy(s, ""); };
+        menu.Formatters[_InitVoice] = [](int idx, float v, int sv, char* s) { strcpy(s, ""); };
+        menu.Formatters[_ClearAllMods] = [](int idx, float v, int sv, char* s) { strcpy(s, ""); };
+        menu.Formatters[_MidiCh] = [this](int idx, float v, int sv, char* s) 
         { 
             if (sv == 0) strcpy(s, "Off");
             else if (sv == 1) strcpy(s, "Omni");
             else sprintf(s, "%d", sv-1); 
         };
-        menu.Formatters[9] = inChannelFormatter;
-        menu.Formatters[10] = inChannelFormatter;
-        menu.Formatters[11] = inChannelFormatter;
-        menu.Formatters[12] = inChannelFormatter;
-        menu.Formatters[13] = inChannelFormatter;
-        menu.Formatters[14] = inChannelFormatter;
+        menu.Formatters[_AudioInL] = inChannelFormatter;
+        menu.Formatters[_AudioInR] = inChannelFormatter;
+        menu.Formatters[_AudioOutL] = inChannelFormatter;
+        menu.Formatters[_AudioOutR] = inChannelFormatter;
+        menu.Formatters[_CVIn] = inChannelFormatter;
+        menu.Formatters[_GateIn] = inChannelFormatter;
 
         menu.ValueChangedCallback = [this](int idx, float val, int sv)
         {
-            if (idx == 0) InGain = Utils::DB2Gainf(-12.0f + val * 24.f);
-            if (idx == 1) OutGain = Utils::DB2Gainf(-12.0f + val * 24.f);
-            if (idx == 2) PitchOffset = sv;
-            if (idx == 3) AmpControl = sv;
-            if (idx == 8) MidiChannel = sv - 2; // -2 = Off, -1 = Omni, 0-15 = channel
-            if (idx == 9) AudioInLeft = sv - 1; // -1 = off, 0-3 = channel
-            if (idx == 10) AudioInRight = sv - 1;
-            if (idx == 11) AudioOutLeft = sv - 1;
-            if (idx == 12) AudioOutRight = sv - 1;
-            if (idx == 13) CvIn = sv - 1;
-            if (idx == 14) GateIn = sv - 1;
+            if (idx == _InGain) InGain = Utils::DB2Gainf(-12.0f + val * 24.f);
+            if (idx == _OutGain) OutGain = Utils::DB2Gainf(-12.0f + val * 24.f);
+            if (idx == _StereoProcessing) StereoProcessing = sv == 1;
+            if (idx == _PitchOffset) PitchOffset = sv;
+            if (idx == _AmpControl) AmpControl = sv;
+            if (idx == _MidiCh) MidiChannel = sv - 2; // -2 = Off, -1 = Omni, 0-15 = channel
+            if (idx == _AudioInL) AudioInLeft = sv - 1; // -1 = off, 0-3 = channel
+            if (idx == _AudioInR) AudioInRight = sv - 1;
+            if (idx == _AudioOutL) AudioOutLeft = sv - 1;
+            if (idx == _AudioOutR) AudioOutRight = sv - 1;
+            if (idx == _CVIn) CvIn = sv - 1;
+            if (idx == _GateIn) GateIn = sv - 1;
         };
 
         menu.SetLength(15);

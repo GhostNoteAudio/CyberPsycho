@@ -53,6 +53,7 @@ struct Master0 : public MasterBase
         dmatx()->triggerAtHardwareEvent(DMAMUX_SOURCE_LPSPI4_TX);
         if (dmatx()->error())
         {
+            Serial.println("ERROR DELETING 1");
             delete dmatx();
             return false;
         }
@@ -74,6 +75,7 @@ struct Master0 : public MasterBase
         dmarx()->interruptAtCompletion();
         if (dmarx()->error())
         {
+            Serial.println("ERROR DELETING 2");
             delete dmarx();
             return false;
         }
@@ -112,6 +114,7 @@ static TsyDMASPI::Master0 TsyDMASPI0;
 
 inline void tsydmaspi_rxisr_0()
 {
+    //Serial.println("ISR");
     TsyDMASPI0.dmarx()->clearInterrupt();
     TsyDMASPI0.next();
 }

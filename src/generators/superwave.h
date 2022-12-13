@@ -12,15 +12,16 @@ namespace Cyber
         Menu menu;
         float pitch = 48;
         float gainAdjust = 1.0;
-        uint32_t phasor[7] = {0};
+        uint32_t phasorL[7] = {0};
+        uint32_t phasorR[7] = {0};
         float volumes[7] = {0};
-        Modules::Biquad biq;
+        Modules::Biquad biqL, biqR;
         
     public:
         Superwave();
         virtual Menu* GetMenu() override;
         virtual void Process(GeneratorArgs args) override;
-        void Reset(float pitchHz = -1);
+        void Update(float pitchHz = -1);
 
     private:
         float GetScaledParameter(int idx);

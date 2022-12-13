@@ -99,11 +99,6 @@ public:
     virtual DMAChannel* dmarx() = 0;
     virtual DMAChannel* dmatx() = 0;
 
-    bool transfer(const uint8_t* tx_buf, const size_t size, uint8_t cs_pin)
-    {
-        return transfer(tx_buf, nullptr, size, cs_pin);
-    }
-
     bool transfer(const uint8_t* tx_buf, volatile uint8_t* rx_buf, const size_t size, const uint8_t cs_pin)
     {
         if (queue(tx_buf, rx_buf, size, cs_pin))
@@ -112,11 +107,6 @@ public:
             return false;
 
         return true;
-    }
-
-    bool queue(const uint8_t* tx_buf, const size_t size, const uint8_t cs_pin)
-    {
-        return queue(tx_buf, nullptr, size, cs_pin);
     }
 
     bool queue(const uint8_t* tx_buf, volatile uint8_t* rx_buf, const size_t size, const uint8_t cs_pin)
@@ -135,7 +125,7 @@ public:
             t.size = size;
             t.cs_pin = cs_pin;
             transactions.emplace_back(t);
-            beginTransaction();
+            //beginTransaction();
         }
 
         return true;
@@ -179,49 +169,60 @@ public:
         return spi;
     }
 
-protected:
+//protected:
 
     void beginTransaction()
     {
-        if (transactions.empty() || b_in_transaction) return;
-
-        b_in_transaction = true;
-        spi_transaction_t& trans = transactions.front();
-
-        if (trans.rx_buffer)
-            dmarx()->destinationBuffer(trans.rx_buffer, trans.size);
-        else
+        ATOMIC_BLOCK(ATOMIC_RESTORESTATE)
         {
-            dmarx()->destination(dummy);
-            dmarx()->transferCount(trans.size);
+            if (transactions.empty() || b_in_transaction) return;
+
+            b_in_transaction = true;
+            spi_transaction_t& trans = transactions.front();
+
+            if (trans.rx_buffer)
+                dmarx()->destinationBuffer(trans.rx_buffer, trans.size);
+            else
+            {
+                dmarx()->destination(dummy);
+                dmarx()->transferCount(trans.size);
+            }
+
+            if (trans.tx_buffer)
+                dmatx()->sourceBuffer(trans.tx_buffer, trans.size);
+            else
+            {
+                dmatx()->source(dummy);
+                dmatx()->transferCount(trans.size);
+            }
+
+            initTransaction();
+
+            spi->beginTransaction(spi_setting);
+            current_cs_pin = trans.cs_pin;
+            digitalWrite(current_cs_pin, !b_active_low);
+            //Serial.print("Begin CS ");
+            //Serial.println(current_cs_pin);
+
+            dmarx()->enable();
+            dmatx()->enable();
         }
-
-        if (trans.tx_buffer)
-            dmatx()->sourceBuffer(trans.tx_buffer, trans.size);
-        else
-        {
-            dmatx()->source(dummy);
-            dmatx()->transferCount(trans.size);
-        }
-
-        initTransaction();
-
-        spi->beginTransaction(spi_setting);
-        current_cs_pin = trans.cs_pin;
-        digitalWriteFast(current_cs_pin, !b_active_low);
-
-        dmarx()->enable();
-        dmatx()->enable();
     }
 
     void endTransaction()
     {
-        digitalWriteFast(current_cs_pin, b_active_low);
-        current_cs_pin = 255;
-        spi->endTransaction();
-        transactions.pop_front();
-        b_in_transaction = false;
-        clearTransaction();
+        ATOMIC_BLOCK(ATOMIC_RESTORESTATE)
+        {
+            digitalWrite(current_cs_pin, b_active_low);
+            //Serial.print("End CS ");
+            //Serial.println(current_cs_pin);
+
+            current_cs_pin = 255;
+            spi->endTransaction();
+            transactions.pop_front();
+            b_in_transaction = false;
+            clearTransaction();
+        }
     }
 
     virtual bool initDmaTx() = 0;

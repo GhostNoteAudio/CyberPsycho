@@ -26,8 +26,7 @@ namespace Cyber
         int8_t CvIn = 0;
         int8_t GateIn = 0;
         int8_t AmpControl = 0;
-        bool StereoInput = false;
-        bool StereoOutput = false;
+        bool StereoProcessing = false;
         
         Generator* Gen = nullptr;
         Generator* Inserts[4] = {nullptr};

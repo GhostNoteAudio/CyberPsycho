@@ -13,8 +13,7 @@ namespace Cyber
     struct GeneratorArgs
     {
         const uint16_t Size = BUFFER_SIZE;
-        bool StereoIn;
-        bool StereoOut;
+        bool Stereo;
         float Bpm;
 
         float* InputLeft;

@@ -14,14 +14,20 @@
 
 
 using namespace Cyber;
-
+int kk = 0;
 void HandleAudioFunction(DataBuffer* data)
 {
+    if (kk % 100 ==0)
+    {
+        LogInfof("CV: %d", data->Cv[0][0]);
+    }
+    kk++;
     Cyber::Scope::ProcessScope(data);
     auto fpData = inProcessor.ConvertToFp(data);
     Voices::GetActiveVoice()->Process(fpData);
+    //delayMicroseconds(100);
     Utils::To12Bit(data->Out[0], fpData->Out[0], data->Size);
-    //Utils::To12Bit(data->Out[1], fpData->Out[1], data->Size);
+    Utils::To12Bit(data->Out[1], fpData->Out[1], data->Size);
     //Utils::To12Bit(data->Out[2], fpData->Out[2], data->Size);
     //Utils::To12Bit(data->Out[3], fpData->Out[3], data->Size);
 }
@@ -116,14 +122,49 @@ PeriodicExecution execPrintFast(100);
 PeriodicExecution updateState(1);
 PeriodicExecution updateMenu(10);
 
+//uint8_t AdcTxBuf[16];
+
 void loop()
 {
-    //RunBenchmark();
+    execPrint.active = false;
+
+    // for (int i = 0; i < 8; i++)
+    // {
+    //     AdcTxBuf[2*i+0] = ((i+1) << 3) & 0b00111000;
+    //     AdcTxBuf[2*i+1] = 0;
+    // }
+
+    // SPI.beginTransaction(SPISettings(10000000, MSBFIRST, SPI_MODE0));
+    // digitalWrite(PIN_CS_ADC, LOW);
+    // SPI.transfer(AdcTxBuf, 16);
+    // digitalWrite(PIN_CS_ADC, HIGH);
+    // SPI.endTransaction();
+
+    // LogInfo("-----------");
+    // for (int i = 0; i < 16; i++)
+    // {
+    //     LogInfof("%d: %d", i, AdcTxBuf[i]);
+    // }
+    
+
+    // LogInfo("-----------");
+    // for (int i = 0; i < 8; i++)
+    // {
+    //     uint8_t byte0 = AdcTxBuf[2*i+0]; 
+    //     uint8_t byte1 = AdcTxBuf[2*i+1];
+    //     int16_t val = ((byte0 & 0x0F) << 8) | byte1;
+    //     LogInfof("SPI %d: %d", i, val);
+    // }
+    
+    // delay(1000);
     // return;
+
+    //RunBenchmark();
+    
 
     YieldAudio();
     
-    if (false && execPrint.Go())
+    if (execPrint.Go())
     {
         if (audio.BufferUnderrun)
         {

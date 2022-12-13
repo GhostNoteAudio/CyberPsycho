@@ -14,7 +14,9 @@ namespace Cyber
     const float OFFSETS[7] = {-0.1102, -0.0629, -0.0235, 0.0, 0.0217, 0.0593, 0.1056};
     const float GAINS[7] = {0.1, 0.3, 0.7, 1, 0.65, 0.32, 0.08};
     
-    Superwave::Superwave() : biq(Modules::Biquad::FilterType::HighPass, SAMPLERATE)
+    Superwave::Superwave() 
+        : biqL(Modules::Biquad::FilterType::HighPass, SAMPLERATE)
+        , biqR(Modules::Biquad::FilterType::HighPass, SAMPLERATE)
     {
         menu.Captions[SEMI] = "Semi";
         menu.Captions[PSPREAD] = "Spread";
@@ -39,13 +41,15 @@ namespace Cyber
 
         for (int i = 0; i < COUNT; i++)
         {
-            phasor[i] = ((uint32_t)rand()) * 2;
+            phasorL[i] = ((uint32_t)rand()) * 2;
+            phasorR[i] = ((uint32_t)rand()) * 2;
         }
-        biq.SetQ(0.707);
-        Reset();
+        biqL.SetQ(0.707);
+        biqR.SetQ(0.707);
+        Update();
     }
 
-    void Superwave::Reset(float pitchHz)
+    void Superwave::Update(float pitchHz)
     {
         float vspread = GetScaledParameter(VSPREAD);
 
@@ -55,8 +59,10 @@ namespace Cyber
             volumes[i] = volumes[i] * volumes[i];
         }
         
-        biq.Frequency = pitchHz;
-        biq.Update();   
+        biqL.Frequency = pitchHz;
+        biqR.Frequency = pitchHz;
+        biqL.Update();   
+        biqR.Update();   
         gainAdjust = 1.0 / Utils::Sum(volumes, 7);
     }
 
@@ -76,35 +82,48 @@ namespace Cyber
 
     void Superwave::Process(GeneratorArgs args)
     {
-        float pspread = 0;
-        float pitch = 0;
-        float pitchHz = 0;
+        float pspread = GetScaledParameter(PSPREAD);
+        float pitch = args.Cv[0] * 12 + GetScaledParameter(SEMI) + GetScaledParameter(CENT) * 0.01;
+        float pitchHz = Utils::Note2HzLut(pitch);
+        Update(pitchHz);
 
         for (int n = 0; n < args.Size; n++)
         {
-            if ((n & 0x7) == 0) // update mod every 8 samples
-            {
-                pspread = GetScaledParameter(PSPREAD);
-                pitch = args.Cv[0] * 12 + GetScaledParameter(SEMI) + GetScaledParameter(CENT) * 0.01;
-                pitchHz = Utils::Note2HzLut(pitch);
-                Reset(pitchHz);
-            }
-
             float output = 0;
             for (int i=0; i<COUNT; i++)
             {
                 float hz = pitchHz * (1 + OFFSETS[i] * pspread);
                 uint32_t inc = Modules::Wavetable::GetPhaseIncrement(hz);
-                phasor[i] += inc;
-                float v = (phasor[i] - 0x7FFFFFFF) * 4.6566128e-10f;
+                phasorL[i] += inc;
+                float v = (phasorL[i] - 0x7FFFFFFF) * 4.6566128e-10f;
                 output += v * volumes[i];
             }
             
             output *= gainAdjust;
-            output = biq.Process(output); // high pass to remove aliasing below fundamental
-            output += 0.2 * Modules::Wavetable::Sin(phasor[3]); // increase fundamental frequency to compensate for high pass
-
+            output = biqL.Process(output); // high pass to remove aliasing below fundamental
+            output += 0.2 * Modules::Wavetable::Sin(phasorL[3]); // increase fundamental frequency to compensate for high pass
             args.OutputLeft[n] = output * 0.8;
+        }
+
+        if (!args.Stereo)
+            return;
+
+        for (int n = 0; n < args.Size; n++)
+        {
+            float output = 0;
+            for (int i=0; i<COUNT; i++)
+            {
+                float hz = pitchHz * (1 + OFFSETS[i] * pspread * 1.01);
+                uint32_t inc = Modules::Wavetable::GetPhaseIncrement(hz);
+                phasorR[i] += inc;
+                float v = (phasorR[i] - 0x7FFFFFFF) * 4.6566128e-10f;
+                output += v * volumes[i];
+            }
+            
+            output *= gainAdjust;
+            output = biqR.Process(output); // high pass to remove aliasing below fundamental
+            output += 0.2 * Modules::Wavetable::Sin(phasorR[3]); // increase fundamental frequency to compensate for high pass
+            args.OutputRight[n] = output * 0.8;
         }
     }
 }
