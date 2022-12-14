@@ -71,10 +71,19 @@ namespace Cyber
         return 0;
     }
 
-
-    Menu* Kick1::GetMenu()
+    Menu* Kick1::GetMenu(int tab)
     {
         return &menu;
+    }
+
+    void Kick1::SetTab(int tab)
+    {
+        if (tab == 0)
+            menu.SetSelectedItem(0);
+        if (tab == 1)
+            menu.SetSelectedItem(4);
+
+        ActiveTab = tab;
     }
 
     void Kick1::Process(GeneratorArgs args)
@@ -100,7 +109,7 @@ namespace Cyber
 
         for (int i = 0; i < args.Size; i++)
         {
-            auto g = args.Gate[i];
+            auto g = args.Data->Gate[0][i];
             if (!currentGate && g)
                 phasor = 0;
             currentGate = g;
@@ -115,7 +124,7 @@ namespace Cyber
             if (boost > 1)
                 s = tanhf(s * boost);
 
-            args.OutputLeft[i] = s;
+            args.Data->Out[0][i] = s;
         }
     }
 }

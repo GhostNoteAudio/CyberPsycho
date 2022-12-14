@@ -6,6 +6,7 @@
 #include "logging.h"
 #include "menus.h"
 #include "fonts.h"
+#include "voice.h"
 
 namespace Cyber
 {
@@ -22,11 +23,13 @@ namespace Cyber
         U8G2_SH1106_128X64_NONAME_F_2ND_HW_I2C display2; // For drawing
 
     public:
+        Menu* ActiveMenu;
+
         inline DisplayManager() : 
             display(SCREEN_WIDTH, SCREEN_HEIGHT, &Wire, OLED_RESET, 1000000, 1000000), 
             display2(U8G2_R0, U8X8_PIN_NONE)
         {
-            Menus::ActiveMenu = 0;
+            ActiveMenu = 0;
         }
 
         inline void Init()
@@ -42,11 +45,53 @@ namespace Cyber
             {
                 Serial.println(F("Display allocation failed"));
             }
+
+            ActiveMenu = &Menus::initMenu;
+        }
+
+        inline void RenderHeader()
+        {
+            int activeTab = voice.Gen->ActiveTab;
+            auto display = GetDisplay();
+            display->setDrawColor(1);
+            display->setFont(SMALL_FONT);
+
+            YieldAudio();
+            const char** pages = voice.Gen->GetTabs();
+            int offsets[] = {0, 23, 128-47, 128-24};
+            
+            for (int i = 0; i < 4; i++)
+            {
+                if (strlen(pages[i]) == 0)
+                    continue;
+
+                if (i == activeTab)
+                    display->drawBox(offsets[i], 0, 24, 9);
+                else
+                    display->drawFrame(offsets[i], 0, 24, 9);
+            }
+
+            YieldAudio();
+
+            for (int i = 0; i < 4; i++)
+            {
+                if (strlen(pages[i]) == 0)
+                    continue;
+                    
+                display->setDrawColor(i == activeTab ? 0 : 1);
+                auto w = display->getStrWidth(pages[i]);
+                display->setCursor(offsets[i] + 12 - w/2, 7);
+                display->print(pages[i]);
+            }
+
+            YieldAudio();
         }
 
         inline void Render()
         {
-            Menus::ActiveMenu->Render(GetDisplay());
+            ActiveMenu->Render(GetDisplay());
+            if (ActiveMenu->QuadMode && !ActiveMenu->DisableTabs)
+                RenderHeader();
         }
         
         inline void Clear()

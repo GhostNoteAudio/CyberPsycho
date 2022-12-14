@@ -19,6 +19,9 @@ namespace Cyber
         const int Height = 4;
         int Length; // effective length, can be shorter than maxLength (N)
 
+        int lastSetValueIdx = -1;
+        int lastSetValueTime = 0;
+
     public:
         const int MaxLength = 32;
         const char* Captions[32] = {0};
@@ -40,6 +43,7 @@ namespace Cyber
         bool EditMode = false; // scroll vs edit
         bool EnableSelection = true;
         bool QuadMode = false;
+        bool DisableTabs = false;
         bool CustomOnlyMode = false;
 
         inline Menu()
@@ -121,6 +125,8 @@ namespace Cyber
                 return;
 
             Values[idx] = value;
+            lastSetValueIdx = idx;
+            lastSetValueTime = micros();
 
             if (ValueChangedCallback != 0)
                 ValueChangedCallback(idx, value, GetScaledValue(idx));
@@ -187,7 +193,7 @@ namespace Cyber
 
                 YieldAudio();
                 display->setCursor(2, 11 + 16 * i);
-                display->println(Captions[item]);
+                display->print(Captions[item]);
 
                 YieldAudio();
                 Formatters[item](item, Values[item], GetScaledValue(item), val);
@@ -200,7 +206,7 @@ namespace Cyber
                     display->setDrawColor(0);
                     display->drawTriangle(x-8, y+1, x-8, y-7, x-4, y-3);
                 }
-                display->println(val);
+                display->print(val);
             }
         }
 
@@ -211,6 +217,24 @@ namespace Cyber
 
             char val[16];
 
+            display->setDrawColor(1);
+            display->drawFrame(0, 31, 63, 17);
+            display->drawFrame(65, 31, 63, 17);
+            display->drawFrame(0, 47, 63, 17);
+            display->drawFrame(65, 47, 63, 17);
+
+            bool setValueVisible = false;
+            int pageCount = (Length+3) / 4;
+            int pageOffset = 64 - (pageCount-1) * 3;
+            int currentPage = TopItem / 4;
+            for (int i = 0; i < pageCount; i++)
+            {
+                if (i == currentPage)
+                    display->drawFrame(pageOffset + i * 6-1, 4-1, 3, 3);
+                else
+                    display->drawPixel(pageOffset + i * 6, 4);
+            }
+            
             for (int k = 0; k < 4; k++)
             {
                 YieldAudio();
@@ -224,35 +248,28 @@ namespace Cyber
                 if (item >= Length)
                     continue;
 
-                bool isSelected = (item == SelectedItem) && EnableSelection;
+                setValueVisible |= item == lastSetValueIdx;
 
                 int x = k % 2;
                 int y = k / 2;
-
-                if (isSelected)
-                {
-                    display->setDrawColor(1);
-                    display->drawBox(x * 64, 2 * 16 * y, display->getWidth() / 2, 32);
-                    display->setDrawColor(0);
-                }
-                else
-                {
-                    display->setDrawColor(1);
-                }
-
                 YieldAudio();
 
                 int w = GetStringWidth(display, Captions[item]);
-                int xPos = x == 0 ? 2 : display->getWidth() - 2 - w;
-                display->setCursor(xPos, 11 + 32 * y);
-                display->println(Captions[item]);
+                int xPos = x == 0 ? 32 - w/2 : 96 - w/2;
+                display->setCursor(xPos, y == 0 ? 44 : 60);
+                display->print(Captions[item]);
 
                 YieldAudio();
+                display->drawBox(x == 0 ? 1 : 66, y == 0 ? 32 : 48, Values[item] * 61, 2);
+            }
+
+            if (setValueVisible && (micros() - lastSetValueTime) < 1000000)
+            {
+                int item = lastSetValueIdx;
                 Formatters[item](item, Values[item], GetScaledValue(item), val);
-                w = GetStringWidth(display, val);
-                xPos = x == 0 ? 2 : display->getWidth() - 2 - w;
-                display->setCursor(xPos, 10 + 16 * (2*y+1));
-                display->println(val);
+                int w = GetStringWidth(display, val);
+                display->setCursor(64 - w/2, 24);
+                display->print(val);
             }
         }
 

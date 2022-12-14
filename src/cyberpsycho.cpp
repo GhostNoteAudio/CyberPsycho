@@ -11,4 +11,5 @@ namespace Cyber
     I2CMaster& i2cMaster = Master;
     ModalState modalState;
     GeneratorRegistry<100> generatorRegistry;
+    Voice voice;
 }

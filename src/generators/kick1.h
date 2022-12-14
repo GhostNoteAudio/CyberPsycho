@@ -9,6 +9,7 @@ namespace Cyber
 
     class Kick1 : public Generator
     {
+        const char* Tabs[4] = {"KICK", "ENV", "", ""};
         Menu menu;
         float phasor;
         bool currentGate;
@@ -17,7 +18,9 @@ namespace Cyber
         Modules::PercussionEnvelope pitchEnv;
     public:
         Kick1();
-        virtual Menu* GetMenu() override;
+        virtual const char** GetTabs() override { return Tabs; }
+        virtual Menu* GetMenu(int tab = -1) override;
+        virtual inline void SetTab(int tab) override;
         virtual void Process(GeneratorArgs args) override;
 
     private:
@@ -32,7 +35,6 @@ namespace Cyber
             info.GeneratorId = "GNA-Kick1";
             info.Info = "X0X-esque kick drum synth.";
             info.Version = 1000;
-            info.InsertEffect = false;
             return info;
         }
 

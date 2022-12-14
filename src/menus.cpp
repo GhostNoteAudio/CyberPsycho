@@ -4,8 +4,9 @@
 #include "input_processor.h"
 #include "scope.h"
 #include "generators/kick1.h"
-#include "voices.h"
+#include "voice.h"
 #include "generatorRegistry.h"
+#include "display_manager.h"
 
 namespace Cyber
 {
@@ -15,8 +16,6 @@ namespace Cyber
     {
         int lastChangeMillis = 0;
         int lastChangeIdx = 0;
-
-        Menu* ActiveMenu;
 
         Menu initMenu;
         Menu globalMenu;
@@ -142,44 +141,66 @@ namespace Cyber
             };
         }
 
+        enum GlobalMenuItems
+        {
+            _GainOut = 0,
+            _PitchOffset,
+            _ClockSource,
+            _ClockScale,
+            _BPM,
+            _GateFilter,
+            _LoadPreset,
+            _SavePreset,
+            _InitProgram,
+            _Modulations,
+            _Calibrate,
+            _Scope,
+        };
+
         void BuildGlobalMenu()
         {
-            globalMenu.Captions[0] = "Clock Source";
-            globalMenu.Captions[1] = "Clock Scale";
-            globalMenu.Captions[2] = "BPM";
-            globalMenu.Captions[3] = "Gate Filter";
-            globalMenu.Captions[4] = "> Load Preset";
-            globalMenu.Captions[5] = "> Save Preset";
-            globalMenu.Captions[6] = "> Init Program";
-            globalMenu.Captions[7] = "> Calibrate";
-            globalMenu.Captions[8] = "> Scope";
+            globalMenu.Captions[_GainOut] = "Gain Out";
+            globalMenu.Captions[_PitchOffset] = "Pitch Offset";
+            globalMenu.Captions[_ClockSource] = "Clock Source";
+            globalMenu.Captions[_ClockScale] = "Clock Scale";
+            globalMenu.Captions[_BPM] = "BPM";
+            globalMenu.Captions[_GateFilter] = "Gate Filter";
+            globalMenu.Captions[_LoadPreset] = "> Load Preset";
+            globalMenu.Captions[_SavePreset] = "> Save Preset";
+            globalMenu.Captions[_InitProgram] = "> Init Program";
+            globalMenu.Captions[_Modulations] = "> Modulations";
+            globalMenu.Captions[_Calibrate] = "> Calibrate";
+            globalMenu.Captions[_Scope] = "> Scope";
 
-            globalMenu.Values[0] = 0;
-            globalMenu.Values[1] = 0;
-            globalMenu.Values[2] = 0.45;
-            globalMenu.Values[3] = 0;
-            globalMenu.Values[4] = 0;
-            globalMenu.Values[5] = 0;
-            globalMenu.Values[6] = 0;
-            globalMenu.Values[7] = 0;
-            globalMenu.Values[8] = 0;
+            globalMenu.Values[_GainOut] = 0.5;
+            globalMenu.Values[_PitchOffset] = 0.5;
+            globalMenu.Values[_ClockSource] = 0;
+            globalMenu.Values[_ClockScale] = 0;
+            globalMenu.Values[_BPM] = 0.45;
+            globalMenu.Values[_GateFilter] = 0;
+            globalMenu.Values[_LoadPreset] = 0;
+            globalMenu.Values[_SavePreset] = 0;
+            globalMenu.Values[_InitProgram] = 0;
+            globalMenu.Values[_Modulations] = 0;
+            globalMenu.Values[_Calibrate] = 0;
+            globalMenu.Values[_Scope] = 0;
 
             int clockScaleLut[12] = {1,2,4,8,12,16,24,32,48,64,96,128};
-            const char* clockSources[3] = {"Int", "Ext", "Midi"};
+            const char* clockSources[_GateFilter] = {"Int", "Ext", "Midi"};
             const char* gateFilters[4] = {"Off", "Mild", "Normal", "High"};
             int gateFilterValues[4] = {255, 128, 64, 16};
 
-            globalMenu.Steps[0] = 2;
-            globalMenu.Steps[1] = 11;
-            globalMenu.Steps[2] = 279;
-            globalMenu.Steps[3] = 3;
+            globalMenu.Steps[_ClockSource] = 2;
+            globalMenu.Steps[_ClockScale] = 11;
+            globalMenu.Steps[_BPM] = 279;
+            globalMenu.Steps[_GateFilter] = 3;
 
-            globalMenu.Min[2] = 20;
+            globalMenu.Min[_BPM] = 20;
 
-            globalMenu.Formatters[0] = [clockSources](int idx, float v, int sv, char* s) { strcpy(s, clockSources[sv]); };
-            globalMenu.Formatters[1] = [clockScaleLut](int idx, float v, int sv, char* s) { sprintf(s, "%d", clockScaleLut[sv]); };
-            globalMenu.Formatters[3] = [gateFilters](int idx, float v, int sv, char* s) { strcpy(s, gateFilters[sv]); };
-            for (int i=4; i<=8; i++)
+            globalMenu.Formatters[_ClockSource] = [clockSources](int idx, float v, int sv, char* s) { strcpy(s, clockSources[sv]); };
+            globalMenu.Formatters[_ClockScale] = [clockScaleLut](int idx, float v, int sv, char* s) { sprintf(s, "%d", clockScaleLut[sv]); };
+            globalMenu.Formatters[_GateFilter] = [gateFilters](int idx, float v, int sv, char* s) { strcpy(s, gateFilters[sv]); };
+            for (int i=4; i<=_LoadPreset; i++)
                 globalMenu.Formatters[i] = [](int idx, float v, int sv, char* s) { strcpy(s, ""); };
 
             globalMenu.SetLength(9);
@@ -190,16 +211,16 @@ namespace Cyber
 
             globalMenu.ValueChangedCallback = [gateFilterValues](int idx, float value, int sv)
             {
-                if (idx == 3)
+                if (idx == _GateFilter)
                     inProcessor.GateSpeed = gateFilterValues[sv];
             };
 
             globalMenu.HandleEncoderSwitchCallback = [](Menu* menu, bool value)
             {
-                if (menu->SelectedItem == 7)
-                    ActiveMenu = &calibrateMenu;
-                else if (menu->SelectedItem == 8)
-                    ActiveMenu = &scopeMenu;
+                if (menu->SelectedItem == _Calibrate)
+                    displayManager.ActiveMenu = &calibrateMenu;
+                else if (menu->SelectedItem == _Scope)
+                    displayManager.ActiveMenu = &scopeMenu;
                 else
                     HandleEncoderSwitchDefault(menu, value);
             };
@@ -329,37 +350,14 @@ namespace Cyber
             };
             generatorSelectMenu.HandleEncoderCallback = [](Menu* menu, int tick)
             {
-                LogInfo("Bang!");
                 // abusing the menu system to pass extra parameters
                 int currentId = menu->Values[0];
-                bool fxOnly = menu->Values[1] == 1;
-                int maxCount = menu->Values[3];
+                int maxCount = menu->Values[1];
                 
-                if (!fxOnly)
-                {
-                    int newId = currentId + tick;
-                    
-                    if (newId < 0) newId = 0;
-                    if (newId >= maxCount) newId = maxCount - 1;
-                    menu->Values[0] = newId;
-                }
-                else
-                {
-                    LogInfof("currentId is %d", currentId);
-
-                    int newId = tick > 0 
-                        ? generatorRegistry.GetNextInsertFxIndex(currentId) 
-                        : generatorRegistry.GetPrevInsertFxIndex(currentId);
-                    if (newId == -1)
-                    {
-                        LogInfo("NewId is -1!");
-                    }
-                    else
-                    {
-                        LogInfof("Setting newId to %d", newId);
-                        menu->Values[0] = newId;
-                    }
-                }
+                int newId = currentId + tick;
+                if (newId < 0) newId = 0;
+                if (newId >= maxCount) newId = maxCount - 1;
+                menu->Values[0] = newId;
             };
         }
 

@@ -75,7 +75,7 @@ namespace Cyber
         return 0;
     }
 
-    Menu* Superwave::GetMenu()
+    Menu* Superwave::GetMenu(int tab)
     {
         return &menu;
     }
@@ -83,7 +83,7 @@ namespace Cyber
     void Superwave::Process(GeneratorArgs args)
     {
         float pspread = GetScaledParameter(PSPREAD);
-        float pitch = args.Cv[0] * 12 + GetScaledParameter(SEMI) + GetScaledParameter(CENT) * 0.01;
+        float pitch = args.Data->Cv[0][0] * 12 + GetScaledParameter(SEMI) + GetScaledParameter(CENT) * 0.01;
         float pitchHz = Utils::Note2HzLut(pitch);
         Update(pitchHz);
 
@@ -102,11 +102,8 @@ namespace Cyber
             output *= gainAdjust;
             output = biqL.Process(output); // high pass to remove aliasing below fundamental
             output += 0.2 * Modules::Wavetable::Sin(phasorL[3]); // increase fundamental frequency to compensate for high pass
-            args.OutputLeft[n] = output * 0.8;
+            args.Data->Out[0][n] = output * 0.8;
         }
-
-        if (!args.Stereo)
-            return;
 
         for (int n = 0; n < args.Size; n++)
         {
@@ -123,7 +120,7 @@ namespace Cyber
             output *= gainAdjust;
             output = biqR.Process(output); // high pass to remove aliasing below fundamental
             output += 0.2 * Modules::Wavetable::Sin(phasorR[3]); // increase fundamental frequency to compensate for high pass
-            args.OutputRight[n] = output * 0.8;
+            args.Data->Out[1][n] = output * 0.8;
         }
     }
 }

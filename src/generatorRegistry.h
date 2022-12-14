@@ -45,37 +45,6 @@ namespace Cyber
             instance->GenIndex = idx;
             return instance;
         }
-
-        inline int GetInsertFxCount()
-        {
-            int counter = 0;
-            for (int i = 0; i < Count; i++)
-            {
-                if (Info[i].InsertEffect)
-                    counter++;
-            }
-            return counter;
-        }
-
-        inline int GetNextInsertFxIndex(int startIdx)
-        {
-            for (int i = startIdx+1; i < Count; i++)
-            {
-                if (Info[i].InsertEffect)
-                    return i;
-            }
-            return -1;
-        }
-
-        inline int GetPrevInsertFxIndex(int startIdx)
-        {
-            for (int i = startIdx - 1; i >= 0 ; i--)
-            {
-                if (Info[i].InsertEffect)
-                    return i;
-            }
-            return -1;
-        }
     };
 
     extern GeneratorRegistry<100> generatorRegistry;

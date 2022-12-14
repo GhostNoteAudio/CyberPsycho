@@ -6,19 +6,6 @@ namespace Cyber
     
     void HandleEncoderDefault(Menu* menu, int tick)
     {
-        auto voice = Voices::GetActiveVoice();
-        if (menu == voice->GetActiveInsert()->GetMenu())
-        {
-            if (tick > 0) voice->ActiveInsert++;
-            if (tick < 0) voice->ActiveInsert--;
-            if (voice->ActiveInsert > 3)
-                voice->ActiveInsert = 3;
-            if (voice->ActiveInsert < 0)
-                voice->ActiveInsert = 0;
-            ActiveMenu = voice->GetActiveInsert()->GetMenu();
-            return;
-        }
-
         if (!menu->EditMode)
         {
             if (tick == 1 && !menu->QuadMode)
@@ -42,35 +29,11 @@ namespace Cyber
             menu->EditMode = !menu->EditMode;
 
         // Go from generator edit menu to generator selection menu
-        if (menu == Voices::GetActiveGen()->GetMenu() && value)
+        if (voice.Gen->GetMenu() == menu && value)
         {
-            generatorSelectMenu.Values[0] = Voices::GetActiveGen()->GenIndex;
-            generatorSelectMenu.Values[1] = 0; // Show inserts only?
-            generatorSelectMenu.Values[2] = -1; // Selected insert effect.
-            generatorSelectMenu.Values[3] = generatorRegistry.Count;
-            ActiveMenu = &generatorSelectMenu;
-            generatorSelectMenu.EditMode = true;
-            return;
-        }
-
-        auto getFxMenuIndex = [](Menu* m)
-        {
-            auto v = Voices::GetActiveVoice();
-            if (v->Inserts[v->ActiveInsert]->GetMenu() == m)
-                return v->ActiveInsert;
-            return -1;
-        };
-
-        int fxIdx = getFxMenuIndex(menu);
-
-        // Go from insert FX edit menu to generator selection menu (Insert only)
-        if (fxIdx != -1 && value)
-        {
-            generatorSelectMenu.Values[0] = Voices::GetActiveVoice()->GetActiveInsert()->GenIndex;;
-            generatorSelectMenu.Values[1] = 1; // Show inserts only?
-            generatorSelectMenu.Values[2] = fxIdx; // Selected insert effect slot
-            generatorSelectMenu.Values[3] = generatorRegistry.Count;
-            ActiveMenu = &generatorSelectMenu;
+            generatorSelectMenu.Values[0] = voice.Gen->GenIndex;
+            generatorSelectMenu.Values[1] = generatorRegistry.Count;
+            displayManager.ActiveMenu = &generatorSelectMenu;
             generatorSelectMenu.EditMode = true;
             return;
         }
@@ -78,28 +41,10 @@ namespace Cyber
         // Assign new generator to active voice if changed
         if (menu == &generatorSelectMenu && value)
         {
-            int selectedGen = menu->Values[0];
-            auto voice = Voices::GetActiveVoice();
-            int selectedFxSlot = menu->Values[2];
-            if (selectedFxSlot == -1) // selecting main generator
-            {
-                if (voice->Gen->GenIndex != selectedGen)
-                {
-                    generatorRegistry.DeleteInstance(voice->Gen);
-                    voice->Gen = generatorRegistry.CreateInstance(selectedGen);
-                }
-                ActiveMenu = voice->Gen->GetMenu();
-            }
-            else // Selecting insert FX
-            {
-                auto fxGen = voice->Inserts[selectedFxSlot];
-                if (fxGen->GenIndex != selectedGen)
-                {
-                    generatorRegistry.DeleteInstance(fxGen);
-                    voice->Inserts[selectedFxSlot] = generatorRegistry.CreateInstance(selectedGen);
-                }
-                ActiveMenu = voice->Inserts[selectedFxSlot]->GetMenu();
-            }
+            int selectedGen = menu->Values[0]; // This is OK, we have hacked the menu to carry an integer here
+            voice.SetGenerator(selectedGen);
+            displayManager.ActiveMenu = voice.Gen->GetMenu(0);
+            return;
         }
     }
 
@@ -113,62 +58,48 @@ namespace Cyber
 
     void HandleSwitchDefault(Menu* menu, int idx, bool value)
     {
-        LogInfof("Handling switch %d, value %d", idx, (int)value);
-        
-        if (idx == 0)
+        bool down = value;
+        bool up = !value;
+
+        if (modalState.EnableAction)
         {
-            if (value)
+            if (idx == 0)
             {
-                modalState.Shift = true;
-            }
-            else
-            {
-                if (modalState.Shift)
+                if (modalState.Shift() && up)
                 {
-                    ActiveMenu = Voices::GetActiveGen()->GetMenu();
+                    voice.Gen->SetTab(0);
+                    displayManager.ActiveMenu = voice.Gen->GetMenu();
                 }
-                else
+            }
+
+            if (idx == 1)
+            {
+                if (modalState.Shift() && down)
                 {
-                    // noop
+                    displayManager.ActiveMenu = &globalMenu;
+                    modalState.EnableAction = false;
                 }
-                modalState.Shift = false;
+                else if (!modalState.Shift() && up)
+                {
+                    if (strlen(voice.Gen->GetTabs()[idx]) > 0)
+                    {
+                        voice.Gen->SetTab(1);
+                        displayManager.ActiveMenu = voice.Gen->GetMenu();
+                    }
+                }
+            }
+
+            if (idx == 2 || idx == 3)
+            {
+                if (!modalState.Shift() && up && strlen(voice.Gen->GetTabs()[idx]) > 0)
+                {
+                    voice.Gen->SetTab(idx);
+                    displayManager.ActiveMenu = voice.Gen->GetMenu();
+                }
             }
         }
-        else if (idx == 1 && value)
-        {
-            if (modalState.Shift)
-            {
-                ActiveMenu = &globalMenu;
-                modalState.Shift = false;
-            }
-            else
-            {
-                ActiveMenu = Voices::GetActiveVoice()->GetActiveInsert()->GetMenu();
-            }
-        }
-        else if (idx == 2 && value)
-        {
-            if (modalState.Shift)
-            {
-                ActiveMenu = Voices::GetActiveVoice()->GetMenu();
-                modalState.Shift = false;
-            }
-            else
-            {
-                ActiveMenu = Voices::GetActiveVoice()->modulators.GetMenu();
-            }
-        }
-        else if (idx == 3 && value)
-        {
-            if (modalState.Shift)
-            {
-                ActiveMenu = &pitchTrigMenu;
-                modalState.Shift = false;
-            }
-            else
-            {
-                ActiveMenu = Voices::GetActiveVoice()->matrix.GetMenu();
-            }
-        }
+
+        modalState.ButtonState[idx] = value;
+        modalState.CheckEnableAction();
     }
 }

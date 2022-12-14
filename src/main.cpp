@@ -17,13 +17,7 @@ using namespace Cyber;
 void HandleAudioFunction(DataBuffer* data)
 {
     Cyber::Scope::ProcessScope(data);
-    auto fpData = inProcessor.ConvertToFp(data);
-    //Voices::GetActiveVoice()->Process(fpData);
-    //delayMicroseconds(100);
-    //Utils::To12Bit(data->Out[0], fpData->Out[0], data->Size);
-    //Utils::To12Bit(data->Out[1], fpData->Out[1], data->Size);
-    //Utils::To12Bit(data->Out[2], fpData->Out[2], data->Size);
-    //Utils::To12Bit(data->Out[3], fpData->Out[3], data->Size);
+    voice.Process(data);
 }
 
 SdFat sd;
@@ -42,14 +36,14 @@ void RegisterAllGenerators()
 {
     generatorRegistry.Add<Kick1>();
     generatorRegistry.Add<Superwave>();
-    generatorRegistry.Add<MultimodeFilter>();
-    generatorRegistry.Add<Redux>();
-    generatorRegistry.Add<BasicDrive>();
-    generatorRegistry.Add<EQShelf>();
-    generatorRegistry.Add<Bypass>();
+    // generatorRegistry.Add<MultimodeFilter>();
+    // generatorRegistry.Add<Redux>();
+    // generatorRegistry.Add<BasicDrive>();
+    // generatorRegistry.Add<EQShelf>();
+    // generatorRegistry.Add<Bypass>();
 
-    Voices::InitVoices();
-    Voices::Voices[0].Gen = generatorRegistry.CreateInstanceById("GNA-Superwave");
+    voice.Init();
+    voice.Gen = generatorRegistry.CreateInstanceById("GNA-Superwave");
 }
 
 void setup()
@@ -97,7 +91,6 @@ void setup()
 
     Menus::Init();
     displayManager.Init();
-    Menus::ActiveMenu = &Menus::initMenu;
 
     audio.Init();
     Serial.println("Done");
@@ -118,7 +111,7 @@ PeriodicExecution updateMenu(10);
 
 void loop()
 {
-
+    execPrint.active = false;
     //RunBenchmark();
     
     YieldAudio();
@@ -159,17 +152,17 @@ void loop()
         auto ev = controls.GetEncoderDelta();
         auto eb = controls.GetEncoderButton();
         if (ev.IsNew)
-            Menus::ActiveMenu->HandleEncoder(ev.Value);
+            displayManager.ActiveMenu->HandleEncoder(ev.Value);
         
         if (eb.IsNew)
-            Menus::ActiveMenu->HandleEncoderSwitch(eb.Value);
+            displayManager.ActiveMenu->HandleEncoderSwitch(eb.Value);
 
         for (int i = 0; i < 4; i++)
         {
             auto potVal = controls.GetPot(i);
             if (potVal.IsNew)
             {
-                Menus::ActiveMenu->HandlePot(i, potVal.Value);
+                displayManager.ActiveMenu->HandlePot(i, potVal.Value);
             }
         }
         
@@ -178,7 +171,7 @@ void loop()
             auto btn = controls.GetButton(i);
             if (btn.IsNew)
             {
-                Menus::ActiveMenu->HandleSwitch(i, btn.Value);
+                displayManager.ActiveMenu->HandleSwitch(i, btn.Value);
             }
         }
         

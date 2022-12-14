@@ -9,6 +9,7 @@ namespace Cyber
 
     class Superwave : public Generator
     {
+        const char* Tabs[4] = {"OSC", "FILT", "FENV", "AENV"};
         Menu menu;
         float pitch = 48;
         float gainAdjust = 1.0;
@@ -19,7 +20,9 @@ namespace Cyber
         
     public:
         Superwave();
-        virtual Menu* GetMenu() override;
+        virtual const char** GetTabs() override { return Tabs; }
+        virtual Menu* GetMenu(int tab = -1) override;
+        virtual inline void SetTab(int tab) override { ActiveTab = tab; }
         virtual void Process(GeneratorArgs args) override;
         void Update(float pitchHz = -1);
 
@@ -33,10 +36,8 @@ namespace Cyber
             info.DeveloperName = "Ghost Note Audio";
             info.DisplayName = "Superwave";
             info.GeneratorId = "GNA-Superwave";
-            info.StereoOutSupport = true;
             info.Info = "Supersaw oscillator with tunable parameters.";
             info.Version = 1000;
-            info.InsertEffect = false;
             return info;
         }
 
