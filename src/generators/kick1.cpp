@@ -71,7 +71,7 @@ namespace Cyber
         return 0;
     }
 
-    Menu* Kick1::GetMenu(int tab)
+    Menu* Kick1::GetMenu()
     {
         return &menu;
     }
@@ -84,6 +84,16 @@ namespace Cyber
             menu.SetSelectedItem(4);
 
         ActiveTab = tab;
+    }
+
+    int Kick1::GetModSlots()
+    {
+        return 8;
+    }
+    
+    void Kick1::GetModSlotName(int idx, char* dest)
+    {
+        strcpy(dest, menu.Captions[idx]);
     }
 
     void Kick1::Process(GeneratorArgs args)

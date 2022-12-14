@@ -43,7 +43,7 @@ namespace Cyber
         {
             int selectedGen = menu->Values[0]; // This is OK, we have hacked the menu to carry an integer here
             voice.SetGenerator(selectedGen);
-            displayManager.ActiveMenu = voice.Gen->GetMenu(0);
+            displayManager.ActiveMenu = voice.Gen->GetMenu();
             return;
         }
     }

@@ -25,8 +25,8 @@ namespace Cyber
 
         menu.Min[SEMI] = -36;
         menu.Min[CENT] = -50;
-        menu.Steps[SEMI] = 72;
-        menu.Steps[CENT] = 100;
+        menu.Steps[SEMI] = 72+1;
+        menu.Steps[CENT] = 100+1;
 
         menu.Values[SEMI] = 0.5f;
         menu.Values[PSPREAD] = 0.5f;
@@ -75,9 +75,19 @@ namespace Cyber
         return 0;
     }
 
-    Menu* Superwave::GetMenu(int tab)
+    Menu* Superwave::GetMenu()
     {
         return &menu;
+    }
+
+    int Superwave::GetModSlots()
+    {
+        return 4;
+    }
+    
+    void Superwave::GetModSlotName(int idx, char* dest)
+    {
+        strcpy(dest, menu.Captions[idx]);
     }
 
     void Superwave::Process(GeneratorArgs args)

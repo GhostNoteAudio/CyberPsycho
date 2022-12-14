@@ -58,8 +58,10 @@ namespace Cyber
         int GenIndex = 0; // used by the "OS", do not modify
         int ActiveTab = 0;
         virtual const char** GetTabs() = 0;
-        virtual Menu* GetMenu(int tab = -1) = 0;
+        virtual Menu* GetMenu() = 0;
         virtual void SetTab(int tab) = 0;
+        virtual int GetModSlots() = 0;
+        virtual void GetModSlotName(int idx, char* dest) = 0;
         virtual void Process(GeneratorArgs args) = 0;
         virtual void ProcessMidi(uint8_t type, uint8_t data0, uint8_t data1) {}
         virtual void ProcessOffline() {}

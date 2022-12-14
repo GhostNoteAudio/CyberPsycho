@@ -19,8 +19,10 @@ namespace Cyber
     public:
         Kick1();
         virtual const char** GetTabs() override { return Tabs; }
-        virtual Menu* GetMenu(int tab = -1) override;
+        virtual Menu* GetMenu() override;
         virtual inline void SetTab(int tab) override;
+        virtual int GetModSlots();
+        virtual void GetModSlotName(int idx, char* dest);
         virtual void Process(GeneratorArgs args) override;
 
     private:

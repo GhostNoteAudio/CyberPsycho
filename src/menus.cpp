@@ -190,20 +190,25 @@ namespace Cyber
             const char* gateFilters[4] = {"Off", "Mild", "Normal", "High"};
             int gateFilterValues[4] = {255, 128, 64, 16};
 
-            globalMenu.Steps[_ClockSource] = 2;
-            globalMenu.Steps[_ClockScale] = 11;
-            globalMenu.Steps[_BPM] = 279;
-            globalMenu.Steps[_GateFilter] = 3;
+            globalMenu.Min[_PitchOffset] = -36;
+
+            globalMenu.Steps[_GainOut] = 25;
+            globalMenu.Steps[_PitchOffset] = 36*2+1;
+            globalMenu.Steps[_ClockSource] = 3;
+            globalMenu.Steps[_ClockScale] = 12;
+            globalMenu.Steps[_BPM] = 281;
+            globalMenu.Steps[_GateFilter] = 4;
 
             globalMenu.Min[_BPM] = 20;
 
+            globalMenu.Formatters[_GainOut] = [](int idx, float v, int sv, char* s) { sprintf(s, "%.1fdB", -12.f + sv); };
             globalMenu.Formatters[_ClockSource] = [clockSources](int idx, float v, int sv, char* s) { strcpy(s, clockSources[sv]); };
             globalMenu.Formatters[_ClockScale] = [clockScaleLut](int idx, float v, int sv, char* s) { sprintf(s, "%d", clockScaleLut[sv]); };
             globalMenu.Formatters[_GateFilter] = [gateFilters](int idx, float v, int sv, char* s) { strcpy(s, gateFilters[sv]); };
-            for (int i=4; i<=_LoadPreset; i++)
+            for (int i=_LoadPreset; i<=_Scope; i++)
                 globalMenu.Formatters[i] = [](int idx, float v, int sv, char* s) { strcpy(s, ""); };
 
-            globalMenu.SetLength(9);
+            globalMenu.SetLength(12);
             globalMenu.SelectedItem = 0;
             globalMenu.TopItem = 0;
             globalMenu.EnableSelection = true;
@@ -211,14 +216,32 @@ namespace Cyber
 
             globalMenu.ValueChangedCallback = [gateFilterValues](int idx, float value, int sv)
             {
-                if (idx == _GateFilter)
+                if (idx == _GainOut)
+                {
+                    voice.GainOut[0] = Utils::DB2Gainf(-12.0f + sv);
+                    voice.GainOut[1] = Utils::DB2Gainf(-12.0f + sv);
+                    voice.GainOut[2] = Utils::DB2Gainf(-12.0f + sv);
+                    voice.GainOut[3] = Utils::DB2Gainf(-12.0f + sv);
+                }
+                else if (idx == _PitchOffset)
+                {
+                    voice.PitchOffset[0] = sv;
+                    voice.PitchOffset[1] = sv;
+                    voice.PitchOffset[2] = sv;
+                    voice.PitchOffset[3] = sv;
+                }
+                else if (idx == _GateFilter)
+                {
                     inProcessor.GateSpeed = gateFilterValues[sv];
+                }
             };
 
             globalMenu.HandleEncoderSwitchCallback = [](Menu* menu, bool value)
             {
                 if (menu->SelectedItem == _Calibrate)
                     displayManager.ActiveMenu = &calibrateMenu;
+                else if (menu->SelectedItem == _Modulations)
+                    displayManager.ActiveMenu = voice.matrix.GetMenu();
                 else if (menu->SelectedItem == _Scope)
                     displayManager.ActiveMenu = &scopeMenu;
                 else
@@ -254,14 +277,14 @@ namespace Cyber
             calibrateMenu.Min[6] = -256;
             calibrateMenu.Min[7] = -256;
 
-            calibrateMenu.Steps[0] = 512;
-            calibrateMenu.Steps[1] = 512;
-            calibrateMenu.Steps[2] = 512;
-            calibrateMenu.Steps[3] = 512;
-            calibrateMenu.Steps[4] = 512;
-            calibrateMenu.Steps[5] = 512;
-            calibrateMenu.Steps[6] = 512;
-            calibrateMenu.Steps[7] = 512;
+            calibrateMenu.Steps[0] = 513;
+            calibrateMenu.Steps[1] = 513;
+            calibrateMenu.Steps[2] = 513;
+            calibrateMenu.Steps[3] = 513;
+            calibrateMenu.Steps[4] = 513;
+            calibrateMenu.Steps[5] = 513;
+            calibrateMenu.Steps[6] = 513;
+            calibrateMenu.Steps[7] = 513;
 
             calibrateMenu.Min[8] = 800;
             calibrateMenu.Min[9] = 800;
@@ -272,14 +295,14 @@ namespace Cyber
             calibrateMenu.Min[14] = 800;
             calibrateMenu.Min[15] = 800;
 
-            calibrateMenu.Steps[8] = 400;
-            calibrateMenu.Steps[9] = 400;
-            calibrateMenu.Steps[10] = 400;
-            calibrateMenu.Steps[11] = 400;
-            calibrateMenu.Steps[12] = 400;
-            calibrateMenu.Steps[13] = 400;
-            calibrateMenu.Steps[14] = 400;
-            calibrateMenu.Steps[15] = 400;
+            calibrateMenu.Steps[8] = 401;
+            calibrateMenu.Steps[9] = 401;
+            calibrateMenu.Steps[10] = 401;
+            calibrateMenu.Steps[11] = 401;
+            calibrateMenu.Steps[12] = 401;
+            calibrateMenu.Steps[13] = 401;
+            calibrateMenu.Steps[14] = 401;
+            calibrateMenu.Steps[15] = 401;
 
             calibrateMenu.Values[0] = 0.5f;
             calibrateMenu.Values[1] = 0.5f;

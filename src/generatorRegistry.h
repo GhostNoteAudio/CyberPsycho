@@ -27,16 +27,16 @@ namespace Cyber
             delete gen;
         }
 
-        inline Generator* CreateInstanceById(const char* genId)
+        inline int GetIndexById(const char* genId)
         {
             for (int i = 0; i < Count; i++)
             {
                 if (strcmp(Info[i].GeneratorId, genId) == 0)
                 {
-                    return CreateInstance(i);
+                    return i;
                 }
             }
-            return 0;
+            return -1;
         }
 
         inline Generator* CreateInstance(int idx)

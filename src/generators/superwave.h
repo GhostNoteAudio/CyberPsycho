@@ -21,8 +21,10 @@ namespace Cyber
     public:
         Superwave();
         virtual const char** GetTabs() override { return Tabs; }
-        virtual Menu* GetMenu(int tab = -1) override;
+        virtual Menu* GetMenu() override;
         virtual inline void SetTab(int tab) override { ActiveTab = tab; }
+        virtual int GetModSlots();
+        virtual void GetModSlotName(int idx, char* dest);
         virtual void Process(GeneratorArgs args) override;
         void Update(float pitchHz = -1);
 

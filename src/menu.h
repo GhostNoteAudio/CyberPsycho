@@ -61,9 +61,22 @@ namespace Cyber
 
         inline int GetScaledValue(int idx)
         {
-            return Steps[idx] > 0 
-                ? Min[idx] + (int)(Values[idx] * Steps[idx] * 1.000001f)
-                : Min[idx] + Values[idx];
+            if (Steps[idx] == 0)
+                return Min[idx] + Values[idx];
+
+            float v = Values[idx];
+            if (v >= 1)
+                v = 0.999999f;
+
+            return Min[idx] + (int)(v * Steps[idx]);
+        }
+
+        inline void SetScaledValue(int idx, int scaledValue)
+        {
+            scaledValue -= Min[idx];
+            float halfstep = 0.5f / Steps[idx];
+            float v = ((float)scaledValue) / Steps[idx] + halfstep;
+            SetValue(idx, v);
         }
 
         inline void ReapplyAllValues()
@@ -111,9 +124,17 @@ namespace Cyber
             if (idx >= Length || idx < 0)
                 return;
 
-            float delta = 1.0f/Steps[idx] * ticks;
-            float newValue = Values[idx] + delta;
-            SetValue(idx, newValue);
+            if (Steps[idx] == 0)
+            {
+                // if no steps, change by 1%
+                SetValue(idx, Values[idx] + 0.01 * ticks);
+            }
+            else
+            {
+                int sv = GetScaledValue(idx);
+                int newSv = sv + ticks;
+                SetScaledValue(idx, newSv);
+            }
         }
 
         inline void SetValue(int idx, float value)
@@ -227,12 +248,15 @@ namespace Cyber
             int pageCount = (Length+3) / 4;
             int pageOffset = 64 - (pageCount-1) * 3;
             int currentPage = TopItem / 4;
-            for (int i = 0; i < pageCount; i++)
+            if (!DisableTabs)
             {
-                if (i == currentPage)
-                    display->drawFrame(pageOffset + i * 6-1, 4-1, 3, 3);
-                else
-                    display->drawPixel(pageOffset + i * 6, 4);
+                for (int i = 0; i < pageCount; i++)
+                {
+                    if (i == currentPage)
+                        display->drawFrame(pageOffset + i * 6-1, 4-1, 3, 3);
+                    else
+                        display->drawPixel(pageOffset + i * 6, 4);
+                }
             }
             
             for (int k = 0; k < 4; k++)

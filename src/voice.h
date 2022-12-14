@@ -20,21 +20,28 @@ namespace Cyber
 
         inline void Init()
         {
-            Gen = generatorRegistry.CreateInstanceById("Bypass");
         }
 
         inline void SetGenerator(int genId)
         {
-            if (Gen->GenIndex != genId)
+            if (genId == -1)
+            {
+                LogInfo("Invalid genId -1 passed in, unable to create generator");
+                return;
+            }
+
+            if (Gen == nullptr || Gen->GenIndex != genId)
             {
                 generatorRegistry.DeleteInstance(Gen);
                 Gen = generatorRegistry.CreateInstance(genId);
+                matrix.GetMenu()->Steps[1] = Gen->GetModSlots();
             }
         }
         
         inline void Process(DataBuffer* data)
         {
             auto fpData = inProcessor.ConvertToFp(data);
+            matrix.fpData = fpData;
 
             GeneratorArgs args;
             args.Bpm = 120;
@@ -57,15 +64,6 @@ namespace Cyber
             Utils::To12Bit(data->Out[2], fpData->Out[2], data->Size);
             Utils::To12Bit(data->Out[3], fpData->Out[3], data->Size);
         }
-
-        /*inline bool IsGenMenu(Menu* menu)
-        {
-            bool b0 = menu ==  Gen->GetMenu(0);
-            bool b1 = menu ==  Gen->GetMenu(1);
-            bool b2 = menu ==  Gen->GetMenu(2);
-            bool b3 = menu ==  Gen->GetMenu(3);
-            return b0 || b1 || b2 || b3;
-        }*/
     };
 
     extern Voice voice;
