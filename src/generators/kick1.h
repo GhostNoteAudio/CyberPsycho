@@ -11,8 +11,16 @@ namespace Cyber
     {
         const char* Tabs[4] = {"KICK", "ENV", "", ""};
         Menu menu;
-        float phasor;
-        bool currentGate;
+        float phasor = 0;
+        bool currentGate = false;
+        float adecay = 0;
+        float pdecay = 0;
+        float pmod = 0;
+        float freq = 0;
+        float boost = 0;
+        float fold = 0;
+        float pshape = 0;
+        float ashape = 0;
 
         Modules::PercussionEnvelope ampEnv;
         Modules::PercussionEnvelope pitchEnv;
@@ -23,10 +31,12 @@ namespace Cyber
         virtual inline void SetTab(int tab) override;
         virtual int GetModSlots();
         virtual void GetModSlotName(int idx, char* dest);
+        virtual int ResolveSlot(int knobIdx);
         virtual void Process(GeneratorArgs args) override;
 
     private:
-        float GetScaledParameter(int idx);
+        void UpdateAll(GeneratorArgs args);
+        float GetScaledParameter(int idx, float modulation=0);
 
     public:
         inline static GeneratorInfo GetInfo()

@@ -1,9 +1,66 @@
 #include "mod_matrix.h"
 #include "logging.h"
 #include "voice.h"
+#include "display_manager.h"
 
 namespace Cyber
 {
+    const char* ModNames[] = 
+    {
+        "Off",
+        "CV 1",
+        "CV 2",
+        "CV 3",
+        "CV 4",
+        "Mod 1",
+        "Mod 2",
+        "Mod 3",
+        "Mod 4",
+        "Gate 1",
+        "Gate 2",
+        "Gate 3",
+        "Gate 4",
+    };
+
+    void PaintModOverlay(U8G2* display)
+    {
+        display->setFont(DEFAULT_FONT);
+        display->setDrawColor(0);
+        
+        display->drawBox(20, 10, 128-40, 44);
+        display->setDrawColor(1);
+        display->drawFrame(20, 10, 128-40, 44);
+
+        if (voice.matrix.LastUpdatedRoute == -1)
+        {
+            int w = display->getStrWidth("Mod Matrix");
+            display->setCursor(64 - w/2, 28);
+            display->print("Mod Matrix");
+
+            w = display->getStrWidth("is full!");
+            display->setCursor(64 - w/2, 41);
+            display->print("is full!");
+            return;
+        }
+
+        auto route = voice.matrix.Routes[voice.matrix.LastUpdatedRoute];
+        char val[16];
+
+        int w = display->getStrWidth(ModNames[(int)route.Source]);
+        display->setCursor(64 - w/2, 22);
+        display->print(ModNames[(int)route.Source]);
+
+        voice.Gen->GetModSlotName(route.Slot, val);
+        w = display->getStrWidth(val);
+        display->setCursor(64 - w/2, 35);
+        display->print(val);
+
+        sprintf(val, "%.1f%%", route.Amount * 100);
+        w = display->getStrWidth(val);
+        display->setCursor(64 - w/2, 48);
+        display->print(val);
+    }
+
     void ModMatrix::InitMenu()
     {
         /*
@@ -64,22 +121,7 @@ namespace Cyber
 
         menu.Formatters[0] = [this](int idx, float val, int sv, char* dest) 
         {
-            switch ((ModSource)sv)
-            {
-                case ModSource::Off: strcpy(dest, "Off"); break;
-                case ModSource::Mod1: strcpy(dest, "Mod 1"); break;
-                case ModSource::Mod2: strcpy(dest, "Mod 2"); break;
-                case ModSource::Mod3: strcpy(dest, "Mod 3"); break;
-                case ModSource::Mod4: strcpy(dest, "Mod 4"); break;
-                case ModSource::Cv1: strcpy(dest, "CV 1"); break;
-                case ModSource::Cv2: strcpy(dest, "CV 2"); break;
-                case ModSource::Cv3: strcpy(dest, "CV 3"); break;
-                case ModSource::Cv4: strcpy(dest, "CV 4"); break;
-                case ModSource::Gate1: strcpy(dest, "Gate 1"); break;
-                case ModSource::Gate2: strcpy(dest, "Gate 2"); break;
-                case ModSource::Gate3: strcpy(dest, "Gate 3"); break;
-                case ModSource::Gate4: strcpy(dest, "Gate 4"); break;
-            }
+            strcpy(dest, ModNames[sv]);
         };
 
         menu.Formatters[1] = [this](int idx, float val, int sv, char* dest) 
@@ -91,10 +133,10 @@ namespace Cyber
             strcpy(dest, name);
         };
 
-        menu.Formatters[2] = [](int idx, float val, int sv, char* dest) { sprintf(dest, "%.0f%%", (val-0.5) * 200.0f); };
+        menu.Formatters[2] = [](int idx, float val, int sv, char* dest) { sprintf(dest, "%.1f%%", (val-0.5) * 200.0f); };
 
         menu.Steps[0] = 13;
-        menu.Steps[1] = 4; //voice.Gen->GetModSlots();
+        menu.Steps[1] = 0; // updated whenever a generator is loaded
         menu.Captions[0] = "Source";
         menu.Captions[1] = "Slot";
         menu.Captions[2] = "Amount";
@@ -106,13 +148,7 @@ namespace Cyber
             if (tick > 0 && this->activeRoute == ModRouteCount-1)
                 return;
             this->activeRoute += tick;
-            
-            menu->SetScaledValue(0, (int)this->Routes[activeRoute].Source);
-            menu->SetScaledValue(1, this->Routes[activeRoute].Slot);
-            menu->Values[2] = this->Routes[activeRoute].Amount;
-
-            auto newSv = menu->GetScaledValue(0);
-            LogInfof("new scaledValue: %d", newSv);
+            UpdateMenuDisplay();
         };
 
         menu.HandlePotCallback = [](Menu* menu, int idx, float value)
@@ -122,10 +158,57 @@ namespace Cyber
 
         menu.ValueChangedCallback = [this](int idx, float val, int sv)
         {
-            LogInfof("Valuechange: %.3f, %d", val, sv);
             if (idx == 0) this->Routes[activeRoute].Source = (ModSource)sv;
             if (idx == 1) this->Routes[activeRoute].Slot = sv;
-            if (idx == 2) this->Routes[activeRoute].Amount = val;
+            if (idx == 2) this->Routes[activeRoute].Amount = -1.0f + 2.0f * val;
         };
+
+        UpdateMenuDisplay();
+    }
+
+    void ModMatrix::UpdateMenuDisplay()
+    {
+        menu.SetScaledValue(0, (int)this->Routes[activeRoute].Source);
+        menu.SetScaledValue(1, this->Routes[activeRoute].Slot);
+        menu.SetValue(2, (1+this->Routes[activeRoute].Amount)*0.5);
+    }
+
+    void ModMatrix::UpdateRoute(ModSource source, int slot, float value)
+    {
+        LogInfo("In updateRoute");
+
+        auto findExisting = [this](ModSource source, int slot)
+        {
+            for (int i = 0; i < ModRouteCount; i++)
+            {
+                if (Routes[i].Source == source && Routes[i].Slot == slot)
+                    return i;
+            }
+            return -1;
+        };
+
+        auto findAvailable = [this]()
+        {
+            for (int i = 0; i < ModRouteCount; i++)
+            {
+                if (Routes[i].Source == ModSource::Off || Routes[i].Amount == 0)
+                    return i;
+            }
+            return -1;
+        };
+
+        int routeIdx = findExisting(source, slot);
+        if (routeIdx == -1) routeIdx = findAvailable();
+
+        if (routeIdx != -1)
+        {
+            Routes[routeIdx].Source = source;
+            Routes[routeIdx].Slot = slot;
+            Routes[routeIdx].Amount = value;
+        }
+
+        LastUpdatedRoute = routeIdx;
+        displayManager.SetOverlay(PaintModOverlay, 1000);
+        UpdateMenuDisplay();
     }
 }

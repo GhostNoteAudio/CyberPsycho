@@ -25,6 +25,7 @@ namespace Cyber
         virtual inline void SetTab(int tab) override { ActiveTab = tab; }
         virtual int GetModSlots();
         virtual void GetModSlotName(int idx, char* dest);
+        virtual int ResolveSlot(int knobIdx);
         virtual void Process(GeneratorArgs args) override;
         void Update(float pitchHz = -1);
 

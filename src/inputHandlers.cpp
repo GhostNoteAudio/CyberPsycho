@@ -50,6 +50,16 @@ namespace Cyber
 
     void HandlePotDefault(Menu* menu, int idx, float value)
     {
+        auto modSource = modalState.GetModSource();
+        
+        if (modSource != ModSource::Off)
+        {
+            int slot = voice.Gen->ResolveSlot(idx);
+            voice.matrix.UpdateRoute(modSource, slot, 2*value-1);
+            modalState.EnableAction = false;
+            return;
+        }
+
         if (menu->QuadMode)
         {
             menu->SetValue(menu->TopItem + idx, value);

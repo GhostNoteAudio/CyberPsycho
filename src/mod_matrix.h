@@ -22,15 +22,20 @@ namespace Cyber
         Menu menu;
         uint8_t activeRoute = 0;
 
-        ModRouting Routes[ModRouteCount];
         float OutputBuffer[BUFFER_SIZE];
         float OutputValue;
+
     public:
+        ModRouting Routes[ModRouteCount];
+        int LastUpdatedRoute = -1;
         void InitMenu();
         inline ModMatrix() 
         {
             InitMenu(); 
         }
+
+        void UpdateMenuDisplay();
+        void UpdateRoute(ModSource source, int slot, float value);
 
     private:
         inline float* GetSourceBuffer(ModSource source)

@@ -90,6 +90,12 @@ namespace Cyber
         strcpy(dest, menu.Captions[idx]);
     }
 
+    int Superwave::ResolveSlot(int knobIdx)
+    {
+        return menu.TopItem + knobIdx;
+    }
+
+
     void Superwave::Process(GeneratorArgs args)
     {
         float pspread = GetScaledParameter(PSPREAD);

@@ -1,5 +1,6 @@
 #pragma once
 
+#include <functional>
 #include <i2c_driver_wire.h>
 #include <Adafruit_SH110X.h>
 #include <U8g2lib.h>
@@ -21,6 +22,9 @@ namespace Cyber
         const int SCREEN_ADDRESS = 0x3C;
         Adafruit_SH1106G display; // For sending
         U8G2_SH1106_128X64_NONAME_F_2ND_HW_I2C display2; // For drawing
+        
+        std::function<void(U8G2*)> overlayCallback;
+        uint overlayExpiration = 0;
 
     public:
         Menu* ActiveMenu;
@@ -47,6 +51,12 @@ namespace Cyber
             }
 
             ActiveMenu = &Menus::initMenu;
+        }
+
+        inline void SetOverlay(std::function<void(U8G2*)> callback, int timeoutMillis)
+        {
+            overlayCallback = callback;
+            overlayExpiration = millis() + timeoutMillis;
         }
 
         inline void RenderHeader()
@@ -90,8 +100,12 @@ namespace Cyber
         inline void Render()
         {
             ActiveMenu->Render(GetDisplay());
+            
             if (ActiveMenu->QuadMode && !ActiveMenu->DisableTabs)
                 RenderHeader();
+
+            if (millis() < overlayExpiration)
+                overlayCallback(GetDisplay());
         }
         
         inline void Clear()

@@ -62,6 +62,7 @@ namespace Cyber
         virtual void SetTab(int tab) = 0;
         virtual int GetModSlots() = 0;
         virtual void GetModSlotName(int idx, char* dest) = 0;
+        virtual int ResolveSlot(int knobIdx) = 0;
         virtual void Process(GeneratorArgs args) = 0;
         virtual void ProcessMidi(uint8_t type, uint8_t data0, uint8_t data1) {}
         virtual void ProcessOffline() {}

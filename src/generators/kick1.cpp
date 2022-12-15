@@ -16,7 +16,7 @@ namespace Cyber
     Kick1::Kick1()
     {
         menu.Captions[0] = "Decay";
-        menu.Captions[1] = "Pitch Dec.";
+        menu.Captions[1] = "Pitch Dec";
         menu.Captions[2] = "Pitch Mod";
         menu.Captions[3] = "Freq";
         menu.Captions[4] = "Boost";
@@ -58,16 +58,18 @@ namespace Cyber
         pitchEnv.UpdateParams();
     }
 
-    float Kick1::GetScaledParameter(int idx)
+    float Kick1::GetScaledParameter(int idx, float modulation)
     {
-        if (idx == DECAY) return (0.01 + menu.Values[DECAY] * 0.99) * SAMPLERATE * 2;
-        if (idx == PDEC) return (0.002 + menu.Values[PDEC] * 0.5) * SAMPLERATE;
-        if (idx == PMOD) return menu.Values[PMOD] * 1000;
-        if (idx == FREQ) return 10 + menu.Values[FREQ] * 290;
-        if (idx == BOOST) return 1 + menu.Values[BOOST] * 20;
-        if (idx == FOLD) return menu.Values[FOLD] * 10;
-        if (idx == PSHAPE) return 10 + menu.Values[PSHAPE] * 50;
-        if (idx == ASHAPE) return 10 + menu.Values[ASHAPE] * 50;
+        float val = Utils::Clamp(menu.Values[idx] + modulation);
+
+        if (idx == DECAY) return (0.01 + val * 0.99) * SAMPLERATE * 2;
+        if (idx == PDEC) return (0.002 + val * 0.5) * SAMPLERATE;
+        if (idx == PMOD) return val * 1000;
+        if (idx == FREQ) return 10 + val * 290;
+        if (idx == BOOST) return 1 + val * 20;
+        if (idx == FOLD) return val * 10;
+        if (idx == PSHAPE) return 10 + val * 50;
+        if (idx == ASHAPE) return 10 + val * 50;
         return 0;
     }
 
@@ -96,19 +98,24 @@ namespace Cyber
         strcpy(dest, menu.Captions[idx]);
     }
 
-    void Kick1::Process(GeneratorArgs args)
+    int Kick1::ResolveSlot(int knobIdx)
     {
-        float fsinv = 1.0 / SAMPLERATE;
-        float adecay = GetScaledParameter(DECAY);
-        float pdecay = GetScaledParameter(PDEC);
-        float pmod = GetScaledParameter(PMOD);
-        float freq = GetScaledParameter(FREQ);
-        float boost = GetScaledParameter(BOOST);
-        float fold = GetScaledParameter(FOLD);
-        
-        // Todo: These two should change the curve shape of the envelopes
-        float pshape = GetScaledParameter(PSHAPE);
-        float ashape = GetScaledParameter(ASHAPE);
+        return menu.TopItem + knobIdx;
+    }
+
+    void Kick1::UpdateAll(GeneratorArgs args)
+    {
+        // Updates are triggered at trigger events. Realtime updates not allowed
+        float fmod = powf(2, args.GetModulationSlow(3));
+
+        adecay = GetScaledParameter(DECAY, args.GetModulationSlow(0));
+        pdecay = GetScaledParameter(PDEC, args.GetModulationSlow(1));
+        pmod = GetScaledParameter(PMOD, args.GetModulationSlow(2));
+        freq = GetScaledParameter(FREQ) * fmod;
+        boost = GetScaledParameter(BOOST, args.GetModulationSlow(4));
+        fold = GetScaledParameter(FOLD, args.GetModulationSlow(5));
+        pshape = GetScaledParameter(PSHAPE, args.GetModulationSlow(6));
+        ashape = GetScaledParameter(ASHAPE, args.GetModulationSlow(7));
 
         ampEnv.DecaySamples = adecay;
         pitchEnv.DecaySamples = pdecay;
@@ -116,12 +123,23 @@ namespace Cyber
         pitchEnv.ValueFloorDb = -pshape;
         ampEnv.UpdateParams();
         pitchEnv.UpdateParams();
+    }
+
+    void Kick1::Process(GeneratorArgs args)
+    {
+        float fsinv = 1.0 / SAMPLERATE;
+        
+        if (adecay == 0) // check for initial start
+            UpdateAll(args);
 
         for (int i = 0; i < args.Size; i++)
         {
             auto g = args.Data->Gate[0][i];
             if (!currentGate && g)
+            {
                 phasor = 0;
+                UpdateAll(args);
+            }
             currentGate = g;
 
             float aenv = ampEnv.Process(g);

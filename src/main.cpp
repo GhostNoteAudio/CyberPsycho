@@ -43,7 +43,7 @@ void RegisterAllGenerators()
     // generatorRegistry.Add<Bypass>();
 
     voice.Init();
-    voice.SetGenerator(generatorRegistry.GetIndexById("GNA-Superwave"));
+    voice.SetGenerator(generatorRegistry.GetIndexById("GNA-Kick1"));
 }
 
 void setup()
