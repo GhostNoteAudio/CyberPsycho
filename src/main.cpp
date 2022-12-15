@@ -111,7 +111,7 @@ PeriodicExecution updateMenu(10);
 
 void loop()
 {
-    execPrint.active = false;
+    //execPrint.active = false;
     //RunBenchmark();
     
     YieldAudio();

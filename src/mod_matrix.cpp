@@ -211,4 +211,61 @@ namespace Cyber
         displayManager.SetOverlay(PaintModOverlay, 1000);
         UpdateMenuDisplay();
     }
+
+    float ModMatrix::GetModulationSlow(uint8_t slot)
+    {
+        OutputValue = 0.0f;
+        for (int i = 0; i < ModRouteCount; i++)
+        {
+            if (Routes[i].Slot == slot)
+                AddRouteSlow(i);
+        }
+        
+        return OutputValue;
+    }
+
+    float* ModMatrix::GetModulationFast(uint8_t slot)
+    {
+        Utils::ZeroBuffer(OutputBuffer, BUFFER_SIZE);
+        for (int i = 0; i < ModRouteCount; i++)
+        {
+            if (Routes[i].Slot == slot)
+                AddRouteFast(i);
+        }
+        
+        return OutputBuffer;
+    }
+
+    float* ModMatrix::GetSourceBuffer(ModSource source)
+    {
+        switch (source)
+        {
+            case ModSource::Off: return fpData->Mod[0]; // hack
+            case ModSource::Mod1: return fpData->Mod[0];
+            case ModSource::Mod2: return fpData->Mod[1];
+            case ModSource::Mod3: return fpData->Mod[2];
+            case ModSource::Mod4: return fpData->Mod[3];
+            case ModSource::Cv1: return fpData->Cv[0];
+            case ModSource::Cv2: return fpData->Cv[1];
+            case ModSource::Cv3: return fpData->Cv[2];
+            case ModSource::Cv4: return fpData->Cv[3];
+            case ModSource::Gate1: return fpData->GateFloat[0];
+            case ModSource::Gate2: return fpData->GateFloat[1];
+            case ModSource::Gate3: return fpData->GateFloat[2];
+            case ModSource::Gate4: return fpData->GateFloat[3];
+        }
+        return nullptr;
+    }
+
+    void ModMatrix::AddRouteSlow(int idx)
+    {
+        auto buf = GetSourceBuffer(Routes[idx].Source);
+        OutputValue += buf[0] * Routes[idx].Amount;
+    }
+
+    void ModMatrix::AddRouteFast(int idx)
+    {
+        auto buf = GetSourceBuffer(Routes[idx].Source);
+        Utils::Mix(OutputBuffer, buf, Routes[idx].Amount, BUFFER_SIZE);
+    }
 }

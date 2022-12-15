@@ -51,7 +51,7 @@ namespace Cyber
     void AudioIo::SampleAdc()
     {
         //LogInfo("Queueing adc sampling");
-        PrepAdcBuffer();
+        //PrepAdcBuffer();
         TsyDMASPI0.queue(AdcTxBuf, AdcRxBuf, 16, PIN_CS_ADC);
     }
 
@@ -61,15 +61,14 @@ namespace Cyber
         {
             uint8_t byte0 = AdcRxBuf[2*i+0]; 
             uint8_t byte1 = AdcRxBuf[2*i+1];
-            //LogInfof("Adc %d: %d %d", i, byte0, byte1);
             AdcValues[i] = ((byte0 & 0x0F) << 8) | byte1;
         }
     }
 
     void AudioIo::SetDac(int channel, uint16_t value)
     {
-        if (value > (1u << 12) - 1) 
-            value = (1u << 12) - 1;
+        if (value > 4095) 
+            value = 4095;
         
         uint8_t* tx = DacTxBuf[channel];
         uint8_t* rx = DacRxBuf;
@@ -82,13 +81,13 @@ namespace Cyber
         TsyDMASPI0.queue(tx, rx, 2, csPin);
     }
 
-    void AudioIo::LatchDac()
-    {
-        digitalWrite(PIN_LATCH_DAC, LOW);
-        SpinWait(20);
-        digitalWrite(PIN_LATCH_DAC, HIGH);
-        SpinWait(20);
-    }
+    // void AudioIo::LatchDac()
+    // {
+    //     digitalWrite(PIN_LATCH_DAC, LOW);
+    //     SpinWait(20);
+    //     digitalWrite(PIN_LATCH_DAC, HIGH);
+    //     SpinWait(20);
+    // }
 
     void AudioIo::StartProcessing()
     {
@@ -108,8 +107,6 @@ namespace Cyber
 
     void AudioIo::ProcessAudioX()
     {
-        
-        //LogInfo("------ Process audio begin -------");
         GetPerfIo()->Start();
         
         if (TsyDMASPI0.remained() > 0)
@@ -119,9 +116,11 @@ namespace Cyber
         }
 
         // Emit the DAC values that were previously sent to the output
-        LatchDac();
+        //LatchDac();
+        digitalWriteFast(PIN_LATCH_DAC, LOW);
         // Process the newly received ADC values
         ProcessAdcValues();
+        digitalWriteFast(PIN_LATCH_DAC, HIGH);
 
         BufTransmitting->Cv[0][bufferIdx] = AdcValues[0];
         BufTransmitting->Cv[1][bufferIdx] = AdcValues[1];
@@ -145,7 +144,6 @@ namespace Cyber
         bufferIdx++;
         if (bufferIdx == BUFFER_SIZE)
         {
-            //LogInfof("Switching buffers at size %d", bufferIdx);
             if (!CallbackComplete)
             {
                 BufferUnderrun = true;
@@ -159,7 +157,6 @@ namespace Cyber
         }
 
         GetPerfIo()->Stop();
-        //LogInfo("------ Process audio END -------");
     }
 
     bool AudioIo::Available()
