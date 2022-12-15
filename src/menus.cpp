@@ -211,7 +211,6 @@ namespace Cyber
             globalMenu.SetLength(12);
             globalMenu.SelectedItem = 0;
             globalMenu.TopItem = 0;
-            globalMenu.EnableSelection = true;
             globalMenu.QuadMode = false;
 
             globalMenu.ValueChangedCallback = [gateFilterValues](int idx, float value, int sv)
@@ -335,7 +334,6 @@ namespace Cyber
             calibrateMenu.SetLength(16);
             calibrateMenu.SelectedItem = 0;
             calibrateMenu.TopItem = 0;
-            calibrateMenu.EnableSelection = true;
             calibrateMenu.QuadMode = false;
         }
 

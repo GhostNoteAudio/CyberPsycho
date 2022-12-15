@@ -9,7 +9,7 @@ namespace Cyber
 
     class Kick1 : public Generator
     {
-        const char* Tabs[4] = {"KICK", "ENV", "", ""};
+        const char* Tabs[4] = {"KICK", "TUNE", "", ""};
         Menu menu;
         float phasor = 0;
         bool currentGate = false;

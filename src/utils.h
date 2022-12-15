@@ -24,6 +24,21 @@ namespace Cyber
             }
         }
 
+        inline float tanhm(const float x, const float m)
+        {
+            // m = 0...1, controls "hardness"
+            const float x2 = x * x;
+            const float x3 = x2 * x;
+            const float x4 = x3 * x;
+            const float x5 = x4 * x;
+            const float m2 = m * m;
+            const float ax = fabsf(x);
+
+            return(( x * m + 0.46247385533802f * x * ax + x3 * ax + x5 * m2 ) /
+                ( m + x4 + 0.423947629220444f * ax + 0.46247385533802f * x2 +
+                x4 * m2 * ax ));
+        }
+
         inline int ScaleSteps(float val, uint16_t steps)
         {
             return (int)(val * ((float)steps-0.0001f));

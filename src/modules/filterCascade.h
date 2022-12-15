@@ -72,8 +72,6 @@ namespace Modules
 		FilterCascade();
 		void Process(float* input, float* output, int len);
 		void SetMode(InternalFilterMode mode);
-
-	private:
 		float ProcessSample(float input);
 		void Update();
 	};

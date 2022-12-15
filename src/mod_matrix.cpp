@@ -70,7 +70,6 @@ namespace Cyber
         */
         menu.QuadMode = true;
         menu.DisableTabs = true;
-        menu.EnableSelection = false;
         menu.CustomOnlyMode = true;
         menu.SetLength(3);
 

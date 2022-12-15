@@ -36,10 +36,7 @@ namespace Modules
 		Update();
 		
 		for (int i = 0; i < len; i++)
-		{
-			float value = ProcessSample(input[i]) * gInv;
-			output[i] = value;
-		}
+			output[i] = ProcessSample(input[i]);
 	}
 
 	float FilterCascade::ProcessSample(float input)
@@ -49,7 +46,7 @@ namespace Modules
 		for (int i = 0; i < Oversample; i++)
 		{
 			float in = mx * (i * input + (Oversample - i) * oversampledInput); // linear interpolation
-			in = tanhf(in);
+			in = Utils::tanhm(in, 0.1f);
 
 			float fb = totalResonance * 4.2f * (feedback - 0.5f * in);
 			float val = in - fb;
@@ -65,12 +62,12 @@ namespace Modules
 			d = (1 - p) * val + p * d;
 			val = d;
 
-			feedback = tanhf(val);
+			feedback = Utils::tanhm(val, 0.1f);
 		}
 
 		oversampledInput = input;
 		float sample = (c0 * x + c1 * a + c2 * b + c3 * c + c4 * d) * (1 - totalResonance * 0.5f);
-		return sample * 4; // gain fudge
+		return sample * gInv;
 	}
 
 	void FilterCascade::SetMode(InternalFilterMode mode)
@@ -129,16 +126,14 @@ namespace Modules
 
 	void FilterCascade::Update()
 	{
-		float driveTotal = Utils::Limit(Drive, 0.0f, 1.0f);
+		float driveTotal = Utils::Clamp(Drive);
 		gain = (0.1f + 2.0f * driveTotal * driveTotal);
 
 		totalResonance = Resonance;
-		totalResonance = Utils::Limit(totalResonance, 0.0f, 1.0f);
-		totalResonance = Utils::Resp2oct(totalResonance) * 1.02f;//0.999f;
+		totalResonance = Utils::Clamp(totalResonance);
+		totalResonance = Utils::Resp2oct(totalResonance) * 1.02f;
 
-		// Voltage is 1V/Oct, C0 = 8.18Hz
-		float noteNum = Cutoff;
-		noteNum = Utils::Limit(noteNum, 0.0f, 135.999f);
+		float noteNum = Utils::Clamp(Cutoff) * 135.99;
         int a = (int)noteNum;
         float rem = noteNum - a;
 		p = CVtoAlpha[a] * (1-rem) + CVtoAlpha[a] * rem;

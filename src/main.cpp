@@ -43,7 +43,7 @@ void RegisterAllGenerators()
     // generatorRegistry.Add<Bypass>();
 
     voice.Init();
-    voice.SetGenerator(generatorRegistry.GetIndexById("GNA-Kick1"));
+    voice.SetGenerator(generatorRegistry.GetIndexById("GNA-Superwave"));
 }
 
 void setup()
@@ -111,7 +111,7 @@ PeriodicExecution updateMenu(10);
 
 void loop()
 {
-    //execPrint.active = false;
+    execPrint.active = false;
     //RunBenchmark();
     
     YieldAudio();

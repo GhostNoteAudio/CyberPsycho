@@ -14,21 +14,22 @@ namespace Cyber
     void HandlePotDefault(Menu* menu, int idx, float value);
     void HandleSwitchDefault(Menu* menu, int idx, bool value);
 
+    const int MENU_MAX_SIZE = 64;
+
     class Menu
     {
         const int Height = 4;
-        int Length; // effective length, can be shorter than maxLength (N)
-
+        int Length; // effective length, can be shorter than MENU_MAX_SIZE
+        uint64_t SectionBreaks = 0;
         int lastSetValueIdx = -1;
         int lastSetValueTime = 0;
 
     public:
-        const int MaxLength = 32;
-        const char* Captions[32] = {0};
-        float Values[32] = {0};
-        int16_t Min[32] = {0};
-        uint16_t Steps[32] = {0};
-        std::function<void(int, float, int, char*)> Formatters[32];
+        const char* Captions[MENU_MAX_SIZE] = {0};
+        float Values[MENU_MAX_SIZE] = {0};
+        int16_t Min[MENU_MAX_SIZE] = {0};
+        uint16_t Steps[MENU_MAX_SIZE] = {0};
+        std::function<void(int, float, int, char*)> Formatters[MENU_MAX_SIZE];
         std::function<void(int, float, int)> ValueChangedCallback = 0;
         std::function<void(U8G2*)> RenderCustomDisplayCallback = 0;
         
@@ -41,14 +42,13 @@ namespace Cyber
         int TopItem = 0;
         int SelectedItem = 0;
         bool EditMode = false; // scroll vs edit
-        bool EnableSelection = true;
         bool QuadMode = false;
         bool DisableTabs = false;
         bool CustomOnlyMode = false;
 
         inline Menu()
         {
-            for (int i = 0; i < MaxLength; i++)
+            for (int i = 0; i < MENU_MAX_SIZE; i++)
             {
                 Formatters[i] = [this](int idx, float v, int sv, char* dest) 
                 {
@@ -57,6 +57,79 @@ namespace Cyber
                         : sprintf(dest, "%.1f", v*100.0f); 
                 };
             }
+        }
+
+        inline void AddSectionBreak(int idxAfter)
+        {
+            SectionBreaks |= ((uint64_t)1) << idxAfter;
+        }
+
+        inline void RemoveSectionBreak(int idxAfter)
+        {
+            SectionBreaks &= ~(((uint64_t)1) << idxAfter);
+        }
+
+        inline bool IsSectionBreak(int idxAfter)
+        {
+            auto v = SectionBreaks & (((uint64_t)1) << idxAfter);
+            return v > 0;
+        }
+
+        inline int GetOffsetInSection(int idx = -1)
+        {
+            idx = idx == -1 ? TopItem : idx;
+            int count = 0;
+            while(true)
+            {
+                if (idx == 0)
+                    break;
+                if (IsSectionBreak(idx-1))
+                    break;
+
+                count++;
+                idx--;
+            }
+
+            return count;
+        }
+
+        inline int GetTotalInSection(int idx = -1)
+        {
+            idx = idx == -1 ? TopItem : idx;
+            int count = GetOffsetInSection(idx);
+
+            while(true)
+            {
+                if (idx == Length-1)
+                    break;
+                if (IsSectionBreak(idx))
+                    break;
+
+                count++;
+                idx++;
+            }
+
+            return count + 1;
+        }
+
+        inline bool IsVisible(int idx)
+        {
+            if (idx < TopItem) return false;
+            if (idx == TopItem) return true;
+            if (idx == TopItem + 1) return !IsSectionBreak(TopItem);
+            if (idx == TopItem + 2) return !IsSectionBreak(TopItem) && !IsSectionBreak(TopItem + 1);
+            if (idx == TopItem + 3) return !IsSectionBreak(TopItem) && !IsSectionBreak(TopItem + 1) && !IsSectionBreak(TopItem + 2);
+            return false;
+        }
+
+        inline int GetPage(int idx = -1)
+        {
+            return GetOffsetInSection(idx) / 4;
+        }
+
+        inline int GetPageCount(int idx = -1)
+        {
+            return (GetTotalInSection(idx)+3) / 4;
         }
 
         inline int GetScaledValue(int idx)
@@ -85,7 +158,7 @@ namespace Cyber
             // useful for ensuring all values applied to other components that interact with callback
 
             for (int i = 0; i < Length; i++)
-                SetValue(i, Values[i]);            
+                SetValue(i, Values[i]);
         }
 
         inline void HandleEncoder(int tick)
@@ -113,10 +186,18 @@ namespace Cyber
             if (idx < 0) idx = 0;
             if (idx >= Length) idx = Length - 1;
 
-            while(SelectedItem < idx)
-                MoveDown();
-            while(SelectedItem > idx)
-                MoveUp();
+            if (!QuadMode)
+            {
+                while(SelectedItem < idx)
+                    MoveDown();
+                while(SelectedItem > idx)
+                    MoveUp();
+            }
+            else
+            {
+                TopItem = idx;
+                SelectedItem = TopItem;
+            }
         }
 
         inline void TickValue(int idx, int ticks)
@@ -139,6 +220,8 @@ namespace Cyber
 
         inline void SetValue(int idx, float value)
         {
+            LogInfof("Setting %d to %.3f", idx, value);
+
             if (value < 0) value = 0;
             if (value > 1) value = 1;
 
@@ -160,8 +243,8 @@ namespace Cyber
 
         inline void SetLength(int len)
         {
-            if (len > MaxLength)
-                len = MaxLength;
+            if (len > MENU_MAX_SIZE)
+                len = MENU_MAX_SIZE;
 
             Length = len;
         }
@@ -199,7 +282,7 @@ namespace Cyber
                 if (item >= Length)
                     break;
 
-                bool isSelected = (item == SelectedItem) && EnableSelection;
+                bool isSelected = (item == SelectedItem);
 
                 if (isSelected)
                 {
@@ -245,38 +328,33 @@ namespace Cyber
             display->drawFrame(65, 47, 63, 17);
 
             bool setValueVisible = false;
-            int pageCount = (Length+3) / 4;
-            int pageOffset = 64 - (pageCount-1) * 3;
-            int currentPage = TopItem / 4;
+            int pageCount = GetPageCount();
+            int currentPage = GetPage();
+
+            int pageOffsetPx = 64 - (pageCount-1) * 3;
             if (!DisableTabs)
             {
                 for (int i = 0; i < pageCount; i++)
                 {
                     if (i == currentPage)
-                        display->drawFrame(pageOffset + i * 6-1, 4-1, 3, 3);
+                        display->drawFrame(pageOffsetPx + i * 6-1, 4-1, 3, 3);
                     else
-                        display->drawPixel(pageOffset + i * 6, 4);
+                        display->drawPixel(pageOffsetPx + i * 6, 4);
                 }
             }
             
-            for (int k = 0; k < 4; k++)
+            for (int p = 0; p < 4; p++)
             {
                 YieldAudio();
                 
-                int item = 999;
-                if (k == 0) item = TopItem + 0;
-                if (k == 1) item = TopItem + 3;
-                if (k == 2) item = TopItem + 1;
-                if (k == 3) item = TopItem + 2;
-                
+                int item = TopItem + p;
                 if (item >= Length)
                     continue;
 
                 setValueVisible |= item == lastSetValueIdx;
 
-                int x = k % 2;
-                int y = k / 2;
-                YieldAudio();
+                int x = (p == 2 || p == 3);
+                int y = (p == 1 || p == 2);
 
                 int w = GetStringWidth(display, Captions[item]);
                 int xPos = x == 0 ? 32 - w/2 : 96 - w/2;
@@ -285,6 +363,9 @@ namespace Cyber
 
                 YieldAudio();
                 display->drawBox(x == 0 ? 1 : 66, y == 0 ? 32 : 48, Values[item] * 61, 2);
+
+                if (IsSectionBreak(item))
+                    break;
             }
 
             if (setValueVisible && (micros() - lastSetValueTime) < 1000000)
@@ -297,79 +378,67 @@ namespace Cyber
             }
         }
 
-        inline void MoveDownPage()
-        {
-            MoveDown();
-            MoveDown();
-            MoveDown();
-            MoveDown();
-        }
-
         inline void MoveDown()
         {
+            if (QuadMode)
+            {
+                if (TopItem + 4 >= Length)
+                    return;
+                
+                bool crossesBreak = IsSectionBreak(TopItem) 
+                                 || IsSectionBreak(TopItem+1) 
+                                 || IsSectionBreak(TopItem+2) 
+                                 || IsSectionBreak(TopItem+3);
+                
+                if (crossesBreak)
+                    return;
+                
+                TopItem += 4;
+                SelectedItem = TopItem;
+                return;
+            }
+
             SelectedItem++;
             if (SelectedItem >= Length)
             {
-                if (QuadMode)
-                {
-                    SelectedItem = Length - 1; // Can't roll over in quad mode
-                }
-                else
-                {
-                    SelectedItem = 0;
-                    TopItem = 0;
-                }
+                SelectedItem = 0;
+                TopItem = 0;
             }
             if (SelectedItem - TopItem >= Height)
             {
-                if (QuadMode)
-                {
-                    TopItem += 4;
-                    SelectedItem = TopItem;
-                }
-                else
-                {
-                    TopItem++;
-                }
+                TopItem++;
             }
-        }
-
-        inline void MoveUpPage()
-        {
-            MoveUp();
-            MoveUp();
-            MoveUp();
-            MoveUp();
         }
 
         inline void MoveUp()
         {
+            if (QuadMode)
+            {
+                if (TopItem - 4 < 0)
+                    return;
+                
+                bool crossesBreak = IsSectionBreak(TopItem-1) 
+                                 || IsSectionBreak(TopItem-2) 
+                                 || IsSectionBreak(TopItem-3) 
+                                 || IsSectionBreak(TopItem-4);
+                
+                if (crossesBreak)
+                    return;
+                
+                TopItem -= 4;
+                SelectedItem = TopItem;
+                return;
+            }
+
             SelectedItem--;
             if (SelectedItem < 0)
             {
-                if (QuadMode)
-                {
-                    SelectedItem = 0; // Can't roll over in quad mode
-                    TopItem = 0;
-                }
-                else
-                {
-                    SelectedItem = Length - 1;
-                    TopItem = SelectedItem - Height + 1;
-                }
+                SelectedItem = Length - 1;
+                TopItem = SelectedItem - Height + 1;
             }
             if (SelectedItem < TopItem)
             {
-                if (QuadMode)
-                {
-                    TopItem -= 4;
-                    if (TopItem < 0)
-                        TopItem = 0;
-                }
-                else
-                {
-                    TopItem = SelectedItem;
-                }
+                TopItem = SelectedItem;
             }
         }
     };

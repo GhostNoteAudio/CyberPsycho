@@ -44,8 +44,13 @@ namespace Cyber
         menu.SetLength(8);
         menu.SelectedItem = 0;
         menu.TopItem = 0;
-        menu.EnableSelection = false;
         menu.QuadMode = true;
+
+        menu.HandleEncoderCallback = [this](Menu* menu, int tick)
+        {
+            HandleEncoderDefault(menu, tick);
+            ActiveTab = menu->GetPage();
+        };
         
         ampEnv.DecaySamples = 20000;
         ampEnv.AttackRate = 1;

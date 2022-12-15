@@ -8,14 +8,10 @@ namespace Cyber
     {
         if (!menu->EditMode)
         {
-            if (tick == 1 && !menu->QuadMode)
+            if (tick == 1)
                 menu->MoveDown();
-            if (tick == 1 && menu->QuadMode)
-                menu->MoveDownPage();
-            if (tick == -1 && !menu->QuadMode)
+            if (tick == -1)
                 menu->MoveUp();
-            if (tick == -1 && menu->QuadMode)
-                menu->MoveUpPage();
         }
         else if (menu->EditMode && !menu->QuadMode)
         {
@@ -62,7 +58,8 @@ namespace Cyber
 
         if (menu->QuadMode)
         {
-            menu->SetValue(menu->TopItem + idx, value);
+            if (menu->IsVisible(menu->TopItem + idx))
+                menu->SetValue(menu->TopItem + idx, value);
         }
     }
 
