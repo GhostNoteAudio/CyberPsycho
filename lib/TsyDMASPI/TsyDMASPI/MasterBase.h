@@ -120,16 +120,16 @@ public:
             return false;
         }
 
-        ATOMIC_BLOCK(ATOMIC_RESTORESTATE)
-        {
+        //ATOMIC_BLOCK(ATOMIC_RESTORESTATE)
+        //{
             spi_transaction_t t;
             t.tx_buffer = tx_buf;
             t.rx_buffer = rx_buf;
             t.size = size;
             t.cs_pin = cs_pin;
             transactions.emplace_back(t);
-            beginTransaction();
-        }
+            //beginTransaction();
+        //}
 
         return true;
     }
@@ -139,10 +139,10 @@ public:
         while(1)
         {
             bool b = false;
-            ATOMIC_BLOCK(ATOMIC_RESTORESTATE)
-            {
+            //ATOMIC_BLOCK(ATOMIC_RESTORESTATE)
+            //{
                 b = transactions.empty();
-            }
+            //}
             if (b) break;
         }
     }
@@ -150,20 +150,20 @@ public:
     size_t remained()
     {
         size_t s;
-        ATOMIC_BLOCK(ATOMIC_RESTORESTATE)
-        {
+        //ATOMIC_BLOCK(ATOMIC_RESTORESTATE)
+        //{
             s = transactions.size();
-        }
+        //}
         return s;
     }
 
     void next()
     {
-        ATOMIC_BLOCK(ATOMIC_RESTORESTATE)
-        {
+        //ATOMIC_BLOCK(ATOMIC_RESTORESTATE)
+        //{
             endTransaction();
             beginTransaction();
-        }
+        //}
     }
 
     // get SPIClass pointer to configure SPI directly
@@ -172,57 +172,63 @@ public:
         return spi;
     }
 
-protected:
+//protected:
 
     void beginTransaction()
     {
-        if (transactions.empty() || b_in_transaction) return;
+        //ATOMIC_BLOCK(ATOMIC_RESTORESTATE)
+        //{
+            if (transactions.empty() || b_in_transaction) return;
 
-        b_in_transaction = true;
-        spi_transaction_t& trans = transactions.front();
+            b_in_transaction = true;
+            spi_transaction_t& trans = transactions.front();
 
-        if (trans.rx_buffer)
-            dmarx()->destinationBuffer(trans.rx_buffer, trans.size);
-        else
-        {
-            dmarx()->destination(dummy);
-            dmarx()->transferCount(trans.size);
-        }
+            if (trans.rx_buffer)
+                dmarx()->destinationBuffer(trans.rx_buffer, trans.size);
+            else
+            {
+                dmarx()->destination(dummy);
+                dmarx()->transferCount(trans.size);
+            }
 
-        if (trans.tx_buffer)
-            dmatx()->sourceBuffer(trans.tx_buffer, trans.size);
-        else
-        {
-            dmatx()->source(dummy);
-            dmatx()->transferCount(trans.size);
-        }
+            if (trans.tx_buffer)
+                dmatx()->sourceBuffer(trans.tx_buffer, trans.size);
+            else
+            {
+                dmatx()->source(dummy);
+                dmatx()->transferCount(trans.size);
+            }
 
-        initTransaction();
+            initTransaction();
 
-        spi->beginTransaction(spi_setting);
-        current_cs_pin = trans.cs_pin;
+            spi->beginTransaction(spi_setting);
+            current_cs_pin = trans.cs_pin;
 
-        // Set all CS pins to not active
-        if (csPins[0] != 255) digitalWriteFast(csPins[0], b_active_low);
-        if (csPins[1] != 255) digitalWriteFast(csPins[1], b_active_low);
-        if (csPins[2] != 255) digitalWriteFast(csPins[2], b_active_low);
-        if (csPins[3] != 255) digitalWriteFast(csPins[3], b_active_low);
-        // set the current cs pin to active
-        digitalWriteFast(current_cs_pin, !b_active_low);
-        
-        dmarx()->enable();
-        dmatx()->enable();
+            // Set all CS pins to not active
+            if (csPins[0] != 255) digitalWriteFast(csPins[0], b_active_low);
+            if (csPins[1] != 255) digitalWriteFast(csPins[1], b_active_low);
+            if (csPins[2] != 255) digitalWriteFast(csPins[2], b_active_low);
+            if (csPins[3] != 255) digitalWriteFast(csPins[3], b_active_low);
+            // set the current cs pin to active
+            digitalWriteFast(current_cs_pin, !b_active_low);
+            
+            dmarx()->enable();
+            dmatx()->enable();
+        //}
     }
 
     void endTransaction()
     {
-        digitalWriteFast(current_cs_pin, b_active_low);
+        //ATOMIC_BLOCK(ATOMIC_RESTORESTATE)
+        //{
+            digitalWriteFast(current_cs_pin, b_active_low);
 
-        current_cs_pin = 255;
-        spi->endTransaction();
-        transactions.pop_front();
-        b_in_transaction = false;
-        clearTransaction();
+            current_cs_pin = 255;
+            spi->endTransaction();
+            transactions.pop_front();
+            b_in_transaction = false;
+            clearTransaction();
+        //}
     }
 
     virtual bool initDmaTx() = 0;

@@ -156,6 +156,7 @@ namespace Cyber
             CallbackComplete = false;
         }
 
+        TsyDMASPI0.beginTransaction();
         GetPerfIo()->Stop();
     }
 
