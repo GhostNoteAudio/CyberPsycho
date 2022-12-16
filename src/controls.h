@@ -23,33 +23,27 @@ namespace Cyber
     typedef ControlUpdate<bool> ButtonUpdate;
     typedef ControlUpdate<int> EncoderUpdate;
 
-    const int POT_FIR_SIZE = 60;
-
     // Note: Ideal update frequency for this is about 1Khz
     class ControlManager
     {
         int EncoderState = 0;
         int EncoderValue = 0;
 
+        int CurrentIdx = 0;
+
         // Encoder switch is the 9th button!
         int ButtonCounter[9] = {0};
         bool ButtonState[9] = {false};
         bool ButtonOutputValue[9] = {false};
 
-        float PotState[4][POT_FIR_SIZE] = {{0.0}};
-        int potStateIdx[4] = {0};
-        
-        // used to smooth pot behaviour
-        float PotExcursionPoint[4] = {0.0};
-        float PotMomentum[4] = {0.0};
+        float PotPredictedValue[4] = {0.0};
         float PotOutputValue[4] = {0.0};
-
+        uint PotFastMovementTimestamp[4] = {0};
+        
         // clip the top and bottom range to ensure the pot can reach min and max reliably
         const int PotDeadSpace = 4;
         const float PotScaler = 1024.0 / (1024.0 - 2*PotDeadSpace);
         const float Pot10BitScale = 1.0 / 1023.0;
-        const int PotHysteresis = 10;
-        const int PotExcursionJump = 4;
 
     public:
         inline void UpdateEncoderState()
@@ -77,66 +71,56 @@ namespace Cyber
             else if (EncoderState == 0 && prevState == 1) EncoderValue++;
         }
 
-        inline void UpdatePotAndButton(int idx)
+        inline void SetNextIndex()
         {
-            int bitA = (idx & 0b001) > 0;
-            int bitB = (idx & 0b010) > 0;
-            int bitC = (idx & 0b100) > 0;
+            CurrentIdx = (CurrentIdx + 1) % 8;
+
+            int bitA = (CurrentIdx & 0b001) > 0;
+            int bitB = (CurrentIdx & 0b010) > 0;
+            int bitC = (CurrentIdx & 0b100) > 0;
 
             digitalWrite(PIN_MUX_A, bitA);
             digitalWrite(PIN_MUX_B, bitB);
             digitalWrite(PIN_MUX_C, bitC);
-            delayMicroseconds(2);
+        }
 
+        inline void UpdatePotAndButton()
+        {
             auto btnVal = digitalRead(PIN_BTN_IN);
-            UpdateButtonState(idx, btnVal);
+            UpdateButtonState(CurrentIdx, btnVal);
 
             // Todo: Encoder switch handling
-            if (idx < 4)
+            if (CurrentIdx < 4)
             {
                 auto potVal = analogRead(PIN_POT_IN);
-                UpdatePotState(idx, potVal);
+                UpdatePotState(CurrentIdx, potVal);
             }
-            else if (idx == 4)
+            else if (CurrentIdx == 4)
             {
                 // special case for encoder switch, which is analog #4, but stored as button #8
                 auto encoderSwitch = digitalRead(PIN_POT_IN);
                 UpdateButtonState(8, !encoderSwitch);
             }
+
+            SetNextIndex();
         }
+
     private:
         inline void UpdatePotState(int pot, float newVal)
         {
-            potStateIdx[pot] = (potStateIdx[pot] + 1) % POT_FIR_SIZE;
-            int idxWrite = potStateIdx[pot];
-            PotState[pot][idxWrite] = newVal;
-            float meanVal = Utils::Mean(PotState[pot], POT_FIR_SIZE);
+            float alpha;
+            float delta = fabsf(newVal - PotPredictedValue[pot]);
 
-            float delta = 0;
-            if (fabsf(meanVal - PotExcursionPoint[pot]) > PotExcursionJump)
-            {
-                PotExcursionPoint[pot] = meanVal;
-                delta = 2 * PotExcursionJump;
-            }
+            if (delta > 10)
+                PotFastMovementTimestamp[pot] = millis();
 
-            PotMomentum[pot] = PotMomentum[pot] * 0.99 + delta;
-            PotMomentum[pot] = PotMomentum[pot] > 200 ? 200 : PotMomentum[pot];          
-        }
+            if (PotFastMovementTimestamp[pot] + 250 > millis()) alpha = 0.2;
+            else if (delta < 4) alpha = 0.005;
+            else if (delta < 8) alpha = 0.05;
+            else alpha = 0.2;
 
-        inline float GetPotMomentum(int pot)
-        {
-            if (pot < 0 || pot > 3)
-                return 0;
-
-            return PotMomentum[pot];
-        }
-
-        inline float GetPotExcursionPoint(int pot)
-        {
-            if (pot < 0 || pot > 3)
-                return 0;
-
-            return PotExcursionPoint[pot];
+            PotPredictedValue[pot] = PotPredictedValue[pot] * (1-alpha) + newVal * alpha;
+            //LogInfof("Delta: %.3f, Alpha: %.3f, PredVal: %.1f", delta, alpha, PotPredictedValue[pot]);       
         }
 
         inline float ScalePot(float p)
@@ -150,36 +134,24 @@ namespace Cyber
     public:
         inline float GetPotRaw(int pot)
         {
-            float potVal = Utils::Mean(PotState[pot], POT_FIR_SIZE);
+            float potVal = PotPredictedValue[pot];
             return ScalePot(potVal) * Pot10BitScale;
         }
 
         inline PotUpdate GetPot(int pot)
         {
-            if (pot < 0 || pot > 3)
-                return PotUpdate(0, false);
+            float val = PotPredictedValue[pot];
+            float currentVal = PotOutputValue[pot];
+            float delta = fabsf(val - currentVal);
 
-            float currentOutput = PotOutputValue[pot];
-            float pv = Utils::Mean(PotState[pot], POT_FIR_SIZE);
-            float p = ScalePot(pv);
-            
-            // Talk about over-engineered :)
-            float delta = fabsf(p - currentOutput);
-            bool beyondHyst = delta > PotHysteresis;
-            bool isNew = delta > 0.001;
-            bool atLeast1Different = delta >= 1;
-            bool highMomentum = fabsf(PotMomentum[pot]) > 1.0;
-            bool maxBoundary = p == 1023;
-            bool minBoundary = p == 0;
-
-            if ((isNew && beyondHyst) || (isNew && highMomentum && atLeast1Different) || (isNew && (maxBoundary || minBoundary)))
+            if (delta > 2)
             {
-                PotOutputValue[pot] = p;
-                return PotUpdate(p * Pot10BitScale, true);
+                PotOutputValue[pot] = val;
+                return PotUpdate(val * Pot10BitScale, true);
             }
             else
             {
-                return PotUpdate(PotOutputValue[pot] * Pot10BitScale, false);
+                return PotUpdate(currentVal * Pot10BitScale, false);
             }
         }
 

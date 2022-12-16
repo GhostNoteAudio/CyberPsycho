@@ -33,7 +33,7 @@
         "name": "Teensy 4.0",
         "options": {
           "USB Type": "Serial",
-          "CPU Speed": "600 MHz",
+          "CPU Speed": "720 MHz (overclock)",
           "Optimize": "Faster",
           "Keyboard Layout": "US English"
         }

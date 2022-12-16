@@ -100,15 +100,17 @@ namespace Cyber
         bool trigger = !gate && newGate;
         bool stereo = menu.GetScaledValue(STEREO);
         if (trigger)
-            activeVoice = (activeVoice + 1 + stereo) % 4; // jump 2 voices if stereo
+            activeVoice = (activeVoice + 1 + stereo) % VOICECOUNT; // jump 2 voices if stereo
 
         UpdateVoices(args);
 
         // figures out which voice is the most recently activated, taking into account stereo activates 2 adjacent voices
-        bool active0 = activeVoice == 0 || (activeVoice == 3 && stereo);
+        bool active0 = activeVoice == 0 || (activeVoice == 5 && stereo);
         bool active1 = activeVoice == 1 || (activeVoice == 0 && stereo);
         bool active2 = activeVoice == 2 || (activeVoice == 1 && stereo);
         bool active3 = activeVoice == 3 || (activeVoice == 2 && stereo);
+        bool active4 = activeVoice == 4 || (activeVoice == 3 && stereo);
+        bool active5 = activeVoice == 5 || (activeVoice == 4 && stereo);
 
         for (int i = 0; i < args.Size; i++)
         {
@@ -118,6 +120,8 @@ namespace Cyber
             output2 += Voices[1].Process(newGate && active1);
             output1 += Voices[2].Process(newGate && active2);
             output2 += Voices[3].Process(newGate && active3);
+            output1 += Voices[4].Process(newGate && active4);
+            output2 += Voices[5].Process(newGate && active5);
 
             if (stereo)
             {
@@ -144,13 +148,13 @@ namespace Cyber
         float pitch = args.Data->Cv[0][0] * 12 + semi + cent * 0.01;
         float pitchHz = Utils::Note2HzLut(pitch);
 
-        for (int i = 0; i < 4; i++)
+        for (int i = 0; i < VOICECOUNT; i++)
         {
             if (i == activeVoice)
             {
                 Voices[i].PitchHz = pitchHz;
                 if (stereo)
-                    Voices[(i+1) % 4].PitchHz = pitchHz;
+                    Voices[(i+1) % VOICECOUNT].PitchHz = pitchHz;
             }
             
             Voices[i].PSpread = menu.Values[PSPREAD];

@@ -220,8 +220,6 @@ namespace Cyber
 
         inline void SetValue(int idx, float value)
         {
-            LogInfof("Setting %d to %.3f", idx, value);
-
             if (value < 0) value = 0;
             if (value > 1) value = 1;
 
@@ -362,7 +360,7 @@ namespace Cyber
                 display->print(Captions[item]);
 
                 YieldAudio();
-                display->drawBox(x == 0 ? 1 : 66, y == 0 ? 32 : 48, Values[item] * 61, 2);
+                display->drawBox(x == 0 ? 1 : 66, y == 0 ? 32 : 48, Values[item] * 62, 2);
 
                 if (IsSectionBreak(item))
                     break;

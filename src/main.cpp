@@ -87,6 +87,10 @@ void setup()
     pinMode(PIN_BTN_IN, INPUT);
     pinMode(PIN_POT_IN, INPUT);
 
+    digitalWrite(PIN_MUX_A, 0);
+    digitalWrite(PIN_MUX_B, 0);
+    digitalWrite(PIN_MUX_C, 0);
+
     Serial.println("Starting...");
 
     Menus::Init();
@@ -138,12 +142,7 @@ void loop()
 
     if (updateState.Go())
     {
-        for (int i = 0; i < 8; i++)
-        {
-            YieldAudio();
-            controls.UpdatePotAndButton(i);
-        }
-
+        controls.UpdatePotAndButton();
         controls.UpdateEncoderState();
     }
 

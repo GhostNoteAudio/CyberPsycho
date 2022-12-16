@@ -117,11 +117,13 @@ namespace Cyber
 
     class Superwave : public Generator
     {
+        const static int VOICECOUNT = 6;
+
         const char* Tabs[4] = {"OSC", "FILT", "FENV", "AENV"};
         Menu menu;
         bool gate;
         int activeVoice = 0;
-        SuperwaveVoice Voices[4];
+        SuperwaveVoice Voices[VOICECOUNT];
 
     public:
         Superwave();
