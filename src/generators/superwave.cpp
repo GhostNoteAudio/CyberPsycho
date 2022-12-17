@@ -10,6 +10,7 @@ namespace Cyber
         PSPREAD,
         VSPREAD,
         CENT,
+        SUBOSC,
         STEREO,
         
         CUTOFF,
@@ -25,7 +26,7 @@ namespace Cyber
         AATTACK,
         ADECAY,
         ASUSTAIN,
-        ARELEASE
+        ARELEASE,
     };
 
     Superwave::Superwave()
@@ -34,6 +35,7 @@ namespace Cyber
         menu.Captions[PSPREAD] = "Spread";
         menu.Captions[VSPREAD] = "Mix";
         menu.Captions[CENT] = "Cent";
+        menu.Captions[SUBOSC] = "Sub Osc";
         menu.Captions[STEREO] = "Stereo";
 
         menu.Captions[CUTOFF] = "Cutoff";
@@ -64,7 +66,7 @@ namespace Cyber
         menu.Values[CUTOFF] = 0.9f;
         menu.Values[DRIVE] = 0.3f;
         menu.Values[ENVAMT] = 0.5f;
-        menu.Values[FSUSTAIN] = 0.5f;
+        menu.Values[FSUSTAIN] = 0.0f;
         menu.Values[ASUSTAIN] = 1.0f;
 
         menu.Formatters[STEREO] = [](int idx, float val, int sv, char* dest) { strcpy(dest, sv == 1 ? "Stereo" : "Mono"); };
@@ -73,7 +75,7 @@ namespace Cyber
         menu.AddSectionBreak(ENVAMT);
         menu.AddSectionBreak(FRELEASE);
 
-        menu.SetLength(17);
+        menu.SetLength(18);
         menu.QuadMode = true;
     }
 
@@ -144,9 +146,15 @@ namespace Cyber
         bool stereo = menu.GetScaledValue(STEREO);
         int semi = menu.GetScaledValue(SEMI);
         int cent = menu.GetScaledValue(CENT);
+        float pitchCv = args.GetModulationSlow(SEMI);
 
-        float pitch = args.Data->Cv[0][0] * 12 + semi + cent * 0.01;
+        float pitch = args.Data->Cv[0][0] * CV_RANGE * 12 + semi + cent * 0.01 + pitchCv * 24;
         float pitchHz = Utils::Note2HzLut(pitch);
+
+        auto getValue = [this, args](int idx)
+        {
+            return Utils::Clamp(menu.Values[idx] + args.GetModulationSlow(idx));
+        };
 
         for (int i = 0; i < VOICECOUNT; i++)
         {
@@ -157,23 +165,23 @@ namespace Cyber
                     Voices[(i+1) % VOICECOUNT].PitchHz = pitchHz;
             }
             
-            Voices[i].PSpread = menu.Values[PSPREAD];
-            Voices[i].VSpread = menu.Values[VSPREAD];
+            Voices[i].PSpread = getValue(PSPREAD);
+            Voices[i].VSpread = getValue(VSPREAD);
 
-            Voices[i].Cutoff = menu.Values[CUTOFF];
-            Voices[i].Resonance = menu.Values[RESO];
-            Voices[i].Drive = menu.Values[DRIVE];
-            Voices[i].EnvAmt = menu.Values[ENVAMT];
+            Voices[i].Cutoff = getValue(CUTOFF);
+            Voices[i].Resonance = getValue(RESO);
+            Voices[i].Drive = getValue(DRIVE);
+            Voices[i].EnvAmt = getValue(ENVAMT);
             
-            Voices[i].Fattack = 10 + Utils::Resp3dec(menu.Values[FATTACK]) * SAMPLERATE * 20;
-            Voices[i].Fdecay = 10 + Utils::Resp3dec(menu.Values[FDECAY]) * SAMPLERATE * 20;
-            Voices[i].Fsustain = menu.Values[FSUSTAIN];
-            Voices[i].Frelease = 10 + Utils::Resp3dec(menu.Values[FRELEASE]) * SAMPLERATE * 20;
+            Voices[i].Fattack = 10 + Utils::Resp3dec(getValue(FATTACK)) * SAMPLERATE * 20;
+            Voices[i].Fdecay = 10 + Utils::Resp3dec(getValue(FDECAY)) * SAMPLERATE * 20;
+            Voices[i].Fsustain = getValue(FSUSTAIN);
+            Voices[i].Frelease = 10 + Utils::Resp3dec(getValue(FRELEASE)) * SAMPLERATE * 20;
 
-            Voices[i].Aattack = 10 + Utils::Resp3dec(menu.Values[AATTACK]) * SAMPLERATE * 20;
-            Voices[i].Adecay = 10 + Utils::Resp3dec(menu.Values[ADECAY]) * SAMPLERATE * 20;
-            Voices[i].Asustain = menu.Values[ASUSTAIN];
-            Voices[i].Arelease = 10 + Utils::Resp3dec(menu.Values[ARELEASE]) * SAMPLERATE * 20;
+            Voices[i].Aattack = 10 + Utils::Resp3dec(getValue(AATTACK)) * SAMPLERATE * 20;
+            Voices[i].Adecay = 10 + Utils::Resp3dec(getValue(ADECAY)) * SAMPLERATE * 20;
+            Voices[i].Asustain = getValue(ASUSTAIN);
+            Voices[i].Arelease = 10 + Utils::Resp3dec(getValue(ARELEASE)) * SAMPLERATE * 20;
             
             Voices[i].Update();
         }

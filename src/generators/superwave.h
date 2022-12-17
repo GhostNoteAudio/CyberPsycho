@@ -129,7 +129,7 @@ namespace Cyber
         Superwave();
         virtual const char** GetTabs() override { return Tabs; }
         virtual Menu* GetMenu() override { return &menu; }
-        virtual int GetModSlots() override { return 4; }
+        virtual int GetModSlots() override { return 18; }
         virtual void GetModSlotName(int idx, char* dest) override { strcpy(dest, menu.Captions[idx]); }
         virtual int ResolveSlot(int knobIdx) override { return menu.TopItem + knobIdx; }
 

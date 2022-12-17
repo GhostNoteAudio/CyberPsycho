@@ -120,7 +120,7 @@ namespace Cyber
             else alpha = 0.2;
 
             PotPredictedValue[pot] = PotPredictedValue[pot] * (1-alpha) + newVal * alpha;
-            //LogInfof("Delta: %.3f, Alpha: %.3f, PredVal: %.1f", delta, alpha, PotPredictedValue[pot]);       
+            //LogInfof("Delta: %.3f, Alpha: %.3f, PredVal: %.1f", delta, alpha, PotPredictedValue[pot]);
         }
 
         inline float ScalePot(float p)
@@ -140,11 +140,13 @@ namespace Cyber
 
         inline PotUpdate GetPot(int pot)
         {
-            float val = PotPredictedValue[pot];
+            float val = ScalePot(PotPredictedValue[pot]);
             float currentVal = PotOutputValue[pot];
             float delta = fabsf(val - currentVal);
+            bool isBoundary = val == 0 || val == 1023;
 
-            if (delta > 2)
+            // We take special care that we can reach the boundaries without problems
+            if ((isBoundary && delta > 0) || delta > 4)
             {
                 PotOutputValue[pot] = val;
                 return PotUpdate(val * Pot10BitScale, true);
