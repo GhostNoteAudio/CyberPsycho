@@ -15,6 +15,7 @@ namespace Cyber
         const float OFFSETS[7] = {-0.1102, -0.0629, -0.0235, 0.0, 0.0217, 0.0593, 0.1056};
         const float GAINS[7] = {0.1, 0.3, 0.7, 1, 0.65, 0.32, 0.08};
 
+        uint32_t phasorSub = 0;
         uint32_t phasor[7] = {0};
         float volumes[7] = {0};
         Modules::Biquad biq;
@@ -22,11 +23,13 @@ namespace Cyber
         Modules::Envelope fenv;
         Modules::FilterCascade filter;
         float gainAdjust = 1.0;
+        float subOscGain = 0.0;
     
     public:
         float PSpread; // 0..1
         float VSpread; // 0..1
         float PitchHz; // 0...20k
+        float SubOsc; // 0..1
 
         float Cutoff;
         float Resonance;
@@ -73,6 +76,7 @@ namespace Cyber
             biq.Frequency = PitchHz;
             biq.Update();
             gainAdjust = 1.0 / Utils::Sum(volumes, 7);
+            subOscGain = SubOsc > 0 ? Utils::DB2Gainf(-30 + SubOsc * 30) : 0;
 
             float cutoff = Cutoff + fenv.GetOutput() * EnvAmt;
             filter.Cutoff = Utils::Clamp(cutoff);
@@ -100,14 +104,23 @@ namespace Cyber
             {
                 float hz = PitchHz * (1 + OFFSETS[i] * PSpread);
                 uint32_t inc = Modules::Wavetable::GetPhaseIncrement(hz);
+                
                 phasor[i] += inc;
                 float v = (phasor[i] - 0x7FFFFFFF) * 4.6566128e-10f;
                 output += v * volumes[i];
+
+                if (i == 3)
+                {
+                    phasorSub += (inc>>1);
+                    float v = (phasorSub - 0x7FFFFFFF) * 4.6566128e-10f;
+                    output += v * subOscGain;
+                }
             }
-            
+
             output *= gainAdjust;
             output = biq.Process(output); // high pass to remove aliasing below fundamental
-            output += 0.2 * Modules::Wavetable::Sin(phasor[3]); // increase fundamental frequency to compensate for high pass
+            output += 0.2 * Modules::Wavetable::Sin(phasor[3]) * (1 + subOscGain); // increase fundamental frequency to compensate for high pass
+            output += 0.35 * Modules::Wavetable::Sin(phasorSub) * subOscGain;
 
             output = filter.ProcessSample(output);
             output *= aenv.Process(gate);

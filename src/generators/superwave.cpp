@@ -63,8 +63,8 @@ namespace Cyber
         menu.Values[PSPREAD] = 0.5f;
         menu.Values[VSPREAD] = 0.5f;
         menu.Values[CENT] = 0.5f;
-        menu.Values[CUTOFF] = 0.9f;
-        menu.Values[DRIVE] = 0.3f;
+        menu.Values[CUTOFF] = 1.0f;
+        menu.Values[DRIVE] = 0.5f;
         menu.Values[ENVAMT] = 0.5f;
         menu.Values[FSUSTAIN] = 0.0f;
         menu.Values[ASUSTAIN] = 1.0f;
@@ -167,6 +167,7 @@ namespace Cyber
             
             Voices[i].PSpread = getValue(PSPREAD);
             Voices[i].VSpread = getValue(VSPREAD);
+            Voices[i].SubOsc = getValue(SUBOSC);
 
             Voices[i].Cutoff = getValue(CUTOFF);
             Voices[i].Resonance = getValue(RESO);
