@@ -34,7 +34,7 @@ namespace Cyber
         {
                  if (idx == 0) return "Pitch";
             else if (idx == 1) return "Volume";
-            else return "X";
+            else return "";
         }
 
         virtual inline void GetParamDisplay(int idx, char* dest)

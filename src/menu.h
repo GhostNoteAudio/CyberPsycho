@@ -69,6 +69,11 @@ namespace Cyber
             SectionBreaks &= ~(((uint64_t)1) << idxAfter);
         }
 
+        inline void ClearAllSectionBreaks()
+        {
+            SectionBreaks = 0;
+        }
+
         inline bool IsSectionBreak(int idxAfter)
         {
             auto v = SectionBreaks & (((uint64_t)1) << idxAfter);
@@ -314,17 +319,10 @@ namespace Cyber
 
         inline void RenderQuad(U8G2* display)
         {
+            char val[16];
             display->clearDisplay();
             display->setFont(DEFAULT_FONT);
-
-            char val[16];
-
             display->setDrawColor(1);
-            display->drawFrame(0, 31, 63, 17);
-            display->drawFrame(65, 31, 63, 17);
-            display->drawFrame(0, 47, 63, 17);
-            display->drawFrame(65, 47, 63, 17);
-
             bool setValueVisible = false;
             int pageCount = GetPageCount();
             int currentPage = GetPage();
@@ -348,6 +346,8 @@ namespace Cyber
                 int item = TopItem + p;
                 if (item >= Length)
                     continue;
+                if (strlen(Captions[item]) == 0)
+                    continue;
 
                 setValueVisible |= item == lastSetValueIdx;
 
@@ -361,6 +361,7 @@ namespace Cyber
 
                 YieldAudio();
                 display->drawBox(x == 0 ? 1 : 66, y == 0 ? 32 : 48, Values[item] * 62, 2);
+                display->drawFrame(x == 0 ? 0 : 65, y == 0 ? 31 : 47, 63, 17);
 
                 if (IsSectionBreak(item))
                     break;

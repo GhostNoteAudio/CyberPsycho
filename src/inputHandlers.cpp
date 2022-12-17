@@ -68,10 +68,12 @@ namespace Cyber
         bool down = value;
         bool up = !value;
         char tabval[16];
-        voice.Gen->GetTab(idx, tabval);
 
         if (modalState.EnableAction)
         {
+            if (idx < 4)
+                voice.Gen->GetTab(idx, tabval);
+
             if (idx == 0)
             {
                 if (modalState.Shift() && up)

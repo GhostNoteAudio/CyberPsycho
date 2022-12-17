@@ -35,6 +35,11 @@ namespace Cyber
             delete gen;
         }
 
+        inline GeneratorInfo GetSlotGenInfo(int idx)
+        {
+            return SlotGenInfo[idx];
+        }
+
         inline int GetSlotGenIndexById(const char* slotGenId)
         {
             for (int i = 0; i < SlotGenCount; i++)
@@ -71,6 +76,11 @@ namespace Cyber
         inline void DeleteGenInstance(Generator* gen)
         {
             delete gen;
+        }
+
+        inline GeneratorInfo GetGenInfo(int idx)
+        {
+            return GenInfo[idx];
         }
 
         inline int GetGenIndexById(const char* genId)

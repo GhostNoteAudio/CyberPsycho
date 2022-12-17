@@ -11,6 +11,7 @@
 
 #include "slots/A440.h"
 #include "slots/Noise.h"
+#include "slots/Blank.h"
 
 using namespace Cyber;
 
@@ -40,6 +41,7 @@ void RegisterAllGenerators()
 
     generatorRegistry.AddSlotGen<A440Hz>();
     generatorRegistry.AddSlotGen<Noise>();
+    generatorRegistry.AddSlotGen<Blank>();
     // generatorRegistry.Add<MultimodeFilter>();
     // generatorRegistry.Add<Redux>();
     // generatorRegistry.Add<BasicDrive>();
@@ -115,11 +117,11 @@ void setup()
 PeriodicExecution execPrint(1000);
 PeriodicExecution execPrintFast(100);
 PeriodicExecution updateState(1);
-PeriodicExecution updateMenu(10);
+PeriodicExecution updateMenu(30);
 
 void loop()
 {
-    //execPrint.active = false;
+    execPrint.active = false;
     //RunBenchmark();
     
     YieldAudio();

@@ -7,6 +7,8 @@ namespace Cyber
 {
     class Quad : public Generator
     {
+        bool selectionModeActive = false;
+        int selectedGen = 0;
         Menu menu;
         SlotGenerator* Slots[4] = {0};
         
@@ -20,6 +22,13 @@ namespace Cyber
         virtual int ResolveSlot(int knobIdx) override;
         virtual void Process(GeneratorArgs args) override;
         
+    private:
+        void RenderSlotSelectionMenu(U8G2* display);
+        void UpdateMenuSections();
+        void UpdateCaptionsValues();
+        void SetSlotGen(int slot, int genId);
+
+    public:
         inline static GeneratorInfo GetInfo()
         {
             GeneratorInfo info;

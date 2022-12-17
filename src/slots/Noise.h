@@ -30,7 +30,7 @@ namespace Cyber
         virtual inline const char* GetParamName(int idx)
         {
                  if (idx == 0) return "Redux";
-            else return "Y";
+            else return "";
         }
 
         virtual inline void GetParamDisplay(int idx, char* dest)

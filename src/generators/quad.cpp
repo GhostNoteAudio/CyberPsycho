@@ -1,26 +1,33 @@
 #include "quad.h"
 #include "generatorRegistry.h"
+#include "menus.h"
 
 namespace Cyber
 {
     Quad::Quad()
     {
-        Slots[0] = generatorRegistry.CreateSlotGenInstance(0);
-        Slots[1] = generatorRegistry.CreateSlotGenInstance(1);
+        int blankIdx = generatorRegistry.GetSlotGenIndexById("Slot-GNA-Blank");
+        Slots[0] = generatorRegistry.CreateSlotGenInstance(blankIdx);
+        Slots[1] = generatorRegistry.CreateSlotGenInstance(blankIdx);
+        Slots[2] = generatorRegistry.CreateSlotGenInstance(blankIdx);
+        Slots[3] = generatorRegistry.CreateSlotGenInstance(blankIdx);
 
         auto formatter = [this](int slot, int idx, char* dest)
         {
             Slots[slot]->GetParamDisplay(idx, dest);
         };
 
-        for (int i = 0; i < 32; i++)
+        for (int i = 0; i < 64; i++)
         {
             int slot = i / 16;
             int param = i % 16;
-            menu.Captions[i] = Slots[slot]->GetParamName(param);
             menu.Formatters[i] = [formatter, slot, param](int idx, float value, int sv, char* dest) { formatter(slot, param, dest); };
-            menu.Values[i] = Slots[slot]->Param[param];
         }
+
+        menu.QuadMode = true;
+        menu.SetLength(64);
+        UpdateMenuSections();
+        UpdateCaptionsValues();
 
         menu.ValueChangedCallback = [this](int idx, float value, int sv)
         {
@@ -30,23 +37,71 @@ namespace Cyber
             Slots[slot]->ParamUpdated(param);
         };
         
-        menu.QuadMode = true;
-        menu.SetLength(64);
+        menu.RenderCustomDisplayCallback = [this](U8G2* display)
+        {
+            RenderSlotSelectionMenu(display);
+        };
 
-        menu.AddSectionBreak( 0 + Slots[0]->ParamCount - 1);
-        menu.AddSectionBreak(16 + Slots[1]->ParamCount - 1);
+        menu.HandleEncoderCallback = [this](Menu* menu, int tick)
+        {
+            if (!selectionModeActive)
+            {
+                HandleEncoderDefault(menu, tick);
+                return;
+            }
 
-        menu.AddSectionBreak(16-1);
-        menu.AddSectionBreak(32-1);
-        menu.AddSectionBreak(48-1);
+            int newSelectedGen = selectedGen + tick;
+            if (newSelectedGen >= generatorRegistry.GetSlotGenCount())
+                newSelectedGen = generatorRegistry.GetSlotGenCount() - 1;
+            if (newSelectedGen < 0)
+                newSelectedGen = 0;
+
+            selectedGen = newSelectedGen;
+        };
+
+        menu.HandleEncoderSwitchCallback = [this](Menu* menu, bool value)
+        {
+            if (!modalState.Shift() && !selectionModeActive)
+            {
+                HandleEncoderSwitchDefault(menu, value);
+                return;
+            }
+
+            if (!value) return;
+
+            if (!selectionModeActive)
+            {
+                selectionModeActive = true;
+                menu->DisableTabs = true;
+                modalState.EnableAction = false;
+                selectedGen = Slots[ActiveTab]->GenIndex;
+            }
+            else
+            {
+                selectionModeActive = false;
+                menu->DisableTabs = false;
+                if (selectedGen != Slots[ActiveTab]->GenIndex)
+                {
+                    LogInfof("Load Gen %d into slot %d !", selectedGen, ActiveTab);
+                    SetSlotGen(ActiveTab, selectedGen);
+                }
+            }
+        };
+
+        menu.HandleSwitchCallback = [this](Menu* menu, int idx, bool value)
+        {
+            if (selectionModeActive && value) selectionModeActive = false;
+            
+            HandleSwitchDefault(menu, idx, value);
+        };
     }
 
     void Quad::GetTab(int idx, char* dest)
     {
         if (idx == 0) strcpy(dest, Slots[0]->TabName);
         if (idx == 1) strcpy(dest, Slots[1]->TabName);
-        if (idx == 2) strcpy(dest, "Slot3");
-        if (idx == 3) strcpy(dest, "Slot4");
+        if (idx == 2) strcpy(dest, Slots[2]->TabName);
+        if (idx == 3) strcpy(dest, Slots[3]->TabName);
     }
 
     void Quad::SetTab(int tab)
@@ -94,5 +149,50 @@ namespace Cyber
             Slots[1]->Process(&sargs);
             args.Data->Out[1][i] = sargs.Output;
         }
+    }
+
+    void Quad::RenderSlotSelectionMenu(U8G2* display)
+    {
+        if (!selectionModeActive) return;
+        auto info = generatorRegistry.GetSlotGenInfo(selectedGen);
+        display->clearDisplay();
+        display->setFont(DEFAULT_FONT);
+        display->setCursor(10, 30);
+        display->print(info.DisplayName);
+    }
+
+    void Quad::UpdateMenuSections()
+    {
+        menu.ClearAllSectionBreaks();
+        if (Slots[0]->ParamCount == 0) menu.AddSectionBreak(0);
+        if (Slots[1]->ParamCount == 0) menu.AddSectionBreak(16);
+        if (Slots[2]->ParamCount == 0) menu.AddSectionBreak(32);
+        if (Slots[3]->ParamCount == 0) menu.AddSectionBreak(48);
+        menu.AddSectionBreak( 0 + Slots[0]->ParamCount - 1);
+        menu.AddSectionBreak(16 + Slots[1]->ParamCount - 1);
+        menu.AddSectionBreak(32 + Slots[2]->ParamCount - 1);
+        menu.AddSectionBreak(48 + Slots[3]->ParamCount - 1);
+        menu.AddSectionBreak(16-1);
+        menu.AddSectionBreak(32-1);
+        menu.AddSectionBreak(48-1);
+    }
+
+    void Quad::UpdateCaptionsValues()
+    {
+        for (int i = 0; i < 64; i++)
+        {
+            int slot = i / 16;
+            int param = i % 16;
+            menu.Captions[i] = Slots[slot]->GetParamName(param);
+            menu.Values[i] = Slots[slot]->Param[param];
+        }
+    }
+
+    void Quad::SetSlotGen(int slot, int genId)
+    {
+        generatorRegistry.DeleteSlotGenInstance(Slots[slot]);
+        Slots[slot] = generatorRegistry.CreateSlotGenInstance(genId);
+        UpdateMenuSections();
+        UpdateCaptionsValues();
     }
 }
