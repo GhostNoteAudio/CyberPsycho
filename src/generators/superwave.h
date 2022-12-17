@@ -140,16 +140,19 @@ namespace Cyber
 
     public:
         Superwave();
-        virtual const char** GetTabs() override { return Tabs; }
-        virtual Menu* GetMenu() override { return &menu; }
-        virtual int GetModSlots() override { return 18; }
-        virtual void GetModSlotName(int idx, char* dest) override { strcpy(dest, menu.Captions[idx]); }
-        virtual int ResolveSlot(int knobIdx) override { return menu.TopItem + knobIdx; }
-
-        virtual inline void SetTab(int tab) override;
-        virtual void Process(GeneratorArgs args) override;
-        void UpdateVoices(GeneratorArgs args);
+        virtual inline Menu* GetMenu() override { return &menu; }
+        virtual inline int GetModSlots() override { return 18; }
+        virtual inline void GetModSlotName(int idx, char* dest) override { strcpy(dest, menu.Captions[idx]); }
+        virtual inline int ResolveSlot(int knobIdx) override { return menu.TopItem + knobIdx; }
         
+        virtual void GetTab(int idx, char* dest) override;
+        virtual void SetTab(int tab) override;
+        virtual void Process(GeneratorArgs args) override;
+
+    private:
+        void UpdateVoices(GeneratorArgs args);
+
+    public:
         inline static GeneratorInfo GetInfo()
         {
             GeneratorInfo info;

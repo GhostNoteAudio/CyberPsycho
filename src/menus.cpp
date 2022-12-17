@@ -359,8 +359,8 @@ namespace Cyber
             {
                 YieldAudio();
                 int selectedGen = generatorSelectMenu.Values[0];
-                if (selectedGen < generatorRegistry.Count)
-                    generatorRegistry.SplashScreenBuilders[selectedGen](display);
+                if (selectedGen < generatorRegistry.GetGenCount())
+                    generatorRegistry.GetSplashScreenBuilder(selectedGen)(display);
                 YieldAudio();
                 if (generatorSelectMenu.EditMode)
                 {

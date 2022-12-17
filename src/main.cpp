@@ -7,10 +7,10 @@
 
 #include "generators/kick1.h"
 #include "generators/superwave.h"
-#include "generators/multimodeFilter.h"
-#include "generators/redux.h"
-#include "generators/basicDrive.h"
-#include "generators/eqShelf.h"
+#include "generators/quad.h"
+
+#include "slots/A440.h"
+#include "slots/Noise.h"
 
 using namespace Cyber;
 
@@ -34,8 +34,12 @@ void PreventStartupBleep()
 
 void RegisterAllGenerators()
 {
-    generatorRegistry.Add<Kick1>();
-    generatorRegistry.Add<Superwave>();
+    generatorRegistry.AddGen<Kick1>();
+    generatorRegistry.AddGen<Superwave>();
+    generatorRegistry.AddGen<Quad>();
+
+    generatorRegistry.AddSlotGen<A440Hz>();
+    generatorRegistry.AddSlotGen<Noise>();
     // generatorRegistry.Add<MultimodeFilter>();
     // generatorRegistry.Add<Redux>();
     // generatorRegistry.Add<BasicDrive>();
@@ -43,7 +47,7 @@ void RegisterAllGenerators()
     // generatorRegistry.Add<Bypass>();
 
     voice.Init();
-    voice.SetGenerator(generatorRegistry.GetIndexById("GNA-Superwave"));
+    voice.SetGenerator(generatorRegistry.GetGenIndexById("GNA-Quad"));
 }
 
 void setup()
@@ -115,7 +119,7 @@ PeriodicExecution updateMenu(10);
 
 void loop()
 {
-    execPrint.active = false;
+    //execPrint.active = false;
     //RunBenchmark();
     
     YieldAudio();

@@ -26,9 +26,9 @@ namespace Cyber
         Modules::PercussionEnvelope pitchEnv;
     public:
         Kick1();
-        virtual const char** GetTabs() override { return Tabs; }
         virtual Menu* GetMenu() override;
-        virtual inline void SetTab(int tab) override;
+         virtual void GetTab(int idx, char* dest) override;
+        virtual void SetTab(int tab) override;
         virtual int GetModSlots();
         virtual void GetModSlotName(int idx, char* dest);
         virtual int ResolveSlot(int knobIdx);

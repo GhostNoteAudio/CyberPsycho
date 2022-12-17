@@ -65,14 +65,15 @@ namespace Cyber
             auto display = GetDisplay();
             display->setDrawColor(1);
             display->setFont(SMALL_FONT);
+            char tabval[16];
 
             YieldAudio();
-            const char** pages = voice.Gen->GetTabs();
             int offsets[] = {0, 23, 128-47, 128-24};
             
             for (int i = 0; i < 4; i++)
             {
-                if (strlen(pages[i]) == 0)
+                voice.Gen->GetTab(i, tabval);
+                if (strlen(tabval) == 0)
                     continue;
 
                 if (i == activeTab)
@@ -85,13 +86,14 @@ namespace Cyber
 
             for (int i = 0; i < 4; i++)
             {
-                if (strlen(pages[i]) == 0)
+                voice.Gen->GetTab(i, tabval);
+                if (strlen(tabval) == 0)
                     continue;
                     
                 display->setDrawColor(i == activeTab ? 0 : 1);
-                auto w = display->getStrWidth(pages[i]);
+                auto w = display->getStrWidth(tabval);
                 display->setCursor(offsets[i] + 12 - w/2, 7);
-                display->print(pages[i]);
+                display->print(tabval);
             }
 
             YieldAudio();

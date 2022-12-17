@@ -28,7 +28,7 @@ namespace Cyber
         if (voice.Gen->GetMenu() == menu && value)
         {
             generatorSelectMenu.Values[0] = voice.Gen->GenIndex;
-            generatorSelectMenu.Values[1] = generatorRegistry.Count;
+            generatorSelectMenu.Values[1] = generatorRegistry.GetGenCount();
             displayManager.ActiveMenu = &generatorSelectMenu;
             generatorSelectMenu.EditMode = true;
             return;
@@ -67,6 +67,8 @@ namespace Cyber
     {
         bool down = value;
         bool up = !value;
+        char tabval[16];
+        voice.Gen->GetTab(idx, tabval);
 
         if (modalState.EnableAction)
         {
@@ -88,7 +90,7 @@ namespace Cyber
                 }
                 else if (!modalState.Shift() && up)
                 {
-                    if (strlen(voice.Gen->GetTabs()[idx]) > 0)
+                    if (strlen(tabval) > 0)
                     {
                         voice.Gen->SetTab(1);
                         displayManager.ActiveMenu = voice.Gen->GetMenu();
@@ -98,7 +100,7 @@ namespace Cyber
 
             if (idx == 2 || idx == 3)
             {
-                if (!modalState.Shift() && up && strlen(voice.Gen->GetTabs()[idx]) > 0)
+                if (!modalState.Shift() && up && strlen(tabval) > 0)
                 {
                     voice.Gen->SetTab(idx);
                     displayManager.ActiveMenu = voice.Gen->GetMenu();

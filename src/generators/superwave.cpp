@@ -79,6 +79,11 @@ namespace Cyber
         menu.QuadMode = true;
     }
 
+    void Superwave::GetTab(int idx, char* dest)
+    {
+        strcpy(dest, Tabs[idx]);
+    }
+
     void Superwave::SetTab(int tab)
     { 
         if (tab == ActiveTab)

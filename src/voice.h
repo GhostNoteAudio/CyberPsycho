@@ -32,8 +32,8 @@ namespace Cyber
 
             if (Gen == nullptr || Gen->GenIndex != genId)
             {
-                generatorRegistry.DeleteInstance(Gen);
-                Gen = generatorRegistry.CreateInstance(genId);
+                generatorRegistry.DeleteGenInstance(Gen);
+                Gen = generatorRegistry.CreateGenInstance(genId);
                 matrix.GetMenu()->Steps[1] = Gen->GetModSlots();
             }
         }

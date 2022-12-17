@@ -20,6 +20,14 @@ namespace Cyber
         std::function<float*(uint8_t)> GetModulationFast;
     };
 
+    struct SlotArgs
+    {
+        float Bpm;
+        bool Gate;
+        float Input;
+        float Output;
+    };
+
     struct GeneratorInfo
     {
         int Version;
@@ -55,11 +63,11 @@ namespace Cyber
     class Generator
     {
     public:
-        int GenIndex = 0; // used by the "OS", do not modify
+        int GenIndex; // used by the "OS", do not modify
         int ActiveTab = 0;
-        virtual const char** GetTabs() = 0;
-        virtual Menu* GetMenu() = 0;
+        virtual void GetTab(int idx, char* dest) = 0;
         virtual void SetTab(int tab) = 0;
+        virtual Menu* GetMenu() = 0;
         virtual int GetModSlots() = 0;
         virtual void GetModSlotName(int idx, char* dest) = 0;
         virtual int ResolveSlot(int knobIdx) = 0;
@@ -71,5 +79,23 @@ namespace Cyber
         // Your class also needs to implement these two static functions
         //static GeneratorInfo GetInfo();
         //static void SplashScreen(U8G2* display);
+    };
+
+    class SlotGenerator
+    {
+    public:
+        int GenIndex; // used by the "OS", do not modify
+        int ParamCount = 0; // Set max 16
+        float Param[16] = { 0 };
+        char TabName[6] = {' ', ' ', ' ', ' ', ' ', 0};
+
+        virtual void ParamUpdated(int idx = -1) = 0;
+        virtual const char* GetParamName(int idx) = 0;
+        virtual void GetParamDisplay(int idx, char* dest) = 0;
+        virtual void Process(SlotArgs* args) = 0;
+        virtual ~SlotGenerator() {}
+
+        // Your class also needs to implement this static function
+        //static GeneratorInfo GetInfo();
     };
 }

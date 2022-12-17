@@ -63,24 +63,14 @@ namespace Cyber
         pitchEnv.UpdateParams();
     }
 
-    float Kick1::GetScaledParameter(int idx, float modulation)
-    {
-        float val = Utils::Clamp(menu.Values[idx] + modulation);
-
-        if (idx == DECAY) return (0.01 + val * 0.99) * SAMPLERATE * 2;
-        if (idx == PDEC) return (0.002 + val * 0.5) * SAMPLERATE;
-        if (idx == PMOD) return val * 1000;
-        if (idx == FREQ) return 10 + val * 290;
-        if (idx == BOOST) return 1 + val * 20;
-        if (idx == FOLD) return val * 10;
-        if (idx == PSHAPE) return 10 + val * 50;
-        if (idx == ASHAPE) return 10 + val * 50;
-        return 0;
-    }
-
     Menu* Kick1::GetMenu()
     {
         return &menu;
+    }
+
+    void Kick1::GetTab(int idx, char* dest)
+    {
+        strcpy(dest, Tabs[idx]);
     }
 
     void Kick1::SetTab(int tab)
@@ -106,28 +96,6 @@ namespace Cyber
     int Kick1::ResolveSlot(int knobIdx)
     {
         return menu.TopItem + knobIdx;
-    }
-
-    void Kick1::UpdateAll(GeneratorArgs args)
-    {
-        // Updates are triggered at trigger events. Realtime updates not allowed
-        float fmod = powf(2, args.GetModulationSlow(3));
-
-        adecay = GetScaledParameter(DECAY, args.GetModulationSlow(0));
-        pdecay = GetScaledParameter(PDEC, args.GetModulationSlow(1));
-        pmod = GetScaledParameter(PMOD, args.GetModulationSlow(2));
-        freq = GetScaledParameter(FREQ) * fmod;
-        boost = GetScaledParameter(BOOST, args.GetModulationSlow(4));
-        fold = GetScaledParameter(FOLD, args.GetModulationSlow(5));
-        pshape = GetScaledParameter(PSHAPE, args.GetModulationSlow(6));
-        ashape = GetScaledParameter(ASHAPE, args.GetModulationSlow(7));
-
-        ampEnv.DecaySamples = adecay;
-        pitchEnv.DecaySamples = pdecay;
-        ampEnv.ValueFloorDb = -ashape;
-        pitchEnv.ValueFloorDb = -pshape;
-        ampEnv.UpdateParams();
-        pitchEnv.UpdateParams();
     }
 
     void Kick1::Process(GeneratorArgs args)
@@ -159,5 +127,42 @@ namespace Cyber
 
             args.Data->Out[0][i] = s;
         }
+    }
+
+    void Kick1::UpdateAll(GeneratorArgs args)
+    {
+        // Updates are triggered at trigger events. Realtime updates not allowed
+        float fmod = powf(2, args.GetModulationSlow(3));
+
+        adecay = GetScaledParameter(DECAY, args.GetModulationSlow(0));
+        pdecay = GetScaledParameter(PDEC, args.GetModulationSlow(1));
+        pmod = GetScaledParameter(PMOD, args.GetModulationSlow(2));
+        freq = GetScaledParameter(FREQ) * fmod;
+        boost = GetScaledParameter(BOOST, args.GetModulationSlow(4));
+        fold = GetScaledParameter(FOLD, args.GetModulationSlow(5));
+        pshape = GetScaledParameter(PSHAPE, args.GetModulationSlow(6));
+        ashape = GetScaledParameter(ASHAPE, args.GetModulationSlow(7));
+
+        ampEnv.DecaySamples = adecay;
+        pitchEnv.DecaySamples = pdecay;
+        ampEnv.ValueFloorDb = -ashape;
+        pitchEnv.ValueFloorDb = -pshape;
+        ampEnv.UpdateParams();
+        pitchEnv.UpdateParams();
+    }
+
+    float Kick1::GetScaledParameter(int idx, float modulation)
+    {
+        float val = Utils::Clamp(menu.Values[idx] + modulation);
+
+        if (idx == DECAY) return (0.01 + val * 0.99) * SAMPLERATE * 2;
+        if (idx == PDEC) return (0.002 + val * 0.5) * SAMPLERATE;
+        if (idx == PMOD) return val * 1000;
+        if (idx == FREQ) return 10 + val * 290;
+        if (idx == BOOST) return 1 + val * 20;
+        if (idx == FOLD) return val * 10;
+        if (idx == PSHAPE) return 10 + val * 50;
+        if (idx == ASHAPE) return 10 + val * 50;
+        return 0;
     }
 }
