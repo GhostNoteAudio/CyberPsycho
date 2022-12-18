@@ -87,11 +87,12 @@ namespace Cyber
         int GenIndex; // used by the "OS", do not modify
         int ParamCount = 0; // Set max 16
         float Param[16] = { 0 };
+        bool ParamDirty[16] = { false };
         char TabName[6] = {' ', ' ', ' ', ' ', ' ', 0};
 
-        virtual void ParamUpdated(int idx = -1) = 0;
+        virtual void ParamUpdated() = 0;
         virtual const char* GetParamName(int idx) = 0;
-        virtual void GetParamDisplay(int idx, char* dest) = 0;
+        virtual void GetParamDisplay(int idx, float value, char* dest) = 0;
         virtual void Process(SlotArgs* args) = 0;
         virtual ~SlotGenerator() {}
 

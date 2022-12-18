@@ -23,28 +23,35 @@ namespace Cyber
             ParamUpdated();
         }
 
-        virtual inline void ParamUpdated(int idx = -1) override 
+        inline float ScaleParameter(int idx, float value)
+        {
+            if (idx == 0) return int(400 + value * 80.99);
+            if (idx == 1) return value > 0 ? Utils::DB2Gainf(-30 + value * 30) : 0;
+            return 0;
+        }
+
+        virtual inline void ParamUpdated() override 
         { 
-            pitch = int(400 + Param[0] * 80.99);
-            gain = Param[1] > 0 ? Utils::DB2Gainf(-30 + Param[1] * 30) : 0;
+            pitch = ScaleParameter(0, Param[0]);
+            gain = ScaleParameter(1, Param[1]);
             inc = Modules::Wavetable::GetPhaseIncrement(pitch);
         }
 
-        virtual inline const char* GetParamName(int idx)
+        virtual inline const char* GetParamName(int idx) override
         {
                  if (idx == 0) return "Pitch";
             else if (idx == 1) return "Volume";
             else return "";
         }
 
-        virtual inline void GetParamDisplay(int idx, char* dest)
+        virtual inline void GetParamDisplay(int idx, float value, char* dest) override
         {
             if (idx == 0) 
-                sprintf(dest, "%d", pitch);
+                sprintf(dest, "%d", (int)ScaleParameter(0, value));
             else if (idx == 1) 
             {
-                if (Param[idx] > 0)
-                    sprintf(dest, "%.1f", (-30 + Param[idx] * 30));
+                if (value > 0)
+                    sprintf(dest, "%.1f", ScaleParameter(1, value));
                 else
                     strcpy(dest, "Off");
             }
@@ -52,7 +59,7 @@ namespace Cyber
                 strcpy(dest, "");
         }
 
-        virtual inline void Process(SlotArgs* args)
+        virtual inline void Process(SlotArgs* args) override
         {
             phasor += inc;
             args->Output = Modules::Wavetable::Sin(phasor) * gain;

@@ -46,16 +46,22 @@ namespace Cyber
         auto route = voice.matrix.Routes[voice.matrix.LastUpdatedRoute];
         char val[16];
 
-        int w = display->getStrWidth(ModNames[(int)route.Source]);
-        display->setCursor(64 - w/2, 22);
-        display->print(ModNames[(int)route.Source]);
+        if (route.Source != ModSource::Off)
+        {
+            int w = display->getStrWidth(ModNames[(int)route.Source]);
+            display->setCursor(64 - w/2, 22);
+            display->print(ModNames[(int)route.Source]);
+        }
 
         voice.Gen->GetModSlotName(route.Slot, val);
         w = display->getStrWidth(val);
         display->setCursor(64 - w/2, 35);
         display->print(val);
 
-        sprintf(val, "%.1f%%", route.Amount * 100);
+        if (route.Amount == 0)
+            strcpy(val, "Off");
+        else
+            sprintf(val, "%.1f%%", route.Amount * 100);
         w = display->getStrWidth(val);
         display->setCursor(64 - w/2, 48);
         display->print(val);
@@ -132,7 +138,16 @@ namespace Cyber
             strcpy(dest, name);
         };
 
-        menu.Formatters[2] = [](int idx, float val, int sv, char* dest) { sprintf(dest, "%.1f%%", (val-0.5) * 200.0f); };
+        menu.Formatters[2] = [](int idx, float val, int sv, char* dest) 
+        { 
+            float v = -1.0f + 2.0f * val;
+            if (fabsf(v) < 0.02) v = 0;
+
+            if (v == 0)
+                strcpy(dest, "Off");
+            else
+                sprintf(dest, "%.1f%%", v * 100.0f); 
+        };
 
         menu.Steps[0] = 13;
         menu.Steps[1] = 0; // updated whenever a generator is loaded
@@ -159,7 +174,12 @@ namespace Cyber
         {
             if (idx == 0) this->Routes[activeRoute].Source = (ModSource)sv;
             if (idx == 1) this->Routes[activeRoute].Slot = sv;
-            if (idx == 2) this->Routes[activeRoute].Amount = -1.0f + 2.0f * val;
+            if (idx == 2)
+            {
+                float v = -1.0f + 2.0f * val;
+                if (fabsf(v) < 0.02) v = 0;
+                this->Routes[activeRoute].Amount = v;
+            }
         };
 
         UpdateMenuDisplay();
@@ -174,7 +194,7 @@ namespace Cyber
 
     void ModMatrix::UpdateRoute(ModSource source, int slot, float value)
     {
-        LogInfo("In updateRoute");
+        if (fabsf(value) < 0.02) value = 0;
 
         auto findExisting = [this](ModSource source, int slot)
         {
@@ -207,6 +227,7 @@ namespace Cyber
         }
 
         LastUpdatedRoute = routeIdx;
+        LogInfof("UpdateRoute, slot: %d, value: %.3f, routeId: %d", slot, value, routeIdx);
         displayManager.SetOverlay(PaintModOverlay, 1000);
         UpdateMenuDisplay();
     }
@@ -235,11 +256,21 @@ namespace Cyber
         return OutputBuffer;
     }
 
+    void ModMatrix::Cleanup()
+    {
+        for (int i = 0; i < ModRouteCount; i++)
+        {
+            if (Routes[i].Amount == 0)
+                Routes[i].Source = ModSource::Off;
+        }
+        UpdateMenuDisplay();
+    }
+
     float* ModMatrix::GetSourceBuffer(ModSource source)
     {
         switch (source)
         {
-            case ModSource::Off: return fpData->Mod[0]; // hack
+            case ModSource::Off: return nullptr;
             case ModSource::Mod1: return fpData->Mod[0];
             case ModSource::Mod2: return fpData->Mod[1];
             case ModSource::Mod3: return fpData->Mod[2];
@@ -258,13 +289,19 @@ namespace Cyber
 
     void ModMatrix::AddRouteSlow(int idx)
     {
-        auto buf = GetSourceBuffer(Routes[idx].Source);
-        OutputValue += buf[0] * Routes[idx].Amount;
+        if (Routes[idx].Source != ModSource::Off)
+        {
+            auto buf = GetSourceBuffer(Routes[idx].Source);
+            OutputValue += buf[BUFFER_SIZE-1] * Routes[idx].Amount; // we take the LAST/most recent value from the buffer
+        }
     }
 
     void ModMatrix::AddRouteFast(int idx)
     {
-        auto buf = GetSourceBuffer(Routes[idx].Source);
-        Utils::Mix(OutputBuffer, buf, Routes[idx].Amount, BUFFER_SIZE);
+        if (Routes[idx].Source != ModSource::Off)
+        {
+            auto buf = GetSourceBuffer(Routes[idx].Source);
+            Utils::Mix(OutputBuffer, buf, Routes[idx].Amount, BUFFER_SIZE);
+        }
     }
 }

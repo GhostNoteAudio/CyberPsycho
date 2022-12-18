@@ -12,16 +12,16 @@ namespace Cyber
         Slots[2] = generatorRegistry.CreateSlotGenInstance(blankIdx);
         Slots[3] = generatorRegistry.CreateSlotGenInstance(blankIdx);
 
-        auto formatter = [this](int slot, int idx, char* dest)
+        auto formatter = [this](int slot, int idx, float value, char* dest)
         {
-            Slots[slot]->GetParamDisplay(idx, dest);
+            Slots[slot]->GetParamDisplay(idx, value, dest);
         };
 
         for (int i = 0; i < 64; i++)
         {
             int slot = i / 16;
             int param = i % 16;
-            menu.Formatters[i] = [formatter, slot, param](int idx, float value, int sv, char* dest) { formatter(slot, param, dest); };
+            menu.Formatters[i] = [formatter, slot, param](int idx, float value, int sv, char* dest) { formatter(slot, param, value, dest); };
         }
 
         menu.QuadMode = true;
@@ -34,7 +34,7 @@ namespace Cyber
             int slot = idx / 16;
             int param = idx % 16;
             Slots[slot]->Param[param] = value;
-            Slots[slot]->ParamUpdated(param);
+            Slots[slot]->ParamDirty[param] = true;
         };
         
         menu.RenderCustomDisplayCallback = [this](U8G2* display)
@@ -142,12 +142,16 @@ namespace Cyber
 
     void Quad::GetModSlotName(int idx, char* dest)
     {
-        sprintf(dest, "Slot %d", idx);
+        strcpy(dest, menu.Captions[idx]);
     }
 
     int Quad::ResolveSlot(int knobIdx)
     {
-        return 0;
+        int page = menu.GetPage();
+        int slot = ActiveTab;
+        int idx = slot*16 + page*4 + knobIdx;
+        LogInfof("Resolve slot as %d", idx);
+        return idx;
     }
 
     void Quad::Process(GeneratorArgs args)
@@ -155,6 +159,18 @@ namespace Cyber
         SlotArgs sargs;
         sargs.Bpm = args.Bpm;
         float zeros[BUFFER_SIZE] = {0};
+
+        for (int n = 0; n < 4; n++)
+        {
+            for (int i = 0; i < Slots[n]->ParamCount; i++)
+            {
+                float oldVal = Slots[n]->Param[i];
+                float newVal = Utils::Clamp(menu.Values[n*16 + i] + args.GetModulationSlow(n*16 + i));
+                Slots[n]->Param[i] = newVal;
+                Slots[n]->ParamDirty[i] |= oldVal != newVal;
+            }
+            Slots[n]->ParamUpdated();
+        }
 
         for (int n = 0; n < 4; n++)
         {
@@ -182,8 +198,6 @@ namespace Cyber
                 outArr[i] = sargs.Output * outGain;
             }
         }
-        
-        
     }
 
     void Quad::RenderSlotSelectionMenu(U8G2* display)

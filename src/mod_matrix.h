@@ -37,6 +37,7 @@ namespace Cyber
         void UpdateRoute(ModSource source, int slot, float value);
         float GetModulationSlow(uint8_t slot);
         float* GetModulationFast(uint8_t slot);
+        void Cleanup();
 
     private:
         float* GetSourceBuffer(ModSource source);

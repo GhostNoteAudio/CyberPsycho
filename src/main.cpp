@@ -5,7 +5,6 @@
 #include "perftest.h"
 #include "fast_curves.h"
 
-#include "generators/kick1.h"
 #include "generators/superwave.h"
 #include "generators/quad.h"
 

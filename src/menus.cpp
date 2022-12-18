@@ -3,7 +3,6 @@
 #include "logging.h"
 #include "input_processor.h"
 #include "scope.h"
-#include "generators/kick1.h"
 #include "voice.h"
 #include "generatorRegistry.h"
 #include "display_manager.h"

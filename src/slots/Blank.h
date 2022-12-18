@@ -12,21 +12,21 @@ namespace Cyber
             ParamCount = 0;
         }
 
-        virtual inline void ParamUpdated(int idx = -1) override 
+        virtual inline void ParamUpdated() override 
         { 
         }
 
-        virtual inline const char* GetParamName(int idx)
+        virtual inline const char* GetParamName(int idx) override
         {
             return "";
         }
 
-        virtual inline void GetParamDisplay(int idx, char* dest)
+        virtual inline void GetParamDisplay(int idx, float value, char* dest) override
         {
             strcpy(dest, "");
         }
 
-        virtual inline void Process(SlotArgs* args)
+        virtual inline void Process(SlotArgs* args) override
         {
             args->Output = args->Input;
         }

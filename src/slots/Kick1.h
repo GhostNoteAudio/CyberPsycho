@@ -63,63 +63,8 @@ namespace Cyber
             pitchEnv.UpdateParams();
         }
 
-        virtual inline void ParamUpdated(int idx = -1) override 
+        virtual inline void ParamUpdated() override 
         { 
-            // Generator only updates when a new sound is triggered.
-            // no live updates
-        }
-
-        virtual inline const char* GetParamName(int idx)
-        {
-                 if (idx == 0) return "Decay";
-            else if (idx == 1) return "Pitch Dec";
-            else if (idx == 2) return "Pitch Mod";
-            else if (idx == 3) return "Freq";
-            else if (idx == 4) return "Boost";
-            else if (idx == 5) return "Fold";
-            else if (idx == 6) return "Pitch Crv";
-            else if (idx == 7) return "Amp Crv";
-            else return "";
-        }
-
-        virtual inline void GetParamDisplay(int idx, char* dest)
-        {
-            if (idx == FREQ || idx == PMOD)
-            {
-                float freq = GetScaledParameter(idx);
-                sprintf(dest, "%.0f Hz", freq);
-            }
-            else
-            {
-                sprintf(dest, "%.1f", Param[idx] * 100);
-            }
-        }
-
-        virtual inline void Process(SlotArgs* args)
-        {
-            auto g = args->Gate;
-            if (!currentGate && g)
-            {
-                phasor = 0;
-                UpdateAll();
-            }
-            currentGate = g;
-
-            float aenv = ampEnv.Process(g);
-            float penv = pitchEnv.Process(g);
-            phasor += (pmod * penv + freq) * fsinv;
-            float s = arm_sin_f32(phasor * 2 * M_PI) * aenv;
-
-            if (fold > 0)
-                s = arm_sin_f32(s * fold);
-            if (boost > 1)
-                s = tanhf(s * boost);
-
-            args->Output = s;
-        }
-
-        inline void UpdateAll()
-        {
             adecay = GetScaledParameter(DECAY);
             pdecay = GetScaledParameter(PDEC);
             pmod = GetScaledParameter(PMOD);
@@ -137,9 +82,57 @@ namespace Cyber
             pitchEnv.UpdateParams();
         }
 
-        inline float GetScaledParameter(int idx)
+        virtual inline const char* GetParamName(int idx) override
         {
-            float val = Param[idx];
+                 if (idx == 0) return "Decay";
+            else if (idx == 1) return "Pitch Dec";
+            else if (idx == 2) return "Pitch Mod";
+            else if (idx == 3) return "Freq";
+            else if (idx == 4) return "Boost";
+            else if (idx == 5) return "Fold";
+            else if (idx == 6) return "Pitch Crv";
+            else if (idx == 7) return "Amp Crv";
+            else return "";
+        }
+
+        virtual inline void GetParamDisplay(int idx, float value, char* dest) override
+        {
+            if (idx == FREQ || idx == PMOD)
+            {
+                float freq = GetScaledParameter(idx, value);
+                sprintf(dest, "%.0f Hz", freq);
+            }
+            else
+            {
+                sprintf(dest, "%.1f", value * 100);
+            }
+        }
+
+        virtual inline void Process(SlotArgs* args) override
+        {
+            auto g = args->Gate;
+            if (!currentGate && g)
+            {
+                phasor = 0;
+            }
+            currentGate = g;
+
+            float aenv = ampEnv.Process(g);
+            float penv = pitchEnv.Process(g);
+            phasor += (pmod * penv + freq) * fsinv;
+            float s = arm_sin_f32(phasor * 2 * M_PI) * aenv;
+
+            if (fold > 0)
+                s = arm_sin_f32(s * fold);
+            if (boost > 1)
+                s = tanhf(s * boost);
+
+            args->Output = s;
+        }
+
+        inline float GetScaledParameter(int idx, float val = -1)
+        {
+            val = val == -1 ? Param[idx] : val;
 
             if (idx == DECAY) return (0.01 + Utils::Resp1dec(val) * 0.99) * SAMPLERATE * 2;
             if (idx == PDEC) return (0.002 + Utils::Resp1dec(val) * 0.5) * SAMPLERATE;

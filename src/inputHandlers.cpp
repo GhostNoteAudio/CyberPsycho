@@ -112,5 +112,6 @@ namespace Cyber
 
         modalState.ButtonState[idx] = value;
         modalState.CheckEnableAction();
+        if (!value) voice.matrix.Cleanup();
     }
 }

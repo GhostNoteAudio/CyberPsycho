@@ -22,24 +22,30 @@ namespace Cyber
             ParamUpdated();
         }
 
-        virtual inline void ParamUpdated(int idx = -1) override 
-        { 
-            divider = 1 + Utils::Resp2dec(Param[0]) * 127;
+        inline float ScaleParameter(int idx, float value)
+        {
+            if (idx == 0) return (int)(1 + Utils::Resp2dec(value) * 127);
+            return 0;
         }
 
-        virtual inline const char* GetParamName(int idx)
+        virtual inline void ParamUpdated() override 
+        { 
+            divider = ScaleParameter(0, Param[0]);
+        }
+
+        virtual inline const char* GetParamName(int idx) override
         {
-                 if (idx == 0) return "Redux";
+                 if (idx == 0) return "Reduce";
             else return "";
         }
 
-        virtual inline void GetParamDisplay(int idx, char* dest)
+        virtual inline void GetParamDisplay(int idx, float value, char* dest) override
         {
-            if (idx == 0) sprintf(dest, "%d", divider);
+            if (idx == 0) sprintf(dest, "1/%d", (int)ScaleParameter(idx, value));
             else strcpy(dest, "");
         }
 
-        virtual inline void Process(SlotArgs* args)
+        virtual inline void Process(SlotArgs* args) override
         {
             phasor++;
             rand.Update();
