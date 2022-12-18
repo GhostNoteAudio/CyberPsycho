@@ -7,10 +7,20 @@ namespace Cyber
 {
     class Quad : public Generator
     {
+        enum Input
+        {
+            INPUT_OFF = 0,
+            INPUT_EXT,
+            INPUT_PREV
+        };
+
         bool selectionModeActive = false;
         int selectedGen = 0;
         Menu menu;
         SlotGenerator* Slots[4] = {0};
+        Input Inputs[4];
+        float GainInDb[4] = {0.5, 0.5, 0.5, 0.5};
+        float GainOutDb[4] = {0.5, 0.5, 0.5, 0.5};
         
     public:
         Quad();

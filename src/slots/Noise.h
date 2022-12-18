@@ -42,14 +42,14 @@ namespace Cyber
         virtual inline void Process(SlotArgs* args)
         {
             phasor++;
+            rand.Update();
+            
             if (phasor > divider)
             {
                 phasor -= divider;
-                rand.Update();
                 output = rand.GetFloat();
             }
             args->Output = output;
-            //LogInfof("Bang %.3f", output);
         }
 
         inline static GeneratorInfo GetInfo()

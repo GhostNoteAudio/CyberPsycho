@@ -90,9 +90,29 @@ namespace Cyber
 
         menu.HandleSwitchCallback = [this](Menu* menu, int idx, bool value)
         {
-            if (selectionModeActive && value) selectionModeActive = false;
+            if (selectionModeActive && value)
+            {
+                selectionModeActive = false;
+                menu->DisableTabs = false;
+            }
             
             HandleSwitchDefault(menu, idx, value);
+        };
+
+        menu.HandlePotCallback = [this](Menu* menu, int idx, float value)
+        {
+            if (!selectionModeActive)
+            {
+                HandlePotDefault(menu, idx, value);
+                return;
+            }
+
+            if (idx == 0)
+                Inputs[ActiveTab] = (Input)(value * 2.99f);
+            else if (idx == 1)
+                GainInDb[ActiveTab] = value;
+            else if (idx == 2)
+                GainOutDb[ActiveTab] = value;
         };
     }
 
@@ -134,31 +154,78 @@ namespace Cyber
     {
         SlotArgs sargs;
         sargs.Bpm = args.Bpm;
-        
-        for (int i = 0; i < args.Size; i++)
-        {
-            sargs.Gate = args.Data->Gate[0][i];
-            sargs.Input = args.Data->Mod[0][i];
-            sargs.Output = 0.0f;
-            Slots[0]->Process(&sargs);
-            args.Data->Out[0][i] = sargs.Output;
+        float zeros[BUFFER_SIZE] = {0};
 
-            sargs.Gate = args.Data->Gate[1][i];
-            sargs.Input = args.Data->Mod[1][i];
-            sargs.Output = 0.0f;
-            Slots[1]->Process(&sargs);
-            args.Data->Out[1][i] = sargs.Output;
+        for (int n = 0; n < 4; n++)
+        {
+            float* inArr;
+            if (Inputs[n] == INPUT_OFF)
+                inArr = zeros;
+            else if (Inputs[n] == INPUT_EXT)
+                inArr = args.Data->Mod[n];
+            else if (Inputs[n] == INPUT_PREV && n == 0)
+                inArr = zeros;
+            else
+                inArr = args.Data->Out[n-1];
+
+            bool* gateArr = args.Data->Gate[n];
+            float inGain = Utils::DB2Gainf(-12 + 24 * GainInDb[n]);
+            float outGain = Utils::DB2Gainf(-12 + 24 * GainOutDb[n]);
+            float* outArr = args.Data->Out[n];
+
+            for (int i = 0; i < args.Size; i++)
+            {
+                sargs.Gate = gateArr[i];
+                sargs.Input = inArr[i] * inGain;
+                sargs.Output = 0.0f;
+                Slots[n]->Process(&sargs);
+                outArr[i] = sargs.Output * outGain;
+            }
         }
+        
+        
     }
 
     void Quad::RenderSlotSelectionMenu(U8G2* display)
     {
         if (!selectionModeActive) return;
+        char val[16];
         auto info = generatorRegistry.GetSlotGenInfo(selectedGen);
+        int w = display->getStrWidth(info.DisplayName);
         display->clearDisplay();
         display->setFont(DEFAULT_FONT);
-        display->setCursor(10, 30);
+        display->setDrawColor(1);
+        display->setCursor(64 - w/2, 18);
         display->print(info.DisplayName);
+
+        sprintf(val, "(%d/%d)", selectedGen+1, generatorRegistry.GetSlotGenCount());
+        w = display->getStrWidth(val);
+        display->setCursor(96 - w/2, 43);
+        display->print(val);
+
+        display->drawFrame(0, 31, 63, 17);
+        display->drawFrame(0, 47, 63, 17);
+        display->drawFrame(65, 47, 63, 17);
+
+        auto inp = (int)Inputs[ActiveTab];
+        const char* inVal = inp == 0 ? "Off" : inp == 1 ? "Ext" : "Previous";
+        w = display->getStrWidth(inVal);
+        display->setCursor(32 - w/2, 44);
+        display->print(inVal);
+
+        sprintf(val, "In: %.1f", (-12 + 24 * GainInDb[ActiveTab]));
+        w = display->getStrWidth(val);
+        display->setCursor(32 - w/2, 60);
+        display->print(val);
+
+        sprintf(val, "Out: %.1f", (-12 + 24 * GainOutDb[ActiveTab]));
+        w = display->getStrWidth(val);
+        display->setCursor(96 - w/2, 60);
+        display->print(val);
+
+        display->drawBox(1, 32, ((int)Inputs[ActiveTab]) * 0.5f * 61, 2);
+        display->drawBox(1, 48, GainInDb[ActiveTab] * 61, 2);
+        display->drawBox(66, 48, GainOutDb[ActiveTab] * 61, 2);
     }
 
     void Quad::UpdateMenuSections()
