@@ -12,6 +12,7 @@
 #include "slots/A440.h"
 #include "slots/Noise.h"
 #include "slots/Blank.h"
+#include "slots/Kick1.h"
 
 using namespace Cyber;
 
@@ -35,13 +36,13 @@ void PreventStartupBleep()
 
 void RegisterAllGenerators()
 {
-    generatorRegistry.AddGen<Kick1>();
     generatorRegistry.AddGen<Superwave>();
     generatorRegistry.AddGen<Quad>();
 
+    generatorRegistry.AddSlotGen<Blank>();
     generatorRegistry.AddSlotGen<A440Hz>();
     generatorRegistry.AddSlotGen<Noise>();
-    generatorRegistry.AddSlotGen<Blank>();
+    generatorRegistry.AddSlotGen<Kick1>();
     // generatorRegistry.Add<MultimodeFilter>();
     // generatorRegistry.Add<Redux>();
     // generatorRegistry.Add<BasicDrive>();

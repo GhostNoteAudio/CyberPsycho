@@ -10,8 +10,6 @@
 
 namespace Cyber
 {
-    extern Kick1 kick;
-
     namespace Menus
     {
         int lastChangeMillis = 0;
