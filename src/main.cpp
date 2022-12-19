@@ -21,8 +21,6 @@ void HandleAudioFunction(DataBuffer* data)
     voice.Process(data);
 }
 
-SdFat sd;
-
 void PreventStartupBleep()
 {
     // Primes the serial port for data, otherwise there's a ~100ms stall just after startup
@@ -93,11 +91,16 @@ void setup()
     pinMode(PIN_BTN_IN, INPUT);
     pinMode(PIN_POT_IN, INPUT);
 
-    digitalWrite(PIN_MUX_A, 0);
-    digitalWrite(PIN_MUX_B, 0);
-    digitalWrite(PIN_MUX_C, 0);
+    digitalWrite(PIN_MUX_A, LOW);
+    digitalWrite(PIN_MUX_B, LOW);
+    digitalWrite(PIN_MUX_C, LOW);
 
-    Serial.println("Starting...");
+    digitalWrite(PIN_CS_ADC, HIGH);
+    digitalWrite(PIN_CS_DAC0, HIGH);
+    digitalWrite(PIN_CS_DAC1, HIGH);
+    digitalWrite(PIN_CS_SD, HIGH);
+
+    Storage::InitStorage();
 
     Menus::Init();
     displayManager.Init();

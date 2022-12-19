@@ -6,6 +6,7 @@
 #include "voice.h"
 #include "generatorRegistry.h"
 #include "display_manager.h"
+#include "tempo.h"
 
 namespace Cyber
 {
@@ -210,7 +211,7 @@ namespace Cyber
             globalMenu.TopItem = 0;
             globalMenu.QuadMode = false;
 
-            globalMenu.ValueChangedCallback = [gateFilterValues](int idx, float value, int sv)
+            globalMenu.ValueChangedCallback = [gateFilterValues, clockScaleLut](int idx, float value, int sv)
             {
                 if (idx == _GainOut)
                 {
@@ -229,6 +230,18 @@ namespace Cyber
                 else if (idx == _GateFilter)
                 {
                     inProcessor.GateSpeed = gateFilterValues[sv];
+                }
+                else if (idx == _BPM)
+                {
+                    tempoState.SetInternalBpm(sv);
+                }
+                else if (idx == _ClockScale)
+                {
+                    tempoState.SetTrigDivision(clockScaleLut[sv]);
+                }
+                else if (idx == _ClockSource)
+                {
+                    tempoState.SetTempoMode((TempoMode)sv);
                 }
             };
 

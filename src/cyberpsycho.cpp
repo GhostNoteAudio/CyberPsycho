@@ -12,4 +12,5 @@ namespace Cyber
     ModalState modalState;
     GeneratorRegistry generatorRegistry;
     Voice voice;
+    TempoState tempoState;
 }

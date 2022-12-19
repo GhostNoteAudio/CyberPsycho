@@ -100,9 +100,23 @@ namespace Cyber
                 }
             }
 
-            if (idx == 2 || idx == 3)
+            if (idx == 2)
             {
                 if (!modalState.Shift() && up && strlen(tabval) > 0)
+                {
+                    voice.Gen->SetTab(idx);
+                    displayManager.ActiveMenu = voice.Gen->GetMenu();
+                }
+            }
+
+            if (idx == 3)
+            {
+                if (modalState.Shift() && down)
+                {
+                    Storage::SaveGlobalState();
+                    modalState.EnableAction = false;
+                }
+                else if (!modalState.Shift() && up && strlen(tabval) > 0)
                 {
                     voice.Gen->SetTab(idx);
                     displayManager.ActiveMenu = voice.Gen->GetMenu();

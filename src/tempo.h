@@ -1,5 +1,7 @@
 #pragma once
 #include "constants.h"
+#include "stdint.h"
+#include "logging.h"
 
 namespace Cyber
 {
@@ -12,7 +14,7 @@ namespace Cyber
 
     class TempoState
     {
-        TempoMode tempoMode;
+        TempoMode tempoMode = TempoMode::External;
         float fixedBpmValue;
 
         float bpm; // calculated value, or = fixedBpmValue if Internal mode
@@ -20,7 +22,9 @@ namespace Cyber
         
         int trigDivision = 1;
 
-        int trigMinus4 = 0;
+        bool clkVal = false;
+        int clkTicks = 0;
+
         int trigMinus3 = 0;
         int trigMinus2 = 0;
         int trigMinus1 = 0;
@@ -28,7 +32,8 @@ namespace Cyber
 
     public:
         inline float GetBpm() { return bpm; }
-        inline void SetBpm(float newBpm) { fixedBpmValue = newBpm; UpdateBpm(); }
+        inline void SetInternalBpm(float newBpm) { fixedBpmValue = newBpm; UpdateBpm(); }
+        inline float GetInternalBpm() { return fixedBpmValue; }
 
         inline TempoMode GetTempoMode() { return tempoMode; }
         inline void SetTempoMode(TempoMode mode) { tempoMode = mode; }
@@ -41,14 +46,9 @@ namespace Cyber
             }
             else if (tempoMode == TempoMode::External)
             {
-                float triggerPeriod = (trigMinus0 - trigMinus4) / 4.0f;
-                
-                if (triggerPeriod < 10)
-                    bpm = 300;
-                else if (triggerPeriod > SAMPLERATE * 6)
-                    bpm = 10;
-
-                float bpm = SAMPLERATE /  (triggerPeriod * trigDivision) * 60;
+                float avgTriggerPeriod = (trigMinus0 + trigMinus1 + trigMinus2 + trigMinus3) * 0.25f;
+                if (avgTriggerPeriod > SAMPLERATE * 6) bpm = 10;
+                bpm = SAMPLERATE / (avgTriggerPeriod * trigDivision) * 60;
             }
             else if (tempoMode == TempoMode::Midi)
             {
@@ -64,17 +64,28 @@ namespace Cyber
             UpdateBpm();
         }
 
-        inline void SetTrig(int sampleOffset)
+        inline void TickClk(bool value)
         {
-            trigMinus4 = trigMinus3;
+            if (value && !clkVal)
+            {
+                UpdateTrigger(clkTicks);
+                clkTicks = 0;
+            }
+
+            clkVal = value;
+            clkTicks++;
+        }
+
+        inline void UpdateTrigger(int sampleDuration)
+        {
             trigMinus3 = trigMinus2;
             trigMinus2 = trigMinus1;
             trigMinus1 = trigMinus0;
-            trigMinus0 = sampleOffset;
+            trigMinus0 = sampleDuration;
             UpdateBpm();
         }
 
-        inline float GetSamplesPerNBote(int numerator, int denominator, bool triplet, bool dotted)
+        inline float GetSamplesPerNote(int numerator, int denominator, bool triplet, bool dotted)
         {
             // quarter notes are the standard
             float samplesperq = 60 * SAMPLERATE * bpmInv;

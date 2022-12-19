@@ -54,7 +54,7 @@ namespace Cyber
         }
 
         voice.Gen->GetModSlotName(route.Slot, val);
-        w = display->getStrWidth(val);
+        int w = display->getStrWidth(val);
         display->setCursor(64 - w/2, 35);
         display->print(val);
 

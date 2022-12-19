@@ -15,4 +15,6 @@
 #include "timers.h"
 #include "scope.h"
 #include "voice.h"
+#include "tempo.h"
 #include "generatorRegistry.h"
+#include "storage.h"

@@ -9,6 +9,7 @@
 #include "timers.h"
 #include "constants.h"
 #include "logging.h"
+#include "tempo.h"
 
 namespace Cyber
 {
@@ -140,6 +141,9 @@ namespace Cyber
         SetDac(2, BufTransmitting->Out[2][bufferIdx]);
         SetDac(3, BufTransmitting->Out[3][bufferIdx]);
         SampleAdc();
+
+        auto clk = digitalReadFast(PIN_CLK);
+        tempoState.TickClk(clk);
 
         bufferIdx++;
         if (bufferIdx == BUFFER_SIZE)
