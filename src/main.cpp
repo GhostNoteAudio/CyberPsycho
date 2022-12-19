@@ -12,6 +12,7 @@
 #include "slots/Noise.h"
 #include "slots/Blank.h"
 #include "slots/Kick1.h"
+#include "slots/Drom.h"
 
 using namespace Cyber;
 
@@ -40,6 +41,7 @@ void RegisterAllGenerators()
     generatorRegistry.AddSlotGen<A440Hz>();
     generatorRegistry.AddSlotGen<Noise>();
     generatorRegistry.AddSlotGen<Kick1>();
+    generatorRegistry.AddSlotGen<DRom>();
     // generatorRegistry.Add<MultimodeFilter>();
     // generatorRegistry.Add<Redux>();
     // generatorRegistry.Add<BasicDrive>();

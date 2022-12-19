@@ -72,7 +72,17 @@ namespace Cyber
             return sd.mkdir(dirPath);
         }
 
+        int GetDirCount(const char* dirPath)
+        {
+            return GetCount(dirPath, true);
+        }
+
         int GetFileCount(const char* dirPath)
+        {
+            return GetCount(dirPath, false);
+        }
+
+        int GetCount(const char* dirPath, bool dirs)
         {
             NoInterrupt ni;
             SdFile dir, file;
@@ -88,7 +98,15 @@ namespace Cyber
             int count = 0;
             while (file.openNext(&dir, O_RDONLY)) 
             {
-                count++;
+                if (file.isDir())
+                {
+                    if (dirs) count++;
+                }
+                else // isFile
+                {
+                    if (!dirs) count++;
+                }
+
                 file.close();
             }
             if (dir.getError()) 
@@ -99,7 +117,7 @@ namespace Cyber
             return count;
         }
 
-        const char* GetFilePath(const char* dirPath, int index)
+        const char* GetName(const char* dirPath, int index, bool dirs)
         {
             NoInterrupt ni;
             strcpy(filePathBuffer, "");
@@ -119,16 +137,28 @@ namespace Cyber
             int count = 0;
             while (file.openNext(&dir, O_RDONLY)) 
             {
-                if (count == index)
+                if (file.isDir() && dirs)
                 {
-                    strcpy(filePathBuffer, dirPath);
-                    filePathBuffer[strlen(dirPath)] = '/';
-                    file.getName(&filePathBuffer[strlen(dirPath) + 1], sizeof(filePathBuffer));
-                    file.close();
-                    return filePathBuffer;
+                    if (count == index)
+                    {
+                        file.getName(filePathBuffer, sizeof(filePathBuffer));
+                        file.close();
+                        return filePathBuffer;
+                    }
+                    count++;
                 }
+                else if (!file.isDir() && !dirs)
+                {
+                    if (count == index)
+                    {
+                        file.getName(filePathBuffer, sizeof(filePathBuffer));
+                        file.close();
+                        return filePathBuffer;
+                    }
+                    count++;
+                }
+
                 file.close();
-                count++;
             }
 
             if (dir.getError()) 
