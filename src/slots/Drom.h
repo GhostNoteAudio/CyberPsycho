@@ -167,7 +167,11 @@ namespace Cyber
             if (idx == LIBRARY)
                 strcpy(dest, selectedLibName);
             else if (idx == SAMPLE)
-                strcpy(dest, selectedSampleName);
+            {
+                int len = strlen(selectedSampleName);
+                memcpy(dest, selectedSampleName, len-4);
+                dest[len-4] = 0;
+            }
             else if (idx == PITCH)
             {
                 float p = GetScaledParameter(idx, value);
