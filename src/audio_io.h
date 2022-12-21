@@ -43,4 +43,19 @@ namespace Cyber
 
     extern AudioIo audio;
     void InvokeProcessAudio();
+
+    class DisableAudio
+    {
+    public:
+        inline DisableAudio()
+        {
+            audio.StopProcessing();
+            delayMicroseconds(50);
+        }
+
+        inline ~DisableAudio()
+        {
+            audio.StartProcessing();
+        }
+    };
 }

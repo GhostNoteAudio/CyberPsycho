@@ -3,19 +3,6 @@
 
 namespace Cyber
 {
-    struct NoInterrupt
-    {
-        NoInterrupt()
-        {
-            //cli();
-        }
-
-        ~NoInterrupt()
-        {
-            //sei();
-        }
-    };
-
     namespace Storage
     {
         SdFat sd;
@@ -23,8 +10,7 @@ namespace Cyber
 
         bool InitStorage()
         {
-            NoInterrupt ni;
-            if (!sd.begin(PIN_CS_SD, 2000000))
+            if (!sd.begin(PIN_CS_SD, 24000000))
             {
                 LogInfo("SD Card initialization FAILED.")
                 sd.initErrorPrint(&Serial);
@@ -36,7 +22,6 @@ namespace Cyber
 
         bool DirExists(const char* dirPath)
         {
-            NoInterrupt ni;
             if (!sd.exists(dirPath))
                 return false;
             
@@ -52,7 +37,6 @@ namespace Cyber
 
         bool FileExists(const char* filePath)
         {
-            NoInterrupt ni;
             if (!sd.exists(filePath))
                 return false;
             
@@ -68,7 +52,6 @@ namespace Cyber
 
         bool CreateFolder(const char* dirPath)
         {
-            NoInterrupt ni;
             return sd.mkdir(dirPath);
         }
 
@@ -84,7 +67,6 @@ namespace Cyber
 
         int GetCount(const char* dirPath, bool dirs)
         {
-            NoInterrupt ni;
             SdFile dir, file;
             if (!dir.open(dirPath))
             {
@@ -119,7 +101,6 @@ namespace Cyber
 
         const char* GetName(const char* dirPath, int index, bool dirs)
         {
-            NoInterrupt ni;
             strcpy(filePathBuffer, "");
 
             SdFile dir, file;
@@ -172,7 +153,6 @@ namespace Cyber
 
         bool WriteFile(const char* filePath, uint8_t* data, int dataLen)
         {
-            NoInterrupt ni;
             SdFile myFile;
             if (!myFile.open(filePath, O_RDWR | O_CREAT | O_TRUNC)) 
             {
@@ -187,7 +167,6 @@ namespace Cyber
 
         int GetFileSize(const char* filePath)
         {
-            NoInterrupt ni;
             SdFile myFile;
             if (!myFile.open(filePath, O_RDONLY))
             {
@@ -201,7 +180,6 @@ namespace Cyber
 
         void ReadFile(const char* filePath, uint8_t* data, int maxDataLen)
         {
-            NoInterrupt ni;
             SdFile myFile;
             if (!myFile.open(filePath, O_RDONLY))
             {
@@ -227,8 +205,7 @@ namespace Cyber
         void SaveGlobalState()
         {
             LogInfo("Trying to save state to SD card")
-            audio.StopProcessing();
-            delayMicroseconds(100);
+            DisableAudio disable;
 
             bool result = true;
 
@@ -269,8 +246,6 @@ namespace Cyber
                 display->print("Saved");
             };
             displayManager.SetOverlay(saveOverlay, 1000);
-
-            audio.StartProcessing();
         }
 
         void SavePreset(int slot)

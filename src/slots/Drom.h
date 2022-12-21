@@ -6,22 +6,25 @@
 #include "audio_io.h"
 #include "storage.h"
 #include "wavReader.h"
+#include "memalloc.h"
 
 namespace Cyber
 {
-    uint8_t WavData[1024*32];
-    float SampleData[1024*32];
-
     class DRom : public SlotGenerator
     {
         enum Params
         {
             LIBRARY = 0,
-            SAMPLE = 1,
-            PITCH = 2,
+            SAMPLE,
+            PITCH,
+            DECAY,
+            KEYTRACK,
+            KEYROOT,
         };
 
         const float fsinv = 1.0 / SAMPLERATE;
+
+        MemoryBlock sampleData;
 
         int libraryCount = 0;
         int sampleCount = 0;
@@ -38,13 +41,16 @@ namespace Cyber
         bool currentGate = false;
         
     public:
-        inline DRom()
+        inline DRom() : sampleData(1024 * 160)
         {
             strcpy(TabName, "DROM");
             ParamCount = 3;
-            Param[0] = 0.0f;
-            Param[1] = 0.0f;
-            Param[2] = 0.5f;
+            Param[LIBRARY] = 0.0f;
+            Param[SAMPLE] = 0.0f;
+            Param[PITCH] = 0.5f;
+            Param[DECAY] = 1.0f;
+            Param[KEYTRACK] = 0.0f;
+            Param[KEYROOT] = 1.0f;
             ParamUpdated();
 
             SetLibraryCount();
@@ -52,22 +58,17 @@ namespace Cyber
 
         inline void SetLibraryCount()
         {
-            audio.StopProcessing();
-            delayMicroseconds(100);
+            DisableAudio disable;
 
             int count = Storage::GetDirCount("cyber/drom");
             LogInfof("There are %d libraries", count);
             libraryCount = count;
             SetLibrary(0);
-
-            audio.StartProcessing();
-            delayMicroseconds(100);
         }
 
         inline void SetLibrary(int libIdx)
         {
-            audio.StopProcessing();
-            delayMicroseconds(100);
+            DisableAudio disable;
 
             selectedLib = libIdx;
 
@@ -81,15 +82,11 @@ namespace Cyber
             sampleCount = Storage::GetFileCount(path);
             LogInfof("There are %d samples in this library", sampleCount);
             SetSample(0);
-            
-            audio.StartProcessing();
-            delayMicroseconds(100);
         }
 
         inline void SetSample(int sampleIdx)
         {
-            audio.StopProcessing();
-            delayMicroseconds(100);
+            DisableAudio disable;
 
             selectedSample = sampleIdx;
             char path[64];
@@ -105,43 +102,40 @@ namespace Cyber
             strcpy(samplePath, path);
             LogInfof("Selected SamplePath: %s", samplePath);
             LoadSample();
-
-            audio.StartProcessing();
-            delayMicroseconds(100);
         }
 
         inline void LoadSample()
         {
-            audio.StopProcessing();
-            delayMicroseconds(100);
+            DisableAudio disable;
 
             LogInfof("Loading SD Sample: %s", samplePath);
             int size = Storage::GetFileSize(samplePath);
             LogInfof("Sample is %d bytes", size);
 
-            if (size > 1024*32)
+            MemoryBlock wavData(size);
+            if (wavData.GetSize() == 0)
             {
-                LogInfo("File is too big, cannot load!");
+                LogInfo("insufficient RAM, cannot load!");
                 return;
             }
 
-            Storage::ReadFile(samplePath, WavData, sizeof(WavData));
+            Storage::ReadFile(samplePath, wavData.GetPtr(), size);
             LogInfo("File read complete");
-            auto info = Wav::GetWaveInfo(WavData, size);
+            auto info = Wav::GetWaveInfo(wavData.GetPtr(), size);
             LogInfof("Wav data, bytes per sample: %d, channels: %d, sample count: %d, sample rate: %d", 
                 info.BytesPerSample, info.Channels, info.SampleCount, info.SampleRate);
-            Wav::GetWaveData(&info, SampleData, 0);
-            LogInfo("ping2");
+
+            if (info.SampleCount > sampleData.GetSize() / 2)
+            {
+                LogInfo("Sample is too long to fit into memory");
+                return;
+            }
+
+            Wav::GetWaveData<int16_t>(&info, (int16_t*)sampleData.GetPtr(), 0);
             sampleLength = info.SampleCount;
-            LogInfo("ping3");
             rateScaler = info.SampleRate / (float)SAMPLERATE;
-            LogInfo("ping4");
             phasor = sampleLength;
             LogInfo("Sample data loaded");
-
-            audio.StartProcessing();
-            delayMicroseconds(100);
-            LogInfo("ping5");
         }
 
         virtual inline void ParamUpdated() override 
@@ -194,7 +188,9 @@ namespace Cyber
             if (idxB >= sampleLength)
                 return 0;
 
-            return SampleData[idxA] * (1-rem) + SampleData[idxB] * rem;
+            int16_t* fData = (int16_t*)sampleData.GetPtr();
+            int16_t output = fData[idxA] * (1-rem) + fData[idxB] * rem;
+            return output / 32768.0f;
         }
 
         virtual inline void Process(SlotArgs* args) override

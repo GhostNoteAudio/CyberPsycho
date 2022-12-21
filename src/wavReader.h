@@ -74,19 +74,25 @@ namespace Cyber
             return WaveInfo(sampleCount, sampleRate, bytesPerSample, numChannels, dataPtr);
         }
 
-        inline void GetWaveData(WaveInfo* info, float* target, int channel=0)
+        template<typename T>
+        inline void GetWaveData(WaveInfo* info, T* target, int channel=0)
         {	
             int stride = info->BytesPerSample * info->Channels;
-            double scaler = 1;
+            float scaler = 1;
             if (info->BytesPerSample == 1)
                 scaler = 1.0 / 256.0;
             else if (info->BytesPerSample == 2)
                 scaler = 1.0 / 32768.0;
             else if (info->BytesPerSample == 3)
-                scaler = 1.0 / 2147483648.0;
+                scaler = 1.0 / 16777216.0;
             else if (info->BytesPerSample == 4) // float32 assumed
                 scaler = 1.0;
 
+            float postScaler = 1.0;
+            if (sizeof(T) == 1) // uint8_t assumed
+                postScaler = 256;
+            if (sizeof(T) == 2) // int16_t assumed
+                postScaler = 32768;
 
             auto GetValueAt = [&](int idx, int bytes)
             {
@@ -123,7 +129,7 @@ namespace Cyber
             {		
                 int idx = i * stride + channel * info->BytesPerSample;
                 float value = GetValueAt(idx, info->BytesPerSample) * scaler;
-                target[i] = value;
+                target[i] = (T)(value * postScaler);
             }
 
         }
