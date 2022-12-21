@@ -79,8 +79,12 @@ namespace Cyber
         {	
             int stride = info->BytesPerSample * info->Channels;
             float scaler = 1;
+            float offset = 0;
             if (info->BytesPerSample == 1)
-                scaler = 1.0 / 256.0;
+            {
+                scaler = 1.0 / 128.0;
+                offset = 128;
+            }
             else if (info->BytesPerSample == 2)
                 scaler = 1.0 / 32768.0;
             else if (info->BytesPerSample == 3)
@@ -128,7 +132,7 @@ namespace Cyber
             for (int i = 0; i < info->SampleCount; i++)
             {		
                 int idx = i * stride + channel * info->BytesPerSample;
-                float value = GetValueAt(idx, info->BytesPerSample) * scaler;
+                float value = (GetValueAt(idx, info->BytesPerSample) - offset) * scaler;
                 target[i] = (T)(value * postScaler);
             }
 
