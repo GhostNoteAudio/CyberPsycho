@@ -15,7 +15,7 @@ namespace Cyber
         const uint16_t Size = BUFFER_SIZE;
         FpBuffer* Data;
         float Bpm;
-        int PitchOffset[4];
+        int PitchOffset;
         std::function<float(uint8_t)> GetModulationSlow;
         std::function<float*(uint8_t)> GetModulationFast;
     };

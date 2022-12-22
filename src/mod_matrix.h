@@ -38,6 +38,7 @@ namespace Cyber
         float GetModulationSlow(uint8_t slot);
         float* GetModulationFast(uint8_t slot);
         void Cleanup();
+        void Reset();
 
     private:
         float* GetSourceBuffer(ModSource source);

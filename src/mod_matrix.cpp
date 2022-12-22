@@ -266,6 +266,17 @@ namespace Cyber
         UpdateMenuDisplay();
     }
 
+    void ModMatrix::Reset()
+    {
+        for (int i = 0; i < ModRouteCount; i++)
+        {
+            Routes[i].Amount = 0;
+            Routes[i].Source = ModSource::Off;
+            Routes[i].Slot = 0;
+        }
+        UpdateMenuDisplay();
+    }
+
     float* ModMatrix::GetSourceBuffer(ModSource source)
     {
         switch (source)

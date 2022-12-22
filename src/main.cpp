@@ -161,6 +161,18 @@ void loop()
     {
         controls.UpdatePotAndButton();
         controls.UpdateEncoderState();
+
+        for (int i = 0; i < 8; i++)
+        {
+            auto btn = controls.GetButton(i);
+            if (btn.IsNew)
+            {
+                LogInfof("Button: %d, state: %d", i, btn.Value);
+                displayManager.ActiveMenu->HandleSwitch(i, btn.Value);
+            }
+        }
+
+        YieldAudio();
     }
 
     if (updateMenu.Go())
@@ -182,20 +194,10 @@ void loop()
             }
         }
         
-        for (int i = 0; i < 8; i++)
-        {
-            auto btn = controls.GetButton(i);
-            if (btn.IsNew)
-            {
-                displayManager.ActiveMenu->HandleSwitch(i, btn.Value);
-            }
-        }
-        
         YieldAudio();
         displayManager.Render();
+        YieldAudio();
     }
-
-    YieldAudio();
 
     if (i2cMaster.finished())
     {

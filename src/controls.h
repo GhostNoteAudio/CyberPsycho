@@ -164,13 +164,13 @@ namespace Cyber
             if (ButtonCounter[idx] < 0)
                 ButtonCounter[idx] = 0;
 
-            if (ButtonCounter[idx] > 15)
-                ButtonCounter[idx] = 15;
+            if (ButtonCounter[idx] > 4)
+                ButtonCounter[idx] = 4;
             
-            if (ButtonCounter[idx] > 12)
+            if (ButtonCounter[idx] > 3)
                 ButtonState[idx] = true;
             
-            if (ButtonCounter[idx] < 3)
+            if (ButtonCounter[idx] < 1)
                 ButtonState[idx] = false;
         }
 

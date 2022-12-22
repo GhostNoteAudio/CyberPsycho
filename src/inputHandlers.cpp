@@ -122,9 +122,15 @@ namespace Cyber
                     displayManager.ActiveMenu = voice.Gen->GetMenu();
                 }
             }
+
+            if (idx >= 4)
+            {
+                if (modalState.Shift() && down)
+                    modalState.EnableAction = false;
+            }
         }
 
-        modalState.ButtonState[idx] = value;
+        modalState.SetButtonState(idx, value);
         modalState.CheckEnableAction();
         if (!value) voice.matrix.Cleanup();
     }

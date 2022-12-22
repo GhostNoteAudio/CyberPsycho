@@ -25,6 +25,36 @@ namespace Cyber
         Menu generatorSelectMenu;
         Menu presetMenu;
 
+        enum GlobalMenuItems
+        {
+            _GainOut = 0,
+            _PitchOffset,
+            _ClockSource,
+            _ClockScale,
+            _BPM,
+            _GateFilter,
+            _LoadPreset,
+            _SavePreset,
+            _InitProgram,
+            _Modulations,
+            _Calibrate,
+            _Scope,
+        };
+
+        void InitProgram()
+        {
+            globalMenu.SetValue(_GainOut, 0.5);
+            globalMenu.SetValue(_PitchOffset, 0.5);
+            globalMenu.SetValue(_ClockSource, 0);
+            globalMenu.SetValue(_ClockScale, 0);
+            globalMenu.SetScaledValue(_BPM, 120);
+            globalMenu.SetValue(_GateFilter, 0);
+            voice.matrix.Reset();
+            voice.SetGenerator(generatorRegistry.GetGenIndexById("GNA-Quad"), true);
+
+            displayManager.SetOverlay(initialisedOverlay, 1000);
+        }
+
         void BuildScopeMenu()
         {
             scopeMenu.SetLength(4);
@@ -142,22 +172,6 @@ namespace Cyber
             };
         }
 
-        enum GlobalMenuItems
-        {
-            _GainOut = 0,
-            _PitchOffset,
-            _ClockSource,
-            _ClockScale,
-            _BPM,
-            _GateFilter,
-            _LoadPreset,
-            _SavePreset,
-            _InitProgram,
-            _Modulations,
-            _Calibrate,
-            _Scope,
-        };
-
         void BuildGlobalMenu()
         {
             globalMenu.Captions[_GainOut] = "Gain Out";
@@ -177,7 +191,7 @@ namespace Cyber
             globalMenu.Values[_PitchOffset] = 0.5;
             globalMenu.Values[_ClockSource] = 0;
             globalMenu.Values[_ClockScale] = 0;
-            globalMenu.Values[_BPM] = 0.45;
+            globalMenu.Values[_BPM] = 0.42;
             globalMenu.Values[_GateFilter] = 0;
             globalMenu.Values[_LoadPreset] = 0;
             globalMenu.Values[_SavePreset] = 0;
@@ -225,17 +239,11 @@ namespace Cyber
             {
                 if (idx == _GainOut)
                 {
-                    voice.GainOut[0] = Utils::DB2Gainf(-12.0f + sv);
-                    voice.GainOut[1] = Utils::DB2Gainf(-12.0f + sv);
-                    voice.GainOut[2] = Utils::DB2Gainf(-12.0f + sv);
-                    voice.GainOut[3] = Utils::DB2Gainf(-12.0f + sv);
+                    voice.GainOut = Utils::DB2Gainf(-12.0f + sv);
                 }
                 else if (idx == _PitchOffset)
                 {
-                    voice.PitchOffset[0] = sv;
-                    voice.PitchOffset[1] = sv;
-                    voice.PitchOffset[2] = sv;
-                    voice.PitchOffset[3] = sv;
+                    voice.PitchOffset = sv;
                 }
                 else if (idx == _GateFilter)
                 {
@@ -266,6 +274,8 @@ namespace Cyber
                     else
                         return;
                 }
+                else if (menu->SelectedItem == _InitProgram)
+                    InitProgram();
                 else if (menu->SelectedItem == _Calibrate)
                     displayManager.ActiveMenu = &calibrateMenu;
                 else if (menu->SelectedItem == _Modulations)

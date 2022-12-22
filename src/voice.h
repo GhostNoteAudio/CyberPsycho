@@ -7,6 +7,7 @@
 #include "menu.h"
 #include "mod_matrix.h"
 #include "input_processor.h"
+#include "menus.h"
 
 namespace Cyber
 {
@@ -14,15 +15,15 @@ namespace Cyber
     {        
     public:        
         Generator* Gen = nullptr;
-        float GainOut[4] = {1.0f, 1.0f, 1.0f, 1.0f};
-        int PitchOffset[4] = {0};
+        float GainOut = 1.0f;
+        int PitchOffset = 0;
         ModMatrix matrix;
 
         inline void Init()
         {
         }
 
-        inline void SetGenerator(int genId)
+        inline void SetGenerator(int genId, bool force = false)
         {
             if (genId == -1)
             {
@@ -30,34 +31,47 @@ namespace Cyber
                 return;
             }
 
-            if (Gen == nullptr || Gen->GenIndex != genId)
+            if (Gen == nullptr || Gen->GenIndex != genId || force)
             {
                 generatorRegistry.DeleteGenInstance(Gen);
                 Gen = generatorRegistry.CreateGenInstance(genId);
                 matrix.GetMenu()->Steps[1] = Gen->GetModSlots();
             }
         }
+
+        inline void OverrideIfPreview(FpBuffer* data)
+        {
+            for (int btn = 0; btn < 4; btn++)
+            {
+                if (modalState.GateTrigger(btn))
+                {
+                    for (int i = 0; i < data->Size; i++)
+                    {
+                        data->Gate[btn][i] = true;
+                        data->GateFloat[btn][i] = 1;
+                    }
+                }
+            }
+        }
         
         inline void Process(DataBuffer* data)
         {
             auto fpData = inProcessor.ConvertToFp(data);
+            OverrideIfPreview(fpData);
             matrix.fpData = fpData;
 
             GeneratorArgs args;
             args.Bpm = 120;
             args.Data = fpData;
-            args.PitchOffset[0] = PitchOffset[0];
-            args.PitchOffset[1] = PitchOffset[1];
-            args.PitchOffset[2] = PitchOffset[2];
-            args.PitchOffset[3] = PitchOffset[3];
+            args.PitchOffset = PitchOffset;
             args.GetModulationFast = [this](uint8_t slot) { return matrix.GetModulationFast(slot); };
             args.GetModulationSlow = [this](uint8_t slot) { return matrix.GetModulationSlow(slot); };
             Gen->Process(args);
 
-            Utils::Gain(fpData->Out[0], GainOut[0], fpData->Size);
-            Utils::Gain(fpData->Out[1], GainOut[1], fpData->Size);
-            Utils::Gain(fpData->Out[2], GainOut[2], fpData->Size);
-            Utils::Gain(fpData->Out[3], GainOut[3], fpData->Size);
+            Utils::Gain(fpData->Out[0], GainOut, fpData->Size);
+            Utils::Gain(fpData->Out[1], GainOut, fpData->Size);
+            Utils::Gain(fpData->Out[2], GainOut, fpData->Size);
+            Utils::Gain(fpData->Out[3], GainOut, fpData->Size);
 
             Utils::To12Bit(data->Out[0], fpData->Out[0], data->Size);
             Utils::To12Bit(data->Out[1], fpData->Out[1], data->Size);

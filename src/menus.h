@@ -6,11 +6,18 @@ namespace Cyber
 {    
     class ModalState
     {
-    public:
         bool ButtonState[8] = {false};
+    public:
+        
         bool EnableAction = true;
 
         inline bool Shift() { return ButtonState[0]; }
+
+        inline void SetButtonState(int idx, bool value)
+        {
+            ButtonState[idx] = value;
+        }
+
         inline void CheckEnableAction()
         {
             EnableAction |= !(ButtonState[0] || ButtonState[1] || ButtonState[2] || ButtonState[3] ||
@@ -21,6 +28,11 @@ namespace Cyber
         {
             return ButtonState[0] | (ButtonState[1] << 1) | (ButtonState[2] << 2) | (ButtonState[3] << 3)
                 | (ButtonState[4] << 4) | (ButtonState[5] << 5) | (ButtonState[6] << 6) | (ButtonState[7] << 7);
+        }
+
+        inline bool GateTrigger(int idx)
+        {
+            return idx < 4 && ButtonState[idx+4] && Shift();
         }
 
         inline ModSource GetModSource()
@@ -82,5 +94,17 @@ namespace Cyber
         int w = display->getStrWidth("Loaded");
         display->setCursor(64 - w/2, 35);
         display->print("Loaded");
+    };
+
+    auto initialisedOverlay = [](U8G2* display)
+    {
+        display->setFont(DEFAULT_FONT);
+        display->setDrawColor(0);
+        display->drawBox(20, 20, 128-40, 24);
+        display->setDrawColor(1);
+        display->drawFrame(20, 20, 128-40, 24);
+        int w = display->getStrWidth("Initialised");
+        display->setCursor(64 - w/2, 35);
+        display->print("Initialised");
     };
 }
