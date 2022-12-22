@@ -16,6 +16,7 @@ namespace Cyber
     {
         int lastChangeMillis = 0;
         int lastChangeIdx = 0;
+        float scopeAvg = 0;
 
         Menu initMenu;
         Menu globalMenu;
@@ -98,10 +99,11 @@ namespace Cyber
                 }
                 else if (readoutVal == 3)
                 {
+                    scopeAvg = scopeAvg * 0.9 + Utils::Mean(Scope::data, 128) * 0.1;
                     display->setDrawColor(1);
                     display->drawBox(64, 55, 60, 9);
                     display->setDrawColor(0);
-                    sprintf(readout, "Mean:%d", (int)Utils::Mean(Scope::data, 128));
+                    sprintf(readout, "Mean:%d", (int)scopeAvg);
                     display->println(readout);
                 }
                 YieldAudio();
@@ -118,7 +120,6 @@ namespace Cyber
 
                     if (lastChangeIdx == 0) sprintf(readout, "Channel:%d", Scope::channel);
                     if (lastChangeIdx == 1) sprintf(readout, "Divide:%d", dsEffective);
-                    if (lastChangeIdx == 2) sprintf(readout, "Freq:%d", Scope::triggerFreq);
                     display->println(readout);
                 }
             };
@@ -128,12 +129,10 @@ namespace Cyber
                     Scope::channel = (int)(value * 7.99);
                 if (idx == 1)
                     Scope::downsampling = (int)(value * 9.99);
-                if (idx == 2)
-                    Scope::triggerFreq = 1024 + (int)(value * 4096);
                 if (idx == 3)
                     menu->SetValue(idx, value);
 
-                if (idx < 3)
+                if (idx <= 1)
                 {
                     lastChangeIdx = idx;
                     lastChangeMillis = millis();

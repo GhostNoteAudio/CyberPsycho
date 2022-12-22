@@ -9,7 +9,7 @@ namespace Cyber
         extern uint16_t data[128];
         extern uint8_t channel;
         extern uint8_t downsampling;
-        extern uint16_t triggerFreq;
+        extern float movingAverage;
         extern void ProcessScope(DataBuffer* data);
     }
 }

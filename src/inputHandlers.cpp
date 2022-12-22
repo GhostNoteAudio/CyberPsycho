@@ -48,7 +48,7 @@ namespace Cyber
     {
         auto modSource = modalState.GetModSource();
         
-        if (modSource != ModSource::Off)
+        if (modSource != ModSource::Off && menu == voice.Gen->GetMenu())
         {
             int slot = voice.Gen->ResolveSlot(idx);
             voice.matrix.UpdateRoute(modSource, slot, 2*value-1);
