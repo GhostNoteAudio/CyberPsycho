@@ -24,6 +24,7 @@ namespace Cyber
     {
         float Bpm;
         bool Gate;
+        float Cv;
         float Input;
         float Output;
     };
@@ -31,7 +32,7 @@ namespace Cyber
     struct GeneratorInfo
     {
         int Version;
-        const char* GeneratorId;
+        const char* GeneratorId; // Max 16 characters
         const char* DisplayName;
         const char* DeveloperName;
         const char* Info;
@@ -74,6 +75,8 @@ namespace Cyber
         virtual void Process(GeneratorArgs args) = 0;
         virtual void ProcessMidi(uint8_t type, uint8_t data0, uint8_t data1) {}
         virtual void ProcessOffline() {}
+        virtual void SaveState(uint8_t* buffer, int maxLength) {}
+        virtual void LoadState(uint8_t* buffer, int length) {}
         virtual ~Generator() {}
 
         // Your class also needs to implement these two static functions

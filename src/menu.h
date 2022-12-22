@@ -159,11 +159,10 @@ namespace Cyber
 
         inline void ReapplyAllValues()
         {
-            // Reads all the values and re-sets them to the same value, invoking the callbacks along the way
-            // useful for ensuring all values applied to other components that interact with callback
-
             for (int i = 0; i < Length; i++)
+            {
                 SetValue(i, Values[i]);
+            }
         }
 
         inline void HandleEncoder(int tick)

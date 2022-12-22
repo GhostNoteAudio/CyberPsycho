@@ -31,6 +31,8 @@ namespace Cyber
         virtual void GetModSlotName(int idx, char* dest) override;
         virtual int ResolveSlot(int knobIdx) override;
         virtual void Process(GeneratorArgs args) override;
+        virtual void SaveState(uint8_t* buffer, int maxLength) override;
+        virtual void LoadState(uint8_t* buffer, int length) override;
         
     private:
         void RenderSlotSelectionMenu(U8G2* display);

@@ -99,11 +99,18 @@ namespace Cyber
         bufferIdx = 0;
         ioLoop.begin(InvokeProcessAudio, 1000000.0/SAMPLERATE);
         //ioLoop.begin(InvokeProcessAudio, 1000000);
+        Enabled = true;
     }
 
     void AudioIo::StopProcessing()
     {
         ioLoop.end();
+        Enabled = false;
+    }
+
+    bool AudioIo::IsProcessingEnabled()
+    {
+        return Enabled;
     }
 
     void AudioIo::ProcessAudioX()

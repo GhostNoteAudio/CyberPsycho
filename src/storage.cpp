@@ -50,8 +50,14 @@ namespace Cyber
             return file.isFile();
         }
 
-        bool CreateFolder(const char* dirPath)
+        bool CreateDirectory(const char* dirPath)
         {
+            LogInfof("Creating directory %s", dirPath);
+
+            bool dirExists = DirExists(dirPath);
+            if (dirExists) 
+                return true;
+
             return sd.mkdir(dirPath);
         }
 
@@ -178,13 +184,13 @@ namespace Cyber
             return output;
         }
 
-        void ReadFile(const char* filePath, uint8_t* data, int maxDataLen)
+        bool ReadFile(const char* filePath, uint8_t* data, int maxDataLen)
         {
             SdFile myFile;
             if (!myFile.open(filePath, O_RDONLY))
             {
                 sd.errorPrint("Failed to open file");
-                return;
+                return false;
             }
 
             int read_count = 0;
@@ -200,6 +206,104 @@ namespace Cyber
             }
 
             myFile.close();
+            return true;
+        }
+
+        void LoadPreset(const char* filepath)
+        {
+            DisableAudio disable;
+            uint8_t data[1024];
+
+            LogInfof("Loading preset from file %s", filepath);
+            int result = ReadFile(filepath, data, 1024);
+            if (!result) { LogInfo("Failed to load preset"); return; }
+            
+            char genId[16];
+            int genIdSize = 16;
+            int matrixSize = sizeof(voice.matrix.Routes);
+            int menuDataSize = sizeof(float) * MENU_MAX_SIZE;
+            int stateSize = 512;
+
+            uint8_t* genIdPtr = &data[0];
+            uint8_t* matrixPtr = &data[genIdSize];
+            uint8_t* menuDataPtr = &data[genIdSize+matrixSize];
+            uint8_t* stateDataPtr = &data[genIdSize+matrixSize+menuDataSize];
+
+            strcpy(genId, (char*)genIdPtr);
+
+            LogInfof("Loading generator %s", genId);
+            voice.SetGenerator(generatorRegistry.GetGenIndexById(genId));
+            LogInfo("Generator Loaded");
+
+            memcpy(voice.matrix.Routes, matrixPtr, matrixSize);
+            voice.Gen->LoadState(stateDataPtr, stateSize);
+            memcpy(voice.Gen->GetMenu()->Values, menuDataPtr, menuDataSize);
+            LogInfo("Preset Loaded");
+        }
+
+        void SavePreset(const char* dir, const char* filename)
+        {
+            DisableAudio disable;
+
+            uint8_t data[1024];            
+            CreateDirectory(dir);
+
+            int written = 0;
+            int size = 0;
+
+            auto genId = generatorRegistry.GetGenInfo(voice.Gen->GenIndex).GeneratorId;
+            memset(data, 0, 16);
+            strcpy((char*)data, genId);
+            written += 16;
+
+            size = sizeof(voice.matrix.Routes);
+            memcpy(&data[written], voice.matrix.Routes, size);
+            written += size;
+
+            size = sizeof(float) * MENU_MAX_SIZE;
+            memcpy(&data[written], voice.Gen->GetMenu()->Values, size);
+            written += size;
+
+            size = 512;
+            memset(&data[written], 0, size);
+            voice.Gen->SaveState(&data[written], size);
+            written += size;
+            
+            strcpy(filePathBuffer, dir);
+            strcat(filePathBuffer, "/");
+            strcat(filePathBuffer, filename);
+            LogInfof("Saving preset (%d bytes) to %s", written, filePathBuffer);
+            bool result = WriteFile(filePathBuffer, data, written);
+            if (!result) { LogInfo("Failed to write preset"); return; }
+            LogInfo("Preset saved");
+        }
+
+        void LoadGlobalState()
+        {
+            LogInfo("Trying to load state from SD card")
+            DisableAudio disable;
+
+            bool result = false;
+
+            bool exists = DirExists("cyber/state");
+            if (!exists) { return; }
+            LogInfo("Ping1");
+
+            uint8_t data[512];
+
+            result = ReadFile("cyber/state/global.bin", data, 512);
+            if (!result) { LogInfo("Failed to read global state"); return; }
+            memcpy(Menus::globalMenu.Values, data, sizeof(float) * MENU_MAX_SIZE);
+            LogInfo("Ping2");
+
+            result = ReadFile("cyber/state/calibrate.bin", data, 512);
+            if (!result) { LogInfo("Failed to read calibrate state"); return; }
+            memcpy(Menus::calibrateMenu.Values, data, sizeof(float) * MENU_MAX_SIZE);
+            LogInfo("Ping3");
+
+            LoadPreset("cyber/state/preset.bin");
+
+            LogInfo("Successfully loaded state from SD card");
         }
 
         void SaveGlobalState()
@@ -209,10 +313,7 @@ namespace Cyber
 
             bool result = true;
 
-            bool dirExists = DirExists("cyber/state");
-            if (!dirExists)
-                result = CreateFolder("cyber/state");
-
+            result = CreateDirectory("cyber/state");
             if (!result) { LogInfo("Failed to create folder cyber/state"); return; }
             LogInfo("Ping1");
 
@@ -224,14 +325,7 @@ namespace Cyber
             if (!result) { LogInfo("Failed to write calibrate state"); return; }
             LogInfo("Ping3");
 
-            result = WriteFile("cyber/state/gen.bin", (uint8_t*)voice.Gen->GetMenu()->Values, sizeof(float) * MENU_MAX_SIZE);
-            if (!result) { LogInfo("Failed to write generator state"); return; }
-            LogInfo("Ping4");
-
-            result = WriteFile("cyber/state/matrix.bin", (uint8_t*)voice.matrix.Routes, sizeof(voice.matrix.Routes));
-            if (!result) { LogInfo("Failed to write matrix state"); return; }
-            LogInfo("Ping5");
-
+            SavePreset("cyber/state", "preset.bin");
             LogInfo("Successfully saved state to SD card");
 
             auto saveOverlay = [](U8G2* display)
@@ -246,11 +340,6 @@ namespace Cyber
                 display->print("Saved");
             };
             displayManager.SetOverlay(saveOverlay, 1000);
-        }
-
-        void SavePreset(int slot)
-        {
-
         }
     }
 }

@@ -12,6 +12,7 @@ namespace Cyber
         uint8_t DacTxBuf[4][2];
         uint8_t DacRxBuf[2]; // discard
         uint16_t AdcValues[8] = {0};
+        bool Enabled = false;
 
     public:
         AudioIo();
@@ -23,6 +24,7 @@ namespace Cyber
         void LatchDac();
         void StartProcessing();
         void StopProcessing();
+        bool IsProcessingEnabled();
         void ProcessAudioX();
         bool Available();
         DataBuffer* BeginAudioProcessing();
@@ -49,13 +51,17 @@ namespace Cyber
     public:
         inline DisableAudio()
         {
-            audio.StopProcessing();
-            delayMicroseconds(50);
+            if (audio.IsProcessingEnabled())
+            {   
+                audio.StopProcessing();
+                delayMicroseconds(50);
+            }
         }
 
         inline ~DisableAudio()
         {
-            audio.StartProcessing();
+            if (!audio.IsProcessingEnabled())
+                audio.StartProcessing();
         }
     };
 }

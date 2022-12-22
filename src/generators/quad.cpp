@@ -185,6 +185,7 @@ namespace Cyber
                 inArr = args.Data->Out[n-1];
 
             bool* gateArr = args.Data->Gate[n];
+            float* cvArr = args.Data->Cv[n];
             float inGain = Utils::DB2Gainf(-12 + 24 * GainInDb[n]);
             float outGain = Utils::DB2Gainf(-12 + 24 * GainOutDb[n]);
             float* outArr = args.Data->Out[n];
@@ -192,11 +193,35 @@ namespace Cyber
             for (int i = 0; i < args.Size; i++)
             {
                 sargs.Gate = gateArr[i];
+                sargs.Cv = cvArr[i];
                 sargs.Input = inArr[i] * inGain;
                 sargs.Output = 0.0f;
                 Slots[n]->Process(&sargs);
                 outArr[i] = sargs.Output * outGain;
             }
+        }
+    }
+
+    void Quad::SaveState(uint8_t* buffer, int maxLength)
+    {
+        strcpy((char*)&buffer[0], generatorRegistry.GetSlotGenInfo(Slots[0]->GenIndex).GeneratorId);
+        strcpy((char*)&buffer[16], generatorRegistry.GetSlotGenInfo(Slots[1]->GenIndex).GeneratorId);
+        strcpy((char*)&buffer[32], generatorRegistry.GetSlotGenInfo(Slots[2]->GenIndex).GeneratorId);
+        strcpy((char*)&buffer[48], generatorRegistry.GetSlotGenInfo(Slots[3]->GenIndex).GeneratorId);
+    }
+
+    void Quad::LoadState(uint8_t* buffer, int length)
+    {
+        const char* slotGenIdStr;
+        int slotGenIdx;
+
+        for (int i = 0; i < 4; i++)
+        {
+            LogInfof("Loading slot generator into slot %d", i);
+            slotGenIdStr = (char*)&buffer[i*16];
+            slotGenIdx = generatorRegistry.GetSlotGenIndexById(slotGenIdStr);
+            LogInfof("SlotGenerator Id: %s, index: %d", slotGenIdStr, slotGenIdx);
+            SetSlotGen(i, slotGenIdx);
         }
     }
 

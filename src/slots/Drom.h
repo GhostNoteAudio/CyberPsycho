@@ -7,6 +7,7 @@
 #include "storage.h"
 #include "wavReader.h"
 #include "memalloc.h"
+#include "modules/sampleEnvelope.h"
 
 namespace Cyber
 {
@@ -25,6 +26,7 @@ namespace Cyber
         const float fsinv = 1.0 / SAMPLERATE;
 
         MemoryBlock sampleData;
+        Modules::SampleEnvelope env;
 
         int libraryCount = 0;
         int sampleCount = 0;
@@ -39,18 +41,20 @@ namespace Cyber
         float phasor = 0;
         float inc = 0;
         bool currentGate = false;
+        bool keytrack = false;
+        int keyRoot = 60;
         
     public:
         inline DRom() : sampleData(1024 * 160)
         {
             strcpy(TabName, "DROM");
-            ParamCount = 3;
+            ParamCount = 6;
             Param[LIBRARY] = 0.0f;
             Param[SAMPLE] = 0.0f;
             Param[PITCH] = 0.5f;
             Param[DECAY] = 1.0f;
             Param[KEYTRACK] = 0.0f;
-            Param[KEYROOT] = 1.0f;
+            Param[KEYROOT] = 0.469f;
             ParamUpdated();
 
             SetLibraryCount();
@@ -135,11 +139,16 @@ namespace Cyber
             sampleLength = info.SampleCount;
             rateScaler = info.SampleRate / (float)SAMPLERATE;
             phasor = sampleLength;
+
+            env.SampleLength = sampleLength / inc;
+            env.Update();
             LogInfo("Sample data loaded");
         }
 
         virtual inline void ParamUpdated() override 
         { 
+            keytrack = Param[KEYTRACK] >= 0.5;
+            keyRoot = Param[KEYROOT] * 127.99;
             inc = powf(2, 4*Param[PITCH]-2) * rateScaler;
             int newSelectedLib = (int)(Param[LIBRARY] * (libraryCount - 0.01));
             int newSelectedSample = (int)(Param[SAMPLE] * (sampleCount - 0.01));
@@ -152,6 +161,10 @@ namespace Cyber
             {
                 SetSample(newSelectedSample);
             }
+
+            env.SampleLength = sampleLength / inc;
+            env.Value = Param[DECAY];
+            env.Update();
         }
 
         virtual inline const char* GetParamName(int idx) override
@@ -159,6 +172,9 @@ namespace Cyber
                  if (idx == LIBRARY) return "Library";
             else if (idx == SAMPLE) return "Sample";
             else if (idx == PITCH) return "Pitch";
+            else if (idx == DECAY) return "Decay";
+            else if (idx == KEYTRACK) return "Keytrack";
+            else if (idx == KEYROOT) return "Key Root";
             else return "";
         }
 
@@ -176,6 +192,15 @@ namespace Cyber
             {
                 float p = GetScaledParameter(idx, value);
                 sprintf(dest, "%+.1f", p);
+            }
+            else if (idx == KEYTRACK)
+            {
+                strcpy(dest, Param[KEYTRACK] < 0.5 ? "Off" : "On");
+            }
+            else if (idx == KEYROOT)
+            {
+                int key = Param[KEYROOT] * 127.99;
+                sprintf(dest, "%d", key);
             }
             else
             {
@@ -205,9 +230,11 @@ namespace Cyber
                 phasor = 0;
             }
             currentGate = g;
-
-            args->Output = GetSampleAt(phasor);
-            phasor += inc;
+            float s = GetSampleAt(phasor);
+            s = s * env.Process(g);
+            args->Output = s;
+            float incx = keytrack ? inc * powf(2, args->Cv * 8 - keyRoot/15.0f) : inc;
+            phasor += incx;
         }
 
         inline float GetScaledParameter(int idx, float val = -1)
@@ -215,7 +242,7 @@ namespace Cyber
             val = val == -1 ? Param[idx] : val;
 
             if (idx == PITCH) return (-24 + val * 48);
-            return 0;
+            return val;
         }
 
         inline static GeneratorInfo GetInfo()

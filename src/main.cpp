@@ -116,6 +116,14 @@ void setup()
     PreventStartupBleep();
     RegisterAllGenerators();
     SPI.begin();
+
+    Storage::LoadGlobalState();
+
+    Menus::calibrateMenu.ReapplyAllValues();
+    Menus::globalMenu.ReapplyAllValues();
+    Menus::pitchTrigMenu.ReapplyAllValues();
+    voice.Gen->GetMenu()->ReapplyAllValues();
+
     audio.StartProcessing();
 }
 
