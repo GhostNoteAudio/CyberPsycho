@@ -202,6 +202,13 @@ namespace Cyber
 
             globalMenu.Min[_BPM] = 20;
 
+            globalMenu.Formatters[_BPM] = [](int idx, float v, int sv, char* s)
+            {
+                if(globalMenu.GetScaledValue(_ClockSource) == 0)
+                    sprintf(s, "%d", globalMenu.GetScaledValue(_BPM));
+                else
+                    sprintf(s, "[%.1f]", tempoState.GetBpm());
+            };
             globalMenu.Formatters[_GainOut] = [](int idx, float v, int sv, char* s) { sprintf(s, "%.1fdB", -12.f + sv); };
             globalMenu.Formatters[_ClockSource] = [clockSources](int idx, float v, int sv, char* s) { strcpy(s, clockSources[sv]); };
             globalMenu.Formatters[_ClockScale] = [clockScaleLut](int idx, float v, int sv, char* s) { sprintf(s, "%d", clockScaleLut[sv]); };
@@ -252,7 +259,14 @@ namespace Cyber
             {
                 if (!value) return;
 
-                if (menu->SelectedItem == _Calibrate)
+                if (menu->SelectedItem == _BPM)
+                {
+                    if(globalMenu.GetScaledValue(_ClockSource) == 0)
+                        HandleEncoderSwitchDefault(menu, value);
+                    else
+                        return;
+                }
+                else if (menu->SelectedItem == _Calibrate)
                     displayManager.ActiveMenu = &calibrateMenu;
                 else if (menu->SelectedItem == _Modulations)
                     displayManager.ActiveMenu = voice.matrix.GetMenu();
