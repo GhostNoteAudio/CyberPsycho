@@ -1,5 +1,6 @@
 #include "storage.h"
 #include "cyberpsycho.h"
+#include "menus.h"
 
 namespace Cyber
 {
@@ -209,7 +210,7 @@ namespace Cyber
             return true;
         }
 
-        void LoadPreset(const char* filepath)
+        void LoadPreset(const char* filepath, bool showOverlay)
         {
             DisableAudio disable;
             uint8_t data[1024];
@@ -239,9 +240,11 @@ namespace Cyber
             voice.Gen->LoadState(stateDataPtr, stateSize);
             memcpy(voice.Gen->GetMenu()->Values, menuDataPtr, menuDataSize);
             LogInfo("Preset Loaded");
+            if (showOverlay)
+                displayManager.SetOverlay(loadOverlay, 1000);
         }
 
-        void SavePreset(const char* dir, const char* filename)
+        void SavePreset(const char* dir, const char* filename, bool showOverlay)
         {
             DisableAudio disable;
 
@@ -276,6 +279,8 @@ namespace Cyber
             bool result = WriteFile(filePathBuffer, data, written);
             if (!result) { LogInfo("Failed to write preset"); return; }
             LogInfo("Preset saved");
+            if (showOverlay)
+                displayManager.SetOverlay(saveOverlay, 1000);
         }
 
         void LoadGlobalState()
@@ -328,17 +333,6 @@ namespace Cyber
             SavePreset("cyber/state", "preset.bin");
             LogInfo("Successfully saved state to SD card");
 
-            auto saveOverlay = [](U8G2* display)
-            {
-                display->setFont(DEFAULT_FONT);
-                display->setDrawColor(0);
-                display->drawBox(20, 20, 128-40, 24);
-                display->setDrawColor(1);
-                display->drawFrame(20, 20, 128-40, 24);
-                int w = display->getStrWidth("Saved");
-                display->setCursor(64 - w/2, 35);
-                display->print("Saved");
-            };
             displayManager.SetOverlay(saveOverlay, 1000);
         }
     }

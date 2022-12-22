@@ -7,6 +7,8 @@
 #include "generatorRegistry.h"
 #include "display_manager.h"
 #include "tempo.h"
+#include "storage.h"
+#include "audio_io.h"
 
 namespace Cyber
 {
@@ -21,6 +23,7 @@ namespace Cyber
         Menu calibrateMenu;
         Menu pitchTrigMenu;
         Menu generatorSelectMenu;
+        Menu presetMenu;
 
         void BuildScopeMenu()
         {
@@ -247,12 +250,24 @@ namespace Cyber
 
             globalMenu.HandleEncoderSwitchCallback = [](Menu* menu, bool value)
             {
+                if (!value) return;
+
                 if (menu->SelectedItem == _Calibrate)
                     displayManager.ActiveMenu = &calibrateMenu;
                 else if (menu->SelectedItem == _Modulations)
                     displayManager.ActiveMenu = voice.matrix.GetMenu();
                 else if (menu->SelectedItem == _Scope)
                     displayManager.ActiveMenu = &scopeMenu;
+                else if (menu->SelectedItem == _LoadPreset)
+                {
+                    displayManager.ActiveMenu = &presetMenu;
+                    presetMenu.Values[16] = 0; // Load Preset
+                }
+                else if (menu->SelectedItem == _SavePreset)
+                {
+                    displayManager.ActiveMenu = &presetMenu;
+                    presetMenu.Values[16] = 1; // Save Preset
+                }
                 else
                     HandleEncoderSwitchDefault(menu, value);
             };
@@ -392,6 +407,101 @@ namespace Cyber
             };
         }
 
+        void BuildPresetMenu()
+        {
+            presetMenu.SetLength(16);
+            presetMenu.Captions[0] = "Preset 1";
+            presetMenu.Captions[1] = "Preset 2";
+            presetMenu.Captions[2] = "Preset 3";
+            presetMenu.Captions[3] = "Preset 4";
+            presetMenu.Captions[4] = "Preset 5";
+            presetMenu.Captions[5] = "Preset 6";
+            presetMenu.Captions[6] = "Preset 7";
+            presetMenu.Captions[7] = "Preset 8";
+            presetMenu.Captions[8] = "Preset 9";
+            presetMenu.Captions[9] = "Preset 10";
+            presetMenu.Captions[10] = "Preset 11";
+            presetMenu.Captions[11] = "Preset 12";
+            presetMenu.Captions[12] = "Preset 13";
+            presetMenu.Captions[13] = "Preset 14";
+            presetMenu.Captions[14] = "Preset 15";
+            presetMenu.Captions[15] = "Preset 16";
+            
+            auto formatter = [](int idx, float val, int sv, char* dest)
+            {
+                if (val < 0.5)
+                {
+                    if (presetMenu.Values[16] == 0)
+                        strcpy(dest, "---");
+                    else
+                        strcpy(dest, "> Save");
+                }
+                else
+                {
+                    if (presetMenu.Values[16] == 0)
+                        strcpy(dest, "> Load");
+                    else
+                        strcpy(dest, "> Overwrite");
+                }
+            };
+
+            for (int i = 0; i < 16; i++)
+                presetMenu.Formatters[i] = formatter;
+
+            auto setValues = []()
+            {
+                DisableAudio disable;
+                char presetFile[32];
+                char temp[8];
+
+                for (int i = 0; i < 16; i++)
+                {
+                    strcpy(presetFile, "cyber/presets/preset-");
+                    sprintf(temp, "%d", i+1);
+                    strcat(presetFile, temp);
+                    strcat(presetFile, ".bin");
+                    bool exists = Storage::FileExists(presetFile);
+                    presetMenu.Values[i] = exists ? 1 : 0;
+                }
+            };
+
+            setValues();
+
+            presetMenu.HandleEncoderSwitchCallback = [setValues](Menu* menu, bool value)
+            {
+                if (!value) return;
+
+                bool save = menu->Values[16] == 1;
+                bool load = !save;
+                int slot = menu->SelectedItem;
+
+                char presetFile[32];
+                char temp[8];
+                
+                if (load)
+                {
+                    strcpy(presetFile, "cyber/presets/preset-");
+                    sprintf(temp, "%d", slot+1);
+                    strcat(presetFile, temp);
+                    strcat(presetFile, ".bin");
+                    LogInfof("Loading preset file: %s", presetFile);
+                    Storage::LoadPreset(presetFile, true);
+                }
+                else
+                {
+                    strcpy(presetFile, "preset-");
+                    sprintf(temp, "%d", slot+1);
+                    strcat(presetFile, temp);
+                    strcat(presetFile, ".bin");
+                    LogInfof("Saving Preset file: %s", presetFile);
+                    Storage::SavePreset("cyber/presets", presetFile, true);
+                    setValues();
+                }
+
+                displayManager.ActiveMenu = &globalMenu;
+            };
+        }
+
         void Init()
         {
             BuildInitMenu();
@@ -400,6 +510,7 @@ namespace Cyber
             BuildCalibrateMenu();
             BuildPitchTrigMenu();
             BuildGeneratorSelectMenu();
+            BuildPresetMenu();
         }
 
         

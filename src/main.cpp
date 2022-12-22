@@ -103,8 +103,7 @@ void setup()
     digitalWrite(PIN_CS_SD, HIGH);
 
     Storage::InitStorage();
-
-    Menus::Init();
+    SPI.begin();
     displayManager.Init();
 
     audio.Init();
@@ -115,8 +114,7 @@ void setup()
 
     PreventStartupBleep();
     RegisterAllGenerators();
-    SPI.begin();
-
+    Menus::Init();
     Storage::LoadGlobalState();
 
     Menus::calibrateMenu.ReapplyAllValues();

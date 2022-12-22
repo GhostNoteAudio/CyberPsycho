@@ -22,8 +22,8 @@ namespace Cyber
         int GetFileSize(const char* filePath);
         bool ReadFile(const char* filePath, uint8_t* data, int maxDataLen);
 
-        void LoadPreset(const char* filepath);
-        void SavePreset(const char* dir, const char* filename);
+        void LoadPreset(const char* filepath, bool showOverlay = false);
+        void SavePreset(const char* dir, const char* filename, bool showOverlay = false);
         void LoadGlobalState();
         void SaveGlobalState();
         
