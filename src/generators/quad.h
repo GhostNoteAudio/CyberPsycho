@@ -18,7 +18,7 @@ namespace Cyber
         int selectedGen = 0;
         Menu menu;
         SlotGenerator* Slots[4] = {0};
-        Input Inputs[4];
+        Input Inputs[4] = {INPUT_EXT, INPUT_EXT, INPUT_EXT, INPUT_EXT};
         float GainInDb[4] = {0.5, 0.5, 0.5, 0.5};
         float GainOutDb[4] = {0.5, 0.5, 0.5, 0.5};
         

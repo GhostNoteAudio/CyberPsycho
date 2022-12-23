@@ -13,6 +13,8 @@
 #include "slots/Blank.h"
 #include "slots/Kick1.h"
 #include "slots/Drom.h"
+#include "slots/BasicDrive.h"
+#include "slots/EqShelf.h"
 
 using namespace Cyber;
 
@@ -42,10 +44,10 @@ void RegisterAllGenerators()
     generatorRegistry.AddSlotGen<Noise>();
     generatorRegistry.AddSlotGen<Kick1>();
     generatorRegistry.AddSlotGen<DRom>();
+    generatorRegistry.AddSlotGen<BasicDrive>();
+    generatorRegistry.AddSlotGen<EqShelf>();
     // generatorRegistry.Add<MultimodeFilter>();
     // generatorRegistry.Add<Redux>();
-    // generatorRegistry.Add<BasicDrive>();
-    // generatorRegistry.Add<EQShelf>();
     // generatorRegistry.Add<Bypass>();
 
     voice.Init();
