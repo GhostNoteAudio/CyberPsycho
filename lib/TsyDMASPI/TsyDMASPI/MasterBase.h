@@ -210,7 +210,8 @@ public:
             if (csPins[2] != 255) digitalWriteFast(csPins[2], b_active_low);
             if (csPins[3] != 255) digitalWriteFast(csPins[3], b_active_low);
             // set the current cs pin to active
-            digitalWriteFast(current_cs_pin, !b_active_low);
+            if (current_cs_pin != 255)
+                digitalWriteFast(current_cs_pin, !b_active_low);
             
             dmarx()->enable();
             dmatx()->enable();
@@ -221,7 +222,8 @@ public:
     {
         //ATOMIC_BLOCK(ATOMIC_RESTORESTATE)
         //{
-            digitalWriteFast(current_cs_pin, b_active_low);
+            if (current_cs_pin != 255)
+                digitalWriteFast(current_cs_pin, b_active_low);
 
             current_cs_pin = 255;
             spi->endTransaction();

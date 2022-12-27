@@ -82,13 +82,20 @@ namespace Cyber
         TsyDMASPI0.queue(tx, rx, 2, csPin);
     }
 
-    // void AudioIo::LatchDac()
-    // {
-    //     digitalWrite(PIN_LATCH_DAC, LOW);
-    //     SpinWait(20);
-    //     digitalWrite(PIN_LATCH_DAC, HIGH);
-    //     SpinWait(20);
-    // }
+    void AudioIo::PushLeds()
+    {
+        TsyDMASPI0.queue(&LedTx, &LedRx, 1, 255);
+    }
+
+    uint8_t AudioIo::GetLed()
+    {
+        return LedTx;
+    }
+
+    void AudioIo::SetLed(uint8_t mask)
+    {
+        LedTx = mask;
+    }
 
     void AudioIo::StartProcessing()
     {
@@ -126,9 +133,11 @@ namespace Cyber
         // Emit the DAC values that were previously sent to the output
         //LatchDac();
         digitalWriteFast(PIN_LATCH_DAC, LOW);
+        digitalWriteFast(PIN_LATCH_LED, HIGH);
         // Process the newly received ADC values
         ProcessAdcValues();
         digitalWriteFast(PIN_LATCH_DAC, HIGH);
+        digitalWriteFast(PIN_LATCH_LED, LOW);
 
         BufTransmitting->Cv[0][bufferIdx] = AdcValues[0];
         BufTransmitting->Cv[1][bufferIdx] = AdcValues[1];
@@ -151,6 +160,8 @@ namespace Cyber
 
         auto clk = digitalReadFast(PIN_CLK);
         tempoState.TickClk(clk);
+
+        PushLeds();
 
         bufferIdx++;
         if (bufferIdx == BUFFER_SIZE)

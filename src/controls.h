@@ -3,6 +3,7 @@
 #include "pins.h"
 #include "logging.h"
 #include "utils.h"
+#include "audio_io.h"
 
 namespace Cyber
 {
@@ -199,6 +200,17 @@ namespace Cyber
             int delta = EncoderValue / 4;
             EncoderValue -= delta * 4;
             return EncoderUpdate(delta, delta != 0);
+        }
+
+        inline void SetLed(int led, bool state)
+        {
+            auto mask = audio.GetLed();
+            auto bitmask = (1 << led);
+            if (state)
+                mask |= bitmask;
+            else
+                mask &= (~bitmask);
+            audio.SetLed(mask);
         }
     };
 

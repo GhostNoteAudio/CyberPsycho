@@ -128,7 +128,6 @@ void setup()
 }
 
 PeriodicExecution execPrint(1000);
-PeriodicExecution execPrintFast(100);
 PeriodicExecution updateState(1);
 PeriodicExecution updateMenu(30);
 

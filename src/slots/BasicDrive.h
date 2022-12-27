@@ -32,7 +32,7 @@ namespace Cyber
             Param[0] = 0.0;
             Param[1] = 0.0;
             Param[2] = 0.0;
-            Param[3] = 0.0;
+            Param[3] = 1.0;
 
             biquadHp.SetSamplerate(SAMPLERATE);
             biquadHp.Type = Modules::Biquad::FilterType::HighPass;

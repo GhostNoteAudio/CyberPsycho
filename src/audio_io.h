@@ -11,6 +11,8 @@ namespace Cyber
         uint8_t AdcRxBuf[16];
         uint8_t DacTxBuf[4][2];
         uint8_t DacRxBuf[2]; // discard
+        uint8_t LedTx = 0;
+        uint8_t LedRx = 0;
         uint16_t AdcValues[8] = {0};
         bool Enabled = false;
 
@@ -21,7 +23,9 @@ namespace Cyber
         void SampleAdc();
         void ProcessAdcValues();
         void SetDac(int channel, uint16_t value);
-        void LatchDac();
+        void PushLeds();
+        uint8_t GetLed();
+        void SetLed(uint8_t mask);
         void StartProcessing();
         void StopProcessing();
         bool IsProcessingEnabled();
@@ -63,5 +67,5 @@ namespace Cyber
             if (!audio.IsProcessingEnabled())
                 audio.StartProcessing();
         }
-    };
+    };    
 }
