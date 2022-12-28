@@ -59,6 +59,10 @@ namespace Cyber
             auto fpData = inProcessor.ConvertToFp(data);
             OverrideIfPreview(fpData);
             matrix.fpData = fpData;
+            controls.SetLed(4, fpData->Gate[0][0]);
+            controls.SetLed(5, fpData->Gate[1][0]);
+            controls.SetLed(6, fpData->Gate[2][0]);
+            controls.SetLed(7, fpData->Gate[3][0]);
 
             GeneratorArgs args;
             args.Bpm = 120;

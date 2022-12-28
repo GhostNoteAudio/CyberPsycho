@@ -17,13 +17,15 @@ namespace Cyber
         TempoMode tempoMode = TempoMode::External;
         float fixedBpmValue;
 
-        float bpm; // calculated value, or = fixedBpmValue if Internal mode
+        float bpm = 0; // calculated value, or = fixedBpmValue if Internal mode
         float bpmInv;
         
         int trigDivision = 1;
 
         bool clkVal = false;
         int clkTicks = 0;
+
+        int microsLast = 0;
 
         int trigMinus3 = 0;
         int trigMinus2 = 0;
@@ -46,13 +48,18 @@ namespace Cyber
             }
             else if (tempoMode == TempoMode::External)
             {
-                float avgTriggerPeriod = (trigMinus0 + trigMinus1 + trigMinus2 + trigMinus3) * 0.25f;
-                if (avgTriggerPeriod > SAMPLERATE * 6) bpm = 10;
-                bpm = SAMPLERATE / (avgTriggerPeriod * trigDivision) * 60;
+                float avgTriggerPeriodSamples = (trigMinus0 + trigMinus1 + trigMinus2 + trigMinus3) * 0.25f;
+                bpm = SAMPLERATE / (avgTriggerPeriodSamples * trigDivision) * 60;
+                if (isinff(bpm)) bpm = 120;
+                if (bpm < 10) bpm = 10;
             }
             else if (tempoMode == TempoMode::Midi)
             {
-                // todo: handle midi sync
+                float avgTriggerPeriodSec = (trigMinus0 + trigMinus1 + trigMinus2 + trigMinus3) * 0.25f * 0.000001f;
+                float newBpm = 60 / (avgTriggerPeriodSec * trigDivision);
+                if (isinff(newBpm)) newBpm = 120;
+                bpm = bpm * 0.95f + newBpm * 0.05f;
+                if (bpm < 10) bpm = 10;
             }
 
             bpmInv = 1.0 / bpm;
@@ -66,6 +73,9 @@ namespace Cyber
 
         inline void TickClk(bool value)
         {
+            if (tempoMode != TempoMode::External)
+                return;
+
             if (value && !clkVal)
             {
                 UpdateTrigger(clkTicks);
@@ -74,6 +84,33 @@ namespace Cyber
 
             clkVal = value;
             clkTicks++;
+        }
+
+        inline void TickMidi()
+        {
+            if (tempoMode != TempoMode::Midi)
+                return;
+
+            int ts = micros();
+            int micros = ts - microsLast;
+            if (micros < 0)
+            {
+                // overflow condition, skip
+            }
+            else if (micros < 3000)
+            {
+                // weird double send, sometimes happens when starting clock in some DAWs
+            }
+            else if (micros > 125000)
+            {
+                // long pause, over 125 ms (20BPM) between sync pulses, assume no signal
+            }
+            else
+            {
+                LogInfof("Updating with micros %d", micros);
+                UpdateTrigger(micros);
+            }
+            microsLast = ts;
         }
 
         inline void UpdateTrigger(int sampleDuration)

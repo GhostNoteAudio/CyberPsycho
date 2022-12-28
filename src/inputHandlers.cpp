@@ -79,6 +79,7 @@ namespace Cyber
                 if (modalState.Shift() && up)
                 {
                     voice.Gen->SetTab(0);
+                    controls.SetLedPage(0);
                     displayManager.ActiveMenu = voice.Gen->GetMenu();
                 }
             }
@@ -88,6 +89,7 @@ namespace Cyber
                 if (modalState.Shift() && down)
                 {
                     displayManager.ActiveMenu = &globalMenu;
+                    controls.SetLedPage(-1);
                     modalState.EnableAction = false;
                 }
                 else if (!modalState.Shift() && up)
@@ -95,6 +97,7 @@ namespace Cyber
                     if (strlen(tabval) > 0)
                     {
                         voice.Gen->SetTab(1);
+                        controls.SetLedPage(1);
                         displayManager.ActiveMenu = voice.Gen->GetMenu();
                     }
                 }
@@ -104,7 +107,8 @@ namespace Cyber
             {
                 if (!modalState.Shift() && up && strlen(tabval) > 0)
                 {
-                    voice.Gen->SetTab(idx);
+                    voice.Gen->SetTab(2);
+                    controls.SetLedPage(2);
                     displayManager.ActiveMenu = voice.Gen->GetMenu();
                 }
             }
@@ -118,7 +122,8 @@ namespace Cyber
                 }
                 else if (!modalState.Shift() && up && strlen(tabval) > 0)
                 {
-                    voice.Gen->SetTab(idx);
+                    voice.Gen->SetTab(3);
+                    controls.SetLedPage(3);
                     displayManager.ActiveMenu = voice.Gen->GetMenu();
                 }
             }

@@ -210,7 +210,16 @@ namespace Cyber
                 mask |= bitmask;
             else
                 mask &= (~bitmask);
+            
             audio.SetLed(mask);
+        }
+
+        inline void SetLedPage(int page)
+        {
+            SetLed(0, page == 0);
+            SetLed(1, page == 1);
+            SetLed(2, page == 2);
+            SetLed(3, page == 3);
         }
     };
 

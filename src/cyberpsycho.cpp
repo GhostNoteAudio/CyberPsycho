@@ -13,4 +13,5 @@ namespace Cyber
     GeneratorRegistry generatorRegistry;
     Voice voice;
     TempoState tempoState;
+    Midi midi;
 }

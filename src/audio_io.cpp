@@ -10,6 +10,7 @@
 #include "constants.h"
 #include "logging.h"
 #include "tempo.h"
+#include "midi.h"
 
 namespace Cyber
 {
@@ -162,6 +163,7 @@ namespace Cyber
         tempoState.TickClk(clk);
 
         PushLeds();
+        midi.ProcessMidiSerial();
 
         bufferIdx++;
         if (bufferIdx == BUFFER_SIZE)

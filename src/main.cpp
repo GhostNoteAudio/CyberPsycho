@@ -123,12 +123,13 @@ void setup()
     Menus::globalMenu.ReapplyAllValues();
     Menus::pitchTrigMenu.ReapplyAllValues();
     voice.Gen->GetMenu()->ReapplyAllValues();
-
+    midi.HandleMidiClock = [](){tempoState.TickMidi();};
     audio.StartProcessing();
 }
 
 PeriodicExecution execPrint(1000);
 PeriodicExecution updateState(1);
+PeriodicExecution updateMidi(1);
 PeriodicExecution updateMenu(30);
 
 void loop()
@@ -154,9 +155,18 @@ void loop()
         LogInfof("Yield Time : %f %f %f", py->Period(), py->PeriodAvg(), py->PeriodDecay());
         LogInfof("IO Time : %f %f %f", pi->Period(), pi->PeriodAvg(), pi->PeriodDecay());
         LogInfof("CPU Load: %.3f", cpuLoad);
+        YieldAudio();
     }
 
-    YieldAudio();
+    if (updateMidi.Go())
+    {
+        if (midi.Available())
+        {
+            auto msg = midi.HandleMidiMessage();
+            LogInfof("Midi message: Ch: %d, Type: %x, Data1: %x, Data2: %x", msg.channel, msg.msgType, msg.data1, msg.data2);
+            YieldAudio();
+        }
+    }
 
     if (updateState.Go())
     {
