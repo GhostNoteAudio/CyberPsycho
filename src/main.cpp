@@ -160,12 +160,12 @@ void loop()
 
     if (updateMidi.Go())
     {
-        if (midi.Available())
+        while (midi.Available())
         {
-            auto msg = midi.HandleMidiMessage();
-            LogInfof("Midi message: Ch: %d, Type: %x, Data1: %x, Data2: %x", msg.channel, msg.msgType, msg.data1, msg.data2);
-            YieldAudio();
+            auto msg = midi.PopMidiMessage();
+            midi.HandleMidiMessage(msg);
         }
+        YieldAudio();
     }
 
     if (updateState.Go())

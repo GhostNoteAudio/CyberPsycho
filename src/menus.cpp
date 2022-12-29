@@ -9,6 +9,7 @@
 #include "tempo.h"
 #include "storage.h"
 #include "audio_io.h"
+#include "midi.h"
 
 namespace Cyber
 {
@@ -33,6 +34,8 @@ namespace Cyber
             _ClockSource,
             _ClockScale,
             _BPM,
+            _MidiEnabled,
+            _PitchbendRange,
             _GateFilter,
             _LoadPreset,
             _SavePreset,
@@ -49,6 +52,8 @@ namespace Cyber
             globalMenu.SetValue(_ClockSource, 0);
             globalMenu.SetValue(_ClockScale, 0);
             globalMenu.SetScaledValue(_BPM, 120);
+            globalMenu.SetValue(_MidiEnabled, 0);
+            globalMenu.SetScaledValue(_PitchbendRange, 2);
             globalMenu.SetValue(_GateFilter, 0);
             voice.matrix.Reset();
             voice.SetGenerator(generatorRegistry.GetGenIndexById("GNA-Quad"), true);
@@ -178,6 +183,8 @@ namespace Cyber
             globalMenu.Captions[_ClockSource] = "Clock Source";
             globalMenu.Captions[_ClockScale] = "Clock Scale";
             globalMenu.Captions[_BPM] = "BPM";
+            globalMenu.Captions[_MidiEnabled] = "Midi";
+            globalMenu.Captions[_PitchbendRange] = "Pitchb. Range";
             globalMenu.Captions[_GateFilter] = "Gate Filter";
             globalMenu.Captions[_LoadPreset] = "> Load Preset";
             globalMenu.Captions[_SavePreset] = "> Save Preset";
@@ -191,6 +198,8 @@ namespace Cyber
             globalMenu.Values[_ClockSource] = 0;
             globalMenu.Values[_ClockScale] = 0;
             globalMenu.Values[_BPM] = 0.42;
+            globalMenu.Values[_MidiEnabled] = 0;
+            globalMenu.Values[_PitchbendRange] = 0;
             globalMenu.Values[_GateFilter] = 0;
             globalMenu.Values[_LoadPreset] = 0;
             globalMenu.Values[_SavePreset] = 0;
@@ -211,6 +220,8 @@ namespace Cyber
             globalMenu.Steps[_ClockSource] = 3;
             globalMenu.Steps[_ClockScale] = 12;
             globalMenu.Steps[_BPM] = 281;
+            globalMenu.Steps[_MidiEnabled] = 2;
+            globalMenu.Steps[_PitchbendRange] = 13;
             globalMenu.Steps[_GateFilter] = 4;
 
             globalMenu.Min[_BPM] = 20;
@@ -222,6 +233,7 @@ namespace Cyber
                 else
                     sprintf(s, "[%.1f]", tempoState.GetBpm());
             };
+            globalMenu.Formatters[_MidiEnabled] = [](int idx, float v, int sv, char* s) { strcpy(s, v < 0.5 ? "Disabled" : "Enabled"); };
             globalMenu.Formatters[_GainOut] = [](int idx, float v, int sv, char* s) { sprintf(s, "%.1fdB", -12.f + sv); };
             globalMenu.Formatters[_ClockSource] = [clockSources](int idx, float v, int sv, char* s) { strcpy(s, clockSources[sv]); };
             globalMenu.Formatters[_ClockScale] = [clockScaleLut](int idx, float v, int sv, char* s) { sprintf(s, "%d", clockScaleLut[sv]); };
@@ -259,6 +271,14 @@ namespace Cyber
                 else if (idx == _ClockSource)
                 {
                     tempoState.SetTempoMode((TempoMode)sv);
+                }
+                else if (idx == _MidiEnabled)
+                {
+                    midi.MidiEnabled = value >= 0.5;
+                }
+                else if (idx == _PitchbendRange)
+                {
+                    midi.PitchbendRange = sv;
                 }
             };
 

@@ -46,27 +46,27 @@ namespace Modules
 	public:
 		const static int Oversample = 2;
 
-		float Drive;
-		float Cutoff;
-		float Resonance;
-		float c0, c1, c2, c3, c4;
+		float Drive = 0;
+		float Cutoff = 0;
+		float Resonance = 0;
+		float c0, c1, c2, c3, c4 = 0;
 
 	private:
-		float gain;
-		float totalResonance;
-		float oversampledInput;
+		float gain = 1;
+		float totalResonance = 0;
+		float oversampledInput = 0;
 
-		float p;
-		float x;
-		float a;
-		float b;
-		float c;
-		float d;
-		float feedback;
+		float p = 0;
+		float x = 0;
+		float a = 0;
+		float b = 0;
+		float c = 0;
+		float d = 0;
+		float feedback = 0;
 
-		float fsinv;
-		float gInv;
-		float mx;
+		float fsinv = 1;
+		float gInv = 1;
+		float mx = 0;
 
 	public:
 		FilterCascade();

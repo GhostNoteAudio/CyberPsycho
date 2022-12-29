@@ -38,12 +38,12 @@ namespace Cyber
 
         int Aattack; // in samples
         int Adecay; // in samples
-        int Asustain;
+        float Asustain;
         int Arelease; // in samples
 
         int Fattack; // in samples
         int Fdecay; // in samples
-        int Fsustain;
+        float Fsustain;
         int Frelease; // in samples
 
         inline SuperwaveVoice() : biq(Modules::Biquad::FilterType::HighPass, SAMPLERATE)

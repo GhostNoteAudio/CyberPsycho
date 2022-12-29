@@ -30,6 +30,7 @@ namespace Cyber
             generatorSelectMenu.Values[0] = voice.Gen->GenIndex;
             generatorSelectMenu.Values[1] = generatorRegistry.GetGenCount();
             displayManager.ActiveMenu = &generatorSelectMenu;
+            displayManager.ActiveMenu->EditMode = false;
             generatorSelectMenu.EditMode = true;
             return;
         }
@@ -40,6 +41,7 @@ namespace Cyber
             int selectedGen = menu->Values[0]; // This is OK, we have hacked the menu to carry an integer here
             voice.SetGenerator(selectedGen);
             displayManager.ActiveMenu = voice.Gen->GetMenu();
+            displayManager.ActiveMenu->EditMode = false;
             return;
         }
     }
@@ -81,6 +83,7 @@ namespace Cyber
                     voice.Gen->SetTab(0);
                     controls.SetLedPage(0);
                     displayManager.ActiveMenu = voice.Gen->GetMenu();
+                    displayManager.ActiveMenu->EditMode = false;
                 }
             }
 
@@ -89,6 +92,7 @@ namespace Cyber
                 if (modalState.Shift() && down)
                 {
                     displayManager.ActiveMenu = &globalMenu;
+                    displayManager.ActiveMenu->EditMode = false;
                     controls.SetLedPage(-1);
                     modalState.EnableAction = false;
                 }
@@ -99,6 +103,7 @@ namespace Cyber
                         voice.Gen->SetTab(1);
                         controls.SetLedPage(1);
                         displayManager.ActiveMenu = voice.Gen->GetMenu();
+                        displayManager.ActiveMenu->EditMode = false;
                     }
                 }
             }
@@ -110,6 +115,7 @@ namespace Cyber
                     voice.Gen->SetTab(2);
                     controls.SetLedPage(2);
                     displayManager.ActiveMenu = voice.Gen->GetMenu();
+                    displayManager.ActiveMenu->EditMode = false;
                 }
             }
 
@@ -125,6 +131,7 @@ namespace Cyber
                     voice.Gen->SetTab(3);
                     controls.SetLedPage(3);
                     displayManager.ActiveMenu = voice.Gen->GetMenu();
+                    displayManager.ActiveMenu->EditMode = false;
                 }
             }
 

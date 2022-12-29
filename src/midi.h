@@ -11,6 +11,13 @@ namespace Cyber
         uint8_t data1;
         uint8_t data2;
     };
+
+    enum class ModWheelMode
+    {
+        Off = 0,
+        Unipolar,
+        Bipolar
+    };
     
     class Midi
     {
@@ -25,7 +32,7 @@ namespace Cyber
         void QueueMessage(MidiMessage msg)
         {
             if (QueueDepth >= 8)
-                HandleMidiMessage();
+                PopMidiMessage();
 
             MessageQueue[QueueDepth] = msg;
             QueueDepth++;
@@ -38,17 +45,48 @@ namespace Cyber
         const int CC = 0xB0;
         const int PROGRAM = 0xC0;
         const int CH_AFT = 0xD0;
+        const int PITCHBEND = 0xE0;
         const int SYSEX_START = 0xF0;
         const int SYSEX_END = 0xF7;
         const int TIMECODE = 0xF8;
+        const float PitchbendScaleInv = 1.0 / 16384.0;
 
         std::function<void()> HandleMidiClock = []() {};
+
+        bool MidiEnabled = true;
+        ModWheelMode Modwheel = ModWheelMode::Off;
+        int PitchbendRange = 2;
+
+        uint8_t MidiNote[4] = {0};
+        float MidiPitchbend[4] = {0};
+        bool MidiGate[4] = {false};
 
         inline bool Available()
         {
             return QueueDepth > 0;
         }
-        inline MidiMessage HandleMidiMessage()
+
+        inline void HandleMidiMessage(MidiMessage msg)
+        {
+            if (msg.msgType == NOTE_ON)
+            {
+                MidiNote[msg.channel] = msg.data1;
+                MidiGate[msg.channel] = true;
+            }
+            else if (msg.msgType == NOTE_OFF)
+            {
+                if (msg.data1 == MidiNote[msg.channel])
+                    MidiGate[msg.channel] = false;
+            }
+            else if (msg.msgType == PITCHBEND)
+            {
+                float value = msg.data1 + (msg.data2 << 7);
+                value = (value * PitchbendScaleInv) * 2 - 1;
+                MidiPitchbend[msg.channel] = value;
+            }
+        }
+
+        inline MidiMessage PopMidiMessage()
         {
             if (QueueDepth == 0)
                 return MidiMessage();

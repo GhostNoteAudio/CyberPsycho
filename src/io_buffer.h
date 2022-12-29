@@ -1,4 +1,5 @@
 #pragma once
+#include <Arduino.h>
 #include "constants.h"
 #include "stdint.h"
 
@@ -23,6 +24,15 @@ namespace Cyber
         float Cv[4][T] = {{0}};
         float Mod[4][T] = {{0}};
         float Out[4][T] = {{0}};
+
+        inline void CopyTo(FpBufferT<T>* dest)
+        {
+            memcpy(dest->Gate, Gate, sizeof(Gate));
+            memcpy(dest->GateFloat, GateFloat, sizeof(GateFloat));
+            memcpy(dest->Cv, Cv, sizeof(Cv));
+            memcpy(dest->Mod, Mod, sizeof(Mod));
+            memcpy(dest->Out, Out, sizeof(Out));
+        }
     };
 
     typedef DataBufferT<BUFFER_SIZE> DataBuffer;

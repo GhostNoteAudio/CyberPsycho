@@ -1,6 +1,7 @@
 #include "quad.h"
 #include "generatorRegistry.h"
 #include "menus.h"
+#include "modal_state.h"
 
 namespace Cyber
 {

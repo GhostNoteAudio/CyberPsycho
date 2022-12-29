@@ -6,6 +6,7 @@
 #include <i2c_driver_wire.h>
 #include "audio_yield.h"
 #include "midi.h"
+#include "modal_state.h"
 
 #include "periodic_execution.h"
 #include "menu.h"
