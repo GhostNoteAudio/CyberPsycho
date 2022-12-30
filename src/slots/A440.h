@@ -70,7 +70,7 @@ namespace Cyber
             GeneratorInfo info;
             info.DeveloperName = "Ghost Note Audio";
             info.DisplayName = "A440Hz";
-            info.GeneratorId = "Slot-GNA-A440Hz";
+            info.GeneratorId = "S-GNA-A440Hz";
             info.Info = "Tuning oscillator.";
             info.Version = 1000;
             return info;

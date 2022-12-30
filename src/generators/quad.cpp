@@ -7,7 +7,7 @@ namespace Cyber
 {
     Quad::Quad()
     {
-        int blankIdx = generatorRegistry.GetSlotGenIndexById("Slot-GNA-Blank");
+        int blankIdx = generatorRegistry.GetSlotGenIndexById("S-GNA-Blank");
         Slots[0] = generatorRegistry.CreateSlotGenInstance(blankIdx);
         Slots[1] = generatorRegistry.CreateSlotGenInstance(blankIdx);
         Slots[2] = generatorRegistry.CreateSlotGenInstance(blankIdx);

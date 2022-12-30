@@ -250,7 +250,7 @@ namespace Cyber
             GeneratorInfo info;
             info.DeveloperName = "Ghost Note Audio";
             info.DisplayName = "DRom";
-            info.GeneratorId = "Slot-GNA-DRom";
+            info.GeneratorId = "S-GNA-DRom";
             info.Info = "Sample-based drum machine with 80s sounds";
             info.Version = 1000;
             return info;

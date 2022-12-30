@@ -63,7 +63,7 @@ namespace Cyber
             GeneratorInfo info;
             info.DeveloperName = "Ghost Note Audio";
             info.DisplayName = "Noise";
-            info.GeneratorId = "Slot-GNA-Noise";
+            info.GeneratorId = "S-GNA-Noise";
             info.Info = "Basic noise generator";
             info.Version = 1000;
             return info;

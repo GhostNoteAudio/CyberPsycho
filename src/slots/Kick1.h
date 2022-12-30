@@ -150,7 +150,7 @@ namespace Cyber
             GeneratorInfo info;
             info.DeveloperName = "Ghost Note Audio";
             info.DisplayName = "Kick One";
-            info.GeneratorId = "Slot-GNA-Kick1";
+            info.GeneratorId = "S-GNA-Kick1";
             info.Info = "X0X Style Kickdrum";
             info.Version = 1000;
             return info;

@@ -79,7 +79,7 @@ namespace Cyber
             subOscGain = SubOsc > 0 ? Utils::DB2Gainf(-30 + SubOsc * 30) : 0;
 
             float cutoff = Cutoff + fenv.GetOutput() * EnvAmt;
-            filter.Cutoff = Utils::Clamp(cutoff);
+            filter.CutoffHz = 20 + Utils::Resp4dec(Utils::Clamp(cutoff)) * 19980;
             filter.Resonance = Resonance;
             filter.Drive = Drive;
             filter.Update();

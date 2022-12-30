@@ -1,32 +1,26 @@
 #include "filterCascade.h"
 #include "utils.h"
+#include "logging.h"
 
 using namespace Cyber;
 
 namespace Modules
 {
-	float FilterCascade::CVtoAlpha[CVtoAlphaSize];
-
-	void FilterCascade::ComputeCVtoAlpha()
+	float FilterCascade::HztoAlpha(float freq)
 	{
 		double fsInv = 1.0 / (SAMPLERATE * Oversample);
-		for (int i = 0; i < CVtoAlphaSize; i++)
-		{
-			double freq = 440.0 * powf(2, (i - 69.0) / 12);
-			CVtoAlpha[i] = (float)((1.0f - 2.0f * freq * fsInv) * (1.0f - 2.0f * freq * fsInv));
-		}
+		float k = 1.0f - 2.0f * freq * fsInv;
+		return k * k;
 	}
 
 	FilterCascade::FilterCascade()
 	{
 		Drive = 0.0;
-		Cutoff = 1.0;
+		CutoffHz = 20000.0;
 		Resonance = 0.0;
 		SetMode(InternalFilterMode::Lp24);
 
-        ComputeCVtoAlpha();
 		fsinv = 1.0f / (Oversample * SAMPLERATE);
-		Cutoff = 1;
 		oversampledInput = 0;
 		Update();
 	}
@@ -133,11 +127,8 @@ namespace Modules
 		totalResonance = Utils::Clamp(totalResonance);
 		totalResonance = Utils::Resp2oct(totalResonance) * 1.02f;
 
-		float noteNum = Utils::Clamp(Cutoff) * 135.99;
-        int a = (int)noteNum;
-        float rem = noteNum - a;
-		p = CVtoAlpha[a] * (1-rem) + CVtoAlpha[a] * rem;
-
+		p = HztoAlpha(CutoffHz);
+		LogInfof("P: %.3f", p);
 		gInv = sqrt(1.0f / gain);
 		mx = 1.0f / Oversample;
 	}

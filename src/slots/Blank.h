@@ -36,7 +36,7 @@ namespace Cyber
             GeneratorInfo info;
             info.DeveloperName = "Ghost Note Audio";
             info.DisplayName = "Blank";
-            info.GeneratorId = "Slot-GNA-Blank";
+            info.GeneratorId = "S-GNA-Blank";
             info.Info = "Blank Slot";
             info.Version = 1000;
             return info;

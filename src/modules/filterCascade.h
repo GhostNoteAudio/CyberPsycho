@@ -31,23 +31,13 @@ namespace Modules
 	class FilterCascade
 	{
 	private:
-		static const int CVtoAlphaSize = 137;
-		static float CVtoAlpha[CVtoAlphaSize];
-		static void ComputeCVtoAlpha();
-	public:
-		static inline float GetCvFreq(float cv)
-		{
-			// Voltage is 1V/OCt, C0 = 16.3516Hz
-			// 10.3V = Max = 20614.33hz
-			float freq = (float)(440.0f * powf(2, (cv * 12 - 69.0 + 12) / 12));
-			return freq;
-		}
+		static float HztoAlpha(float freq);
 
 	public:
 		const static int Oversample = 2;
 
 		float Drive = 0;
-		float Cutoff = 0;
+		float CutoffHz = 0;
 		float Resonance = 0;
 		float c0, c1, c2, c3, c4 = 0;
 

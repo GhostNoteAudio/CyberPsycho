@@ -105,7 +105,7 @@ namespace Cyber
             GeneratorInfo info;
             info.DeveloperName = "Ghost Note Audio";
             info.DisplayName = "Shelf EQ";
-            info.GeneratorId = "Slot-GNA-EQShelf";
+            info.GeneratorId = "S-GNA-EQShelf";
             info.Info = "High/Low shelving Equaliser";
             info.Version = 1000;
             return info;

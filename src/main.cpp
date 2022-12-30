@@ -15,6 +15,7 @@
 #include "slots/Drom.h"
 #include "slots/BasicDrive.h"
 #include "slots/EqShelf.h"
+#include "slots/MultiFilter.h"
 
 using namespace Cyber;
 
@@ -46,9 +47,7 @@ void RegisterAllGenerators()
     generatorRegistry.AddSlotGen<DRom>();
     generatorRegistry.AddSlotGen<BasicDrive>();
     generatorRegistry.AddSlotGen<EqShelf>();
-    // generatorRegistry.Add<MultimodeFilter>();
-    // generatorRegistry.Add<Redux>();
-    // generatorRegistry.Add<Bypass>();
+    generatorRegistry.AddSlotGen<MultiFilter>();
 
     voice.Init();
     voice.SetGenerator(generatorRegistry.GetGenIndexById("GNA-Quad"));

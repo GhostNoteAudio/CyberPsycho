@@ -127,7 +127,7 @@ namespace Cyber
             GeneratorInfo info;
             info.DeveloperName = "Ghost Note Audio";
             info.DisplayName = "Basic Drive";
-            info.GeneratorId = "Slot-GNA-BasicDrive";
+            info.GeneratorId = "S-GNA-BasicDrive";
             info.Info = "Simple Drive/Distortion effect";
             info.Version = 1000;
             return info;
