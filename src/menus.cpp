@@ -241,7 +241,7 @@ namespace Cyber
             for (int i=_LoadPreset; i<=_Scope; i++)
                 globalMenu.Formatters[i] = [](int idx, float v, int sv, char* s) { strcpy(s, ""); };
 
-            globalMenu.SetLength(12);
+            globalMenu.SetLength(14);
             globalMenu.SelectedItem = 0;
             globalMenu.TopItem = 0;
             globalMenu.QuadMode = false;

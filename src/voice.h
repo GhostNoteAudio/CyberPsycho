@@ -21,6 +21,7 @@ namespace Cyber
         int PitchOffset = 0;
         ModMatrix matrix;
         FpBuffer fpDataModified;
+        int ClipIndicator[4];
 
         inline void Init()
         {
@@ -102,6 +103,23 @@ namespace Cyber
             }
         }
         
+        inline void ClippingIndicators(DataBuffer* data)
+        {
+            for (int n = 0; n < 4; n++)
+            {
+                int mini = 99999;
+                int maxi = -1;
+
+                for (int i = 0; i < BUFFER_SIZE; i++)
+                {
+                    auto val = data->Out[n][i];
+                    if (val < mini) mini = val;
+                    if (val > maxi) maxi = val; 
+                }
+
+                ClipIndicator[n] = (mini == 0 || maxi >= 4096) ? 300 : ClipIndicator[n]-1;
+            }
+        }
         
         inline void Process(DataBuffer* data)
         {
@@ -133,6 +151,8 @@ namespace Cyber
             Utils::To12Bit(data->Out[1], fpDataModified.Out[1], data->Size);
             Utils::To12Bit(data->Out[2], fpDataModified.Out[2], data->Size);
             Utils::To12Bit(data->Out[3], fpDataModified.Out[3], data->Size);
+
+            ClippingIndicators(data);
         }
     };
 

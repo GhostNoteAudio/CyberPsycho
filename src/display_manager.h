@@ -97,6 +97,17 @@ namespace Cyber
             }
 
             YieldAudio();
+
+            display->setDrawColor(0);
+            for (int i = 0; i < 4; i++)
+            {
+                if (voice.ClipIndicator[i] > 0)    
+                {
+                    display->drawBox(offsets[i] + 8, 0 , 8, 1);
+                }
+            }
+
+            YieldAudio();
         }
 
         inline void Render()

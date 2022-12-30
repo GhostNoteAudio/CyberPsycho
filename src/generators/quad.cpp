@@ -209,6 +209,22 @@ namespace Cyber
         strcpy((char*)&buffer[16], generatorRegistry.GetSlotGenInfo(Slots[1]->GenIndex).GeneratorId);
         strcpy((char*)&buffer[32], generatorRegistry.GetSlotGenInfo(Slots[2]->GenIndex).GeneratorId);
         strcpy((char*)&buffer[48], generatorRegistry.GetSlotGenInfo(Slots[3]->GenIndex).GeneratorId);
+        
+        buffer[64] = (uint8_t)Inputs[0];
+        buffer[65] = (uint8_t)Inputs[1];
+        buffer[66] = (uint8_t)Inputs[2];
+        buffer[67] = (uint8_t)Inputs[3];
+
+        float* fptr = (float*)(buffer + 68);
+        fptr[0] = GainInDb[0];
+        fptr[1] = GainInDb[1];
+        fptr[2] = GainInDb[2];
+        fptr[3] = GainInDb[3];
+
+        fptr[4] = GainOutDb[0];
+        fptr[5] = GainOutDb[1];
+        fptr[6] = GainOutDb[2];
+        fptr[7] = GainOutDb[3];
     }
 
     void Quad::LoadState(uint8_t* buffer, int length)
@@ -221,9 +237,32 @@ namespace Cyber
             LogInfof("Loading slot generator into slot %d", i);
             slotGenIdStr = (char*)&buffer[i*16];
             slotGenIdx = generatorRegistry.GetSlotGenIndexById(slotGenIdStr);
-            LogInfof("SlotGenerator Id: %s, index: %d", slotGenIdStr, slotGenIdx);
-            SetSlotGen(i, slotGenIdx);
+            if (slotGenIdx == -1)
+            {
+                LogInfof("Cannot find Slot Generator with Id: %s", slotGenIdStr);
+            }
+            else
+            {
+                LogInfof("SlotGenerator Id: %s, index: %d", slotGenIdStr, slotGenIdx);
+                SetSlotGen(i, slotGenIdx);
+            }
         }
+
+        Inputs[0] = (Input)buffer[64];
+        Inputs[1] = (Input)buffer[65];
+        Inputs[2] = (Input)buffer[66];
+        Inputs[3] = (Input)buffer[67];
+
+        float* fptr = (float*)(buffer + 68);
+        GainInDb[0] = fptr[0];
+        GainInDb[1] = fptr[1];
+        GainInDb[2] = fptr[2];
+        GainInDb[3] = fptr[3];
+
+        GainOutDb[0] = fptr[4];
+        GainOutDb[1] = fptr[5];
+        GainOutDb[2] = fptr[6];
+        GainOutDb[3] = fptr[7];
     }
 
     void Quad::RenderSlotSelectionMenu(U8G2* display)
