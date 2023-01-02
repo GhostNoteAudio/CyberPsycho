@@ -39,11 +39,6 @@ namespace Cyber
                 x4 * m2 * ax ));
         }
 
-        inline int ScaleSteps(float val, uint16_t steps)
-        {
-            return (int)(val * ((float)steps-0.0001f));
-        }
-
         inline float Limit(float val, float min, float max)
         {
             return val < min ? min : val > max ? max : val;
@@ -305,11 +300,13 @@ namespace Cyber
             }
         }
 
-        inline void ApplyHamming(float* buffer, int M)
+        inline void ApplyHamming(float* buffer, int size)
         {
-            for (int n = 0; n < M; n++)
+            int M = size - 1;
+
+            for (int n = 0; n < size; n++)
             {
-                float val = 0.42 - 0.5 * cosf(2*M_PI * n / (double)M) + 0.08 * cosf(4 * M_PI * n / (double)M);
+                float val = 0.54 - 0.46 * cosf(2 * M_PI * n / (double)M) + 0.08 * cosf(4 * M_PI * n / (double)M);
                 buffer[n] *= val;
             }
         }

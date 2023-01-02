@@ -16,6 +16,7 @@
 #include "slots/BasicDrive.h"
 #include "slots/EqShelf.h"
 #include "slots/MultiFilter.h"
+#include "slots/BasicWaves.h"
 
 using namespace Cyber;
 
@@ -48,6 +49,7 @@ void RegisterAllGenerators()
     generatorRegistry.AddSlotGen<BasicDrive>();
     generatorRegistry.AddSlotGen<EqShelf>();
     generatorRegistry.AddSlotGen<MultiFilter>();
+    generatorRegistry.AddSlotGen<BasicWaves>();
 
     voice.Init();
     voice.SetGenerator(generatorRegistry.GetGenIndexById("GNA-Quad"));
@@ -133,7 +135,7 @@ PeriodicExecution updateMenu(30);
 
 void loop()
 {
-    execPrint.active = false;
+    //execPrint.active = false;
     //RunBenchmark();
     
     YieldAudio();
