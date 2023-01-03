@@ -5,6 +5,7 @@
 #include "modules/blitOsc.h"
 #include "modules/slewLimiter.h"
 #include "modules/additiveOsc.h"
+#include "modules/fm4Osc.h"
 
 namespace Cyber
 {
@@ -23,6 +24,9 @@ namespace Cyber
         Modules::BlitOsc pulse;
         Modules::AdditiveOsc triangle;
         Modules::AdditiveOsc sine;
+        Modules::Fm4Osc fm1;
+        Modules::Fm4Osc fm2;
+        Modules::Fm4Osc fm3;
 
     public:
         inline BasicWaves() : 
@@ -32,6 +36,14 @@ namespace Cyber
             slew.Rate = 10;
             triangle.SetTriangle();
             sine.SetTone(0, 1, 1);
+            fm1.SetOperator(0, 1, 0);
+
+            fm2.SetOperator(0, 1, 0);
+            fm2.SetOperator(1, 2, 0);
+
+            fm3.SetOperator(0, 1, 0);
+            fm3.SetOperator(1, 5, 0);
+            fm3.SetOperator(2, 9, 0);
 
             strcpy(TabName, "BASIC");
             ParamCount = 5;
@@ -70,8 +82,21 @@ namespace Cyber
             saw.setPwm(adj);
             pulse.setPwm(adj);
 
+            fm1.matrix[0][0] = adj;
+
+            fm2.matrix[1][0] = 1;
+            fm2.SetOperator(1, 2 + adj * 7, 0);
+
+            fm3.matrix[1][0] = adj;
+            fm3.matrix[2][0] = adj * 0.5;
+            fm3.SetOperator(1, 5 + Utils::SlopeAt(adj, 0.5, 1) * 0.3, -10 * Utils::SlopeAt(adj, 0.5, 1));
+            fm3.SetOperator(2, 9 + Utils::SlopeAt(adj, 0.5, 1) * -0.3, 0);
+
             triangle.SetFrequency(pitchHz);
             sine.SetFrequency(pitchHz);
+            fm1.SetPitch(pitchHz);
+            fm2.SetPitch(pitchHz);
+            fm3.SetPitch(pitchHz);
         }
 
         virtual inline const char* GetParamName(int idx) override
@@ -124,6 +149,9 @@ namespace Cyber
             float sampleSaw = saw.tick();
             float sampleTri = triangle.Process();
             float sampleSine = sine.Process();
+            float sampleFm1 = fm1.Process();
+            float sampleFm2 = fm2.Process();
+            float sampleFm3 = fm3.Process();
 
             if (sv == 0)
                 args->Output = sampleSaw;
@@ -133,6 +161,12 @@ namespace Cyber
                 args->Output = sampleTri;
             else if (sv == 3)
                 args->Output = sampleSine;
+            else if (sv == 4)
+                args->Output = sampleFm1;
+            else if (sv == 5)
+                args->Output = sampleFm2;
+            else if (sv == 6)
+                args->Output = sampleFm3;
             else
                 args->Output = 0;
         }

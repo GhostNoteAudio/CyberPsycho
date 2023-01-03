@@ -342,14 +342,25 @@ namespace Cyber
             return output;
         }
 
+        // Weird but useful function that maps a sub-section of a knobs range to 0...1 range
+        // Example:
+        // SlopeAt(0.0, 0.4, 0.6) => 0
+        // SlopeAt(0.4, 0.4, 0.6) => 0    // start of range
+        // SlopeAt(0.5, 0.4, 0.6) => 0.5  // middle of range
+        // SlopeAt(0.6, 0.4, 0.6) => 1.0  // end of range
+        // SlopeAt(1.0, 0.4, 0.6) => 1.0
+        inline float SlopeAt(float p, float a, float b)
+        {
+            float x = (p - a) / (b-a);
+            return Utils::Clamp(x);
+        }
+
         inline float Note2hz(float note)
         {
             const float scaler = 1/12.0;
             //return powf(2, (note-69)/12.0f) * 440.0f;
             return powf(2, (note-69)*scaler) * 440.0f;
         }
-
-        
 
         inline float Note2HzLut(float note)
         {
